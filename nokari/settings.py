@@ -37,10 +37,12 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    'app.core.apps.CoreConfig',
+    'app.core',
+    'rest_framework',
+    'rest_framework_simplejwt',
 ]
 
-AUTH_USER_MODEL = 'core.CustomUser'
+AUTH_USER_MODEL = 'core.User'
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -81,7 +83,7 @@ DATABASES = {
         'NAME': 'nokari',
         'USER': 'nokari',
         'PASSWORD': 'password',
-        'HOST': 'localhost',
+        'HOST': 'db',
         'PORT': '5432',
     }
 }
@@ -122,6 +124,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "static/"
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    )
+}
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

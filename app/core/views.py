@@ -1,27 +1,23 @@
-from django.shortcuts import render
-from .scraper import scrape_jobs
-from .matcher import match_resume
-from django.http import JsonResponse
-import json
+from rest_framework import generics
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from .serializers import UserSerializer, JobPostingSerializer
+from django.contrib.auth import get_user_model
+from .models import JobPosting
 
-def scrape_view(request):
-    # This is a placeholder for the actual view logic.
-    # You will need to create a form for administrators to enter a URL to scrape.
-    if request.method == 'POST':
-        url = request.POST.get('url')
-        jobs = scrape_jobs(url)
-        return render(request, 'scraper_results.html', {'jobs': jobs})
-    return render(request, 'scrape_form.html')
+User = get_user_model()
 
-def match_resume_view(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        resume_text = data.get('resume_text')
-        job_description_text = data.get('job_description_text')
+class RegisterView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    permission_classes = (AllowAny,)
+    serializer_class = UserSerializer
 
-        if resume_text and job_description_text:
-            result = match_resume(resume_text, job_description_text)
-            return JsonResponse(result)
-        else:
-            return JsonResponse({'error': 'Missing resume_text or job_description_text'}, status=400)
-    return JsonResponse({'error': 'Invalid request method'}, status=405)
+class JobPostingView(generics.ListAPIView):
+    serializer_class = JobPostingSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = JobPosting.objects.all()
+        title = self.request.query_params.get('title')
+        if title is not None:
+            queryset = queryset.filter(title__icontains=title)
+        return queryset
