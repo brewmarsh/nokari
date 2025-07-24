@@ -2,3 +2,6 @@ services:
   frontend:
     ports:
       - "${WEB_APP_PORT:-3000}:3000"
+  backend:
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
