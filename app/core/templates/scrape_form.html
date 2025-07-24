@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Scrape Jobs</title>
+</head>
+<body>
+    <h1>Scrape Jobs</h1>
+    <form method="post">
+        {% csrf_token %}
+        <label for="url">URL:</label>
+        <input type="text" id="url" name="url" size="50">
+        <button type="submit">Scrape</button>
+    </form>
+</body>
+</html>
