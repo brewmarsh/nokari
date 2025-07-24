@@ -13,6 +13,9 @@ RUN npm install
 # Copy the rest of the application's code
 COPY . .
 
+# Add the node_modules to the path
+ENV PATH /app/node_modules/.bin:$PATH
+
 # Make port 3000 available to the world outside this container
 EXPOSE 3000
 
