@@ -24,9 +24,15 @@ To provide a simple way of finding jobs and helping to tailor the resume and cov
 *   ...be able to click and see a quick preview of the role.
 *   ...be able to click to open roles in a new window so that I can review them. 
 *   ...be able to see a level of confidence that my resume matches the role.
+*   ...be able to refresh the list of web scraping results. 
 *   ...be able to generate an updated resume based on a job posting.
 *   ...be able to generate an updated cover letter based on a job posting.
 *   ...be able to change my password securely.
+
+### 3.3 As a system administrator, I want to...
+*   ...be able to see administrative options that are not available to non-adminstrator users.
+*   ...be able to add new domains for scraping job roles.
+*   ...be able to see statistics for job matching.
 
 ## 4. Non-Functional Requirements
 
