@@ -1,7 +1,10 @@
 # build environment
 FROM node:16-alpine as build
 WORKDIR /app
-COPY frontend/. .
+COPY frontend/package.json .
+COPY frontend/package-lock.json .
+COPY frontend/public ./public
+COPY frontend/src ./src
 RUN ls -la
 RUN npm ci
 RUN npm run build
