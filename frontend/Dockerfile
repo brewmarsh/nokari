@@ -5,7 +5,7 @@ COPY package.json .
 COPY package-lock.json .
 RUN npm ci
 COPY . .
-COPY frontend/src /app/src
+COPY src /app/src
 RUN npm run build
 
 # production environment
