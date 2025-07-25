@@ -9,8 +9,8 @@ services:
       - db
   frontend:
     build:
-      context: .
-      dockerfile: frontend/Dockerfile
+      context: ./frontend
+      dockerfile: Dockerfile
     volumes:
       - ./frontend:/app
     depends_on:
