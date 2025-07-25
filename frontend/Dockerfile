@@ -5,6 +5,7 @@ COPY package.json .
 COPY package-lock.json .
 RUN npm ci
 COPY . .
+RUN ls -la /app
 COPY frontend/src /app/src
 RUN ls -la /app/src
 RUN npm run build
