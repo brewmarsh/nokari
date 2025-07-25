@@ -1,8 +1,7 @@
 # build environment
 FROM node:16-alpine as build
-WORKDIR /app
-COPY frontend .
 WORKDIR /app/frontend
+COPY frontend .
 RUN ls -la
 RUN npm ci
 RUN npm run build
