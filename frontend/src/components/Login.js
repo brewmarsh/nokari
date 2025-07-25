@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import api from '../services/api';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -11,10 +12,16 @@ const Login = () => {
   const onChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log('Login form submitted');
+    try {
+      const res = await api.post('/login/', { username, password });
+      console.log(res.data);
+      // Handle successful login
+    } catch (err) {
+      console.error(err);
+      // Handle login error
+    }
   };
 
   return (

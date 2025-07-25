@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import api from '../services/api';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -13,13 +14,23 @@ const Register = () => {
   const onChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
     if (password !== password2) {
       console.log('Passwords do not match');
     } else {
-      // Handle registration logic here
-      console.log('Registration form submitted');
+      try {
+        const res = await api.post('/register/', {
+          username,
+          email,
+          password,
+        });
+        console.log(res.data);
+        // Handle successful registration
+      } catch (err) {
+        console.error(err);
+        // Handle registration error
+      }
     }
   };
 
