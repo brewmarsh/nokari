@@ -3,6 +3,7 @@ FROM node:16-alpine as build
 WORKDIR /app
 COPY frontend .
 WORKDIR /app/frontend
+RUN ls -la
 RUN npm ci
 RUN npm run build
 
