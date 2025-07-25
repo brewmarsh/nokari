@@ -1,13 +1,13 @@
 # build environment
 FROM node:16-alpine as build
-WORKDIR /app
-COPY package.json .
-COPY package-lock.json .
+WORKDIR /app/frontend
+COPY frontend/package.json .
+COPY frontend/package-lock.json .
 RUN npm ci
-COPY . .
-RUN ls -la /app
-COPY frontend/src /app/src
-RUN ls -la /app/src
+COPY frontend .
+RUN ls -la /app/frontend
+COPY frontend/src /app/frontend/src
+RUN ls -la /app/frontend/src
 RUN npm run build
 
 # production environment
