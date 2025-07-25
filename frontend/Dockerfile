@@ -1,17 +1,13 @@
 # build environment
 FROM node:16-alpine as build
 WORKDIR /app
-COPY frontend/package.json .
-COPY frontend/package-lock.json .
-RUN npm ci
 COPY frontend .
-RUN ls -la /app
-COPY frontend/src/. /app/src/
-RUN ls -la /app/src
+WORKDIR /app/frontend
+RUN npm ci
 RUN npm run build
 
 # production environment
 FROM nginx:stable-alpine
-COPY --from=build /app/build /usr/share/nginx/html
+COPY --from=build /app/frontend/build /usr/share/nginx/html
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
