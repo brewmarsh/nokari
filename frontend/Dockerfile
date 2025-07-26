@@ -1,7 +1,10 @@
 # build environment
 FROM node:20-alpine as build
 WORKDIR /app
-COPY . .
+COPY package.json .
+COPY package-lock.json .
+COPY public ./public
+COPY src ./src
 RUN npm ci
 RUN npm run build
 
