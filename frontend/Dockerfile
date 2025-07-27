@@ -4,7 +4,8 @@ WORKDIR /app
 COPY package.json .
 COPY package-lock.json .
 RUN npm ci
-COPY . .
+COPY src ./src
+COPY public ./public
 RUN npm run build
 
 # production environment
