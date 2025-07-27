@@ -81,3 +81,7 @@ To provide a simple way of finding jobs and helping to tailor the resume and cov
 *   Code should be well-documented with comments and docstrings.
 *   A linter (e.g., Flake8) should be used to enforce code quality standards.
 *   All new features should be accompanied by unit tests.
+
+### 7.4. Environment
+
+*   The version of `npm` should be updated to the latest version.
