@@ -1,9 +1,0 @@
-node_modules
-build
-.dockerignore
-Dockerfile
-!/frontend
-/frontend/src
-/frontend/public
-/frontend/package.json
-/frontend/package-lock.json
