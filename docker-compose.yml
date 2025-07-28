@@ -5,6 +5,7 @@ services:
       dockerfile: Dockerfile.backend
     volumes:
       - .:/app
+      - logs:/var/log/
     depends_on:
       - db
   frontend:
@@ -24,3 +25,4 @@ services:
 
 volumes:
   postgres_data:
+  logs:
