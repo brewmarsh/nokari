@@ -15,3 +15,13 @@ We will use **Docker** to containerize the application. This will make it easy t
 - The `backend` service is a Django application running on port 8000.
 - The `frontend` service is a React application running on port 3000.
 - The `db` service is a PostgreSQL database.
+
+## Component-Based Architecture
+
+The application is broken down into the following components:
+
+*   **User Management:** This component is responsible for user authentication, registration, and profile management.
+*   **Job Postings:** This component is responsible for scraping, storing, and displaying job postings.
+*   **Resume and Cover Letter Management:** This component is responsible for storing and managing user resumes and cover letters.
+*   **Resume Matching:** This component is responsible for matching resumes to job postings and providing a confidence score.
+*   **Admin:** This component is responsible for providing administrative functionality, such as managing scrapable domains.

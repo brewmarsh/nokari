@@ -58,7 +58,9 @@ To provide a simple way of finding jobs and helping to tailor the resume and cov
 
 ## 5. Future Features
 
-*   TBD
+*   Users can upload multiple resumes and cover letters.
+*   Users can choose a default resume and cover letter.
+*   Users can delete resumes and cover letters.
 
 ## 7. Development Requirements
 

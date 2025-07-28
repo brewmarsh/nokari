@@ -50,6 +50,13 @@ class ResumeView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+class ResumeDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = ResumeSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Resume.objects.filter(user=self.request.user)
+
 class CoverLetterView(generics.ListCreateAPIView):
     serializer_class = CoverLetterSerializer
     permission_classes = [IsAuthenticated]
@@ -59,6 +66,13 @@ class CoverLetterView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+class CoverLetterDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = CoverLetterSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return CoverLetter.objects.filter(user=self.request.user)
 
 class GenerateResumeView(APIView):
     permission_classes = [IsAuthenticated]
