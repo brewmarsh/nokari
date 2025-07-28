@@ -17,7 +17,7 @@ services:
     depends_on:
       - backend
   db:
-    image: postgres:14
+    image: postgres:13
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     env_file:
