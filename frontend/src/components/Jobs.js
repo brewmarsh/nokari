@@ -4,19 +4,26 @@ import api from '../services/api';
 const Jobs = () => {
   const [jobs, setJobs] = useState([]);
   const [error, setError] = useState(null);
+  const [title, setTitle] = useState('');
+  const [company, setCompany] = useState('');
+
+  const fetchJobs = async () => {
+    try {
+      const res = await api.get('/jobs/', {
+        params: {
+          title,
+          company,
+        },
+      });
+      setJobs(res.data);
+    } catch (err) {
+      setError(err);
+    }
+  };
 
   useEffect(() => {
-    const fetchJobs = async () => {
-      try {
-        const res = await api.get('/jobs/');
-        setJobs(res.data);
-      } catch (err) {
-        setError(err);
-      }
-    };
-
     fetchJobs();
-  }, []);
+  }, [title, company]);
 
   if (error) {
     return <div>Error: {error.message}</div>;
@@ -25,6 +32,20 @@ const Jobs = () => {
   return (
     <div>
       <h1>Job Postings</h1>
+      <div>
+        <input
+          type="text"
+          placeholder="Filter by title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+        <input
+          type="text"
+          placeholder="Filter by company"
+          value={company}
+          onChange={(e) => setCompany(e.target.value)}
+        />
+      </div>
       {jobs.map((job) => (
         <div key={job.id}>
           <h2>{job.title}</h2>
