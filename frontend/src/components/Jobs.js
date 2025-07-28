@@ -6,6 +6,7 @@ const Jobs = () => {
   const [error, setError] = useState(null);
   const [title, setTitle] = useState('');
   const [company, setCompany] = useState('');
+  const [search, setSearch] = useState('');
 
   const fetchJobs = async () => {
     try {
@@ -13,6 +14,7 @@ const Jobs = () => {
         params: {
           title,
           company,
+          search,
         },
       });
       setJobs(res.data);
@@ -23,7 +25,7 @@ const Jobs = () => {
 
   useEffect(() => {
     fetchJobs();
-  }, [title, company]);
+  }, [title, company, search]);
 
   if (error) {
     return <div>Error: {error.message}</div>;
@@ -44,6 +46,12 @@ const Jobs = () => {
           placeholder="Filter by company"
           value={company}
           onChange={(e) => setCompany(e.target.value)}
+        />
+        <input
+          type="text"
+          placeholder="Search by keyword"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
         />
       </div>
       {jobs.map((job) => (

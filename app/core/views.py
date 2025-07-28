@@ -26,6 +26,9 @@ class JobPostingView(generics.ListAPIView):
         company = self.request.query_params.get('company')
         if company is not None:
             queryset = queryset.filter(company__icontains=company)
+        search = self.request.query_params.get('search')
+        if search is not None:
+            queryset = queryset.filter(description__icontains=search)
 
         resume = Resume.objects.filter(user=self.request.user).first()
         if resume:
