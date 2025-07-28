@@ -85,3 +85,4 @@ To provide a simple way of finding jobs and helping to tailor the resume and cov
 ### 7.4. Environment
 
 *   The version of `npm` should be updated to the latest version.
+*   The application should be containerized using Docker.

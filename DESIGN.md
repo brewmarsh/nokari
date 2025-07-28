@@ -10,4 +10,8 @@ We will use a model from **Hugging Face's Transformers** library for resume matc
 
 ## Deployment
 
-We will use **Docker** to containerize the application. This will make it easy to deploy the application in a local network and also to a cloud platform in the future. We will create a `Dockerfile` for both the frontend and the backend, and a `docker-compose.yml` file to manage the services. We will also create a `docker-compose.override.yml` file to allow for easy customization of the web app port.
+We will use **Docker** to containerize the application. This will make it easy to deploy the application in a local network and also to a cloud platform in the future. The `docker-compose.yml` file defines three services: `backend`, `frontend`, and `db`.
+
+- The `backend` service is a Django application running on port 8000.
+- The `frontend` service is a React application running on port 3000.
+- The `db` service is a PostgreSQL database.
