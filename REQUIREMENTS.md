@@ -58,7 +58,9 @@ To provide a simple way of finding jobs and helping to tailor the resume and cov
 
 ## 5. Future Features
 
-*   TBD
+*   Users can upload multiple resumes and cover letters.
+*   Users can choose a default resume and cover letter.
+*   Users can delete resumes and cover letters.
 
 ## 7. Development Requirements
 
@@ -81,3 +83,8 @@ To provide a simple way of finding jobs and helping to tailor the resume and cov
 *   Code should be well-documented with comments and docstrings.
 *   A linter (e.g., Flake8) should be used to enforce code quality standards.
 *   All new features should be accompanied by unit tests.
+
+### 7.4. Environment
+
+*   The version of `npm` should be updated to the latest version.
+*   The application should be containerized using Docker.
