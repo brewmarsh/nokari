@@ -3,7 +3,6 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from .serializers import UserSerializer, JobPostingSerializer, ResumeSerializer, CoverLetterSerializer, ScrapableDomainSerializer
 from django.contrib.auth import get_user_model
 from .models import JobPosting, Resume, CoverLetter, ScrapableDomain
-from .matcher import match_resume
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
