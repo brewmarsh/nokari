@@ -3,7 +3,6 @@ gunicorn
 psycopg2-binary
 beautifulsoup4
 requests
-transformers
 djangorestframework
 djangorestframework-simplejwt
 django-cors-headers
