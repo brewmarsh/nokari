@@ -6,6 +6,7 @@ services:
     volumes:
       - .:/app
       - logs:/var/log/
+    command: ["./wait-for-it.sh", "db", "--", "sh", "-c", "python manage.py migrate && python manage.py load_initial_data && gunicorn nokari.wsgi:application --bind 0.0.0.0:8000"]
     depends_on:
       db:
         condition: service_healthy
@@ -21,7 +22,6 @@ services:
     image: postgres:14
     volumes:
       - postgres_data:/var/lib/postgresql/data/
-    command: sh -c "rm -rf /var/lib/postgresql/data/* && docker-entrypoint.sh postgres"
     env_file:
       - ./.env
     healthcheck:
