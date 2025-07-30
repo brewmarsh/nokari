@@ -20,7 +20,8 @@ services:
   db:
     image: postgres:14
     volumes:
-      - postgres_data_${TIMESTAMP}:/var/lib/postgresql/data/
+      - postgres_data:/var/lib/postgresql/data/
+    command: sh -c "rm -rf /var/lib/postgresql/data/* && docker-entrypoint.sh postgres"
     env_file:
       - ./.env
     healthcheck:
@@ -30,5 +31,5 @@ services:
       retries: 5
 
 volumes:
-  postgres_data_${TIMESTAMP}:
+  postgres_data:
   logs:
