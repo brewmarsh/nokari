@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Wait for the database to be ready
-./wait-for-it.sh db 5432
+./wait-for-it.sh db:5432
 
 # Run database migrations
 python manage.py migrate
