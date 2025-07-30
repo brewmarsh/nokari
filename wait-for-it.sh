@@ -7,7 +7,8 @@ host="$1"
 shift
 cmd="$@"
 
-until echo "$POSTGRES_PASSWORD" | psql -h "$host" -U "nokari" -c '\q'; do
+export PGPASSWORD=$POSTGRES_PASSWORD
+until psql -h "$host" -U "nokari" -c '\q'; do
   >&2 echo "Postgres is unavailable - sleeping"
   sleep 1
 done
