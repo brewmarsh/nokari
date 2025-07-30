@@ -7,10 +7,7 @@ host="$1"
 shift
 cmd="$@"
 
-echo "*:*:*:$POSTGRES_USER:$POSTGRES_PASSWORD" > ~/.pgpass
-chmod 0600 ~/.pgpass
-
-until psql -h "$host" -U "nokari" -c '\q'; do
+until pg_isready -h "$host" -U "nokari"; do
   >&2 echo "Postgres is unavailable - sleeping"
   sleep 1
 done
