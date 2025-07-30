@@ -15,6 +15,3 @@ EXPOSE 8000
 
 # Define environment variable
 ENV NAME World
-
-# Run app.py when the container launches
-CMD ["sh", "-c", "python manage.py migrate && python manage.py load_initial_data && gunicorn nokari.wsgi:application --bind 0.0.0.0:8000"]

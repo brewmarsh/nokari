@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import api from '../services/api';
+import { setToken } from '../services/auth';
 
 const Login = () => {
   const [formData, setFormData] = useState({
-    username: '',
+    email: '',
     password: '',
   });
 
-  const { username, password } = formData;
+  const { email, password } = formData;
 
   const onChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -15,8 +16,8 @@ const Login = () => {
   const onSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await api.post('/login/', { username, password });
-      console.log(res.data);
+      const res = await api.post('/login/', { email, password });
+      setToken(res.data.access);
       // Handle successful login
     } catch (err) {
       console.error(err);
@@ -30,10 +31,10 @@ const Login = () => {
       <form onSubmit={onSubmit}>
         <div>
           <input
-            type="text"
-            placeholder="Username"
-            name="username"
-            value={username}
+            type="email"
+            placeholder="Email Address"
+            name="email"
+            value={email}
             onChange={onChange}
             required
           />
