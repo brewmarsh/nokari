@@ -13,4 +13,4 @@ until pg_isready -h "$host" -U "nokari"; do
 done
 
 >&2 echo "Postgres is up - executing command"
-exec $cmd
+exec "$@"
