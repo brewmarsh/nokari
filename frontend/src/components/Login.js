@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
 const Login = () => {
   const [formData, setFormData] = useState({
-    username: '',
+    email: '',
     password: '',
   });
+  const navigate = useNavigate();
 
-  const { username, password } = formData;
+  const { email, password } = formData;
 
   const onChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -15,9 +17,10 @@ const Login = () => {
   const onSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await api.post('/login/', { username, password });
-      console.log(res.data);
-      // Handle successful login
+      const res = await api.post('/login/', { email, password });
+      localStorage.setItem('access_token', res.data.access);
+      localStorage.setItem('refresh_token', res.data.refresh);
+      navigate('/');
     } catch (err) {
       console.error(err);
       // Handle login error
@@ -30,10 +33,10 @@ const Login = () => {
       <form onSubmit={onSubmit}>
         <div>
           <input
-            type="text"
-            placeholder="Username"
-            name="username"
-            value={username}
+            type="email"
+            placeholder="Email"
+            name="email"
+            value={email}
             onChange={onChange}
             required
           />

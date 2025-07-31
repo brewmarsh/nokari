@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
 const Register = () => {
@@ -8,6 +9,7 @@ const Register = () => {
     password: '',
     password2: '',
   });
+  const navigate = useNavigate();
 
   const { username, email, password, password2 } = formData;
 
@@ -20,13 +22,12 @@ const Register = () => {
       console.log('Passwords do not match');
     } else {
       try {
-        const res = await api.post('/register/', {
+        await api.post('/register/', {
           username,
           email,
           password,
         });
-        console.log(res.data);
-        // Handle successful registration
+        navigate('/login');
       } catch (err) {
         console.error(err);
         // Handle registration error
