@@ -6,6 +6,7 @@ from .models import JobPosting, Resume, CoverLetter, ScrapableDomain
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import render
+from .scraper import scrape_jobs
 
 User = get_user_model()
 
@@ -108,6 +109,26 @@ class ScrapableDomainView(generics.ListCreateAPIView):
     serializer_class = ScrapableDomainSerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
     queryset = ScrapableDomain.objects.all()
+
+
+class ScrapeView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def post(self, request, *args, **kwargs):
+        domains = ScrapableDomain.objects.all()
+        scraped_count = 0
+        for domain in domains:
+            jobs = scrape_jobs(domain.url)
+            for job_data in jobs:
+                obj, created = JobPosting.objects.get_or_create(
+                    title=job_data['title'],
+                    company=job_data['company'],
+                    defaults={'description': ''}
+                )
+                if created:
+                    scraped_count += 1
+        return Response({'detail': f'Scraped {scraped_count} new jobs.'})
+
 
 def test_page(request):
     User = get_user_model()
