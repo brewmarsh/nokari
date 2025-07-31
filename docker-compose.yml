@@ -6,15 +6,7 @@ services:
     volumes:
       - .:/app
       - logs:/var/log/
-    entrypoint: ["/app/entrypoint.sh"]
-    depends_on:
-      db:
-        condition: service_healthy
-  test:
-    build:
-      context: .
-      dockerfile: Dockerfile.backend
-    command: ["python", "manage.py", "test"]
+    command: ["./wait-for-it.sh", "db", "sh", "-c", "python manage.py migrate && python manage.py load_initial_data && gunicorn nokari.wsgi:application --bind 0.0.0.0:8000"]
     depends_on:
       db:
         condition: service_healthy

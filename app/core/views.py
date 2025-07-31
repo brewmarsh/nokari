@@ -1,4 +1,3 @@
-import re
 from rest_framework import generics
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from .serializers import UserSerializer, JobPostingSerializer, ResumeSerializer, CoverLetterSerializer, ScrapableDomainSerializer
@@ -6,14 +5,6 @@ from django.contrib.auth import get_user_model
 from .models import JobPosting, Resume, CoverLetter, ScrapableDomain
 from rest_framework.views import APIView
 from rest_framework.response import Response
-
-def match_resume(resume_text, job_description):
-    # This is a placeholder for the actual resume matching logic.
-    # For now, we'll just count the number of common words.
-    resume_words = set(re.findall(r'\w+', resume_text.lower()))
-    job_description_words = set(re.findall(r'\w+', job_description.lower()))
-    common_words = resume_words.intersection(job_description_words)
-    return {'scores': [len(common_words)]}
 
 User = get_user_model()
 
