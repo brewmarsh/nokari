@@ -18,7 +18,7 @@ const Register = () => {
   const onSubmit = async (e) => {
     e.preventDefault();
     if (password !== password2) {
-      console.log('Passwords do not match');
+      alert('Passwords do not match');
     } else {
       try {
         await api.post('/register/', {
@@ -27,8 +27,17 @@ const Register = () => {
         });
         navigate('/login');
       } catch (err) {
-        console.error(err);
-        // Handle registration error
+        if (err.response) {
+          // The request was made and the server responded with a status code
+          // that falls out of the range of 2xx
+          alert('Registration failed: ' + JSON.stringify(err.response.data));
+        } else if (err.request) {
+          // The request was made but no response was received
+          alert('Registration failed: No response from server.');
+        } else {
+          // Something happened in setting up the request that triggered an Error
+          alert('Registration failed: ' + err.message);
+        }
       }
     }
   };
