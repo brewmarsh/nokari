@@ -56,7 +56,7 @@ const Jobs = () => {
       </div>
       {jobs.map((job) => (
         <div key={job.id}>
-          <h2>{job.title}</h2>
+          <h2><a href={job.link} target="_blank" rel="noopener noreferrer">{job.title}</a></h2>
           <p>{job.company}</p>
           <p>{job.description}</p>
         </div>

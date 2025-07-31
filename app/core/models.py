@@ -43,6 +43,7 @@ class JobPosting(models.Model):
     company = models.CharField(max_length=255)
     title = models.CharField(max_length=255)
     description = models.TextField(default='')
+    link = models.URLField(default='')
     posting_date = models.DateField()
     confidence_score = models.FloatField(default=0)
 
