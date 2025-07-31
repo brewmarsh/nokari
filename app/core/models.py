@@ -9,6 +9,8 @@ class UserManager(BaseUserManager):
         email = self.normalize_email(email)
         if 'username' not in extra_fields or not extra_fields['username']:
             extra_fields['username'] = email
+        if 'role' not in extra_fields:
+            extra_fields['role'] = 'user'
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
