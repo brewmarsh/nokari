@@ -16,6 +16,8 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./frontend:/app
+    ports:
+      - "${WEB_APP_PORT:-3000}:80"
     depends_on:
       - backend
   db:
