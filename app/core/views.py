@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from .models import JobPosting, Resume, CoverLetter, ScrapableDomain
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.shortcuts import render
 
 User = get_user_model()
 
@@ -107,3 +108,8 @@ class ScrapableDomainView(generics.ListCreateAPIView):
     serializer_class = ScrapableDomainSerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
     queryset = ScrapableDomain.objects.all()
+
+def test_page(request):
+    User = get_user_model()
+    user = User.objects.first()
+    return render(request, 'test_page.html', {'user': user})
