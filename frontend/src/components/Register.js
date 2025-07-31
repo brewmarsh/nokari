@@ -4,14 +4,13 @@ import api from '../services/api';
 
 const Register = () => {
   const [formData, setFormData] = useState({
-    username: '',
     email: '',
     password: '',
     password2: '',
   });
   const navigate = useNavigate();
 
-  const { username, email, password, password2 } = formData;
+  const { email, password, password2 } = formData;
 
   const onChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -23,7 +22,6 @@ const Register = () => {
     } else {
       try {
         await api.post('/register/', {
-          username,
           email,
           password,
         });
@@ -39,16 +37,6 @@ const Register = () => {
     <div>
       <h1>Register</h1>
       <form onSubmit={onSubmit}>
-        <div>
-          <input
-            type="text"
-            placeholder="Username"
-            name="username"
-            value={username}
-            onChange={onChange}
-            required
-          />
-        </div>
         <div>
           <input
             type="email"
