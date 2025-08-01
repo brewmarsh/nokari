@@ -1,5 +1,6 @@
 from rest_framework import generics
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from .permissions import IsAdmin
 from .serializers import UserSerializer, JobPostingSerializer, ResumeSerializer, CoverLetterSerializer, ScrapableDomainSerializer
 from django.contrib.auth import get_user_model
 from .models import JobPosting, Resume, CoverLetter, ScrapableDomain
@@ -107,12 +108,12 @@ class GenerateCoverLetterView(APIView):
 
 class ScrapableDomainView(generics.ListCreateAPIView):
     serializer_class = ScrapableDomainSerializer
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated, IsAdmin]
     queryset = ScrapableDomain.objects.all()
 
 
 class ScrapeView(APIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdmin]
 
     def post(self, request, *args, **kwargs):
         domains = ScrapableDomain.objects.all()
