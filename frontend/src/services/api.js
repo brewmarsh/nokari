@@ -20,4 +20,11 @@ api.interceptors.request.use(
   }
 );
 
+export const api_unauthenticated = axios.create({
+  baseURL: '/api',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
 export default api;

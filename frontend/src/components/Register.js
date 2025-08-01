@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../services/api';
+import { api_unauthenticated } from '../services/api';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -21,7 +21,7 @@ const Register = () => {
       alert('Passwords do not match');
     } else {
       try {
-        await api.post('/register/', {
+        await api_unauthenticated.post('/register/', {
           email,
           password,
         });
