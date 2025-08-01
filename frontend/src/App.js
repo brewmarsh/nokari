@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
 import Login from './components/Login';
 import Register from './components/Register';
 import Dashboard from './components/Dashboard';
 import Onboarding from './components/Onboarding';
+import PrivateRoute from './components/PrivateRoute';
 import { api_unauthenticated } from './services/api';
 
 function App() {
@@ -31,11 +32,10 @@ function App() {
         <Link to="/login">Login</Link> | <Link to="/register">Register</Link> | <Link to="/">Dashboard</Link>
       </nav>
       <Routes>
-        {userCount === 0 && <Route path="/*" element={<Navigate to="/onboarding" />} />}
         <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/" element={<Dashboard />} />
+        <Route path="/" element={<PrivateRoute userCount={userCount}><Dashboard /></PrivateRoute>} />
       </Routes>
     </Router>
   );
