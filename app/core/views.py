@@ -135,3 +135,9 @@ def test_page(request):
     User = get_user_model()
     user = User.objects.first()
     return render(request, 'test_page.html', {'user': user})
+
+class UserCountView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        return Response({'user_count': User.objects.count()})

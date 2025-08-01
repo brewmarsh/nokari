@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import RegisterView, JobPostingView, ResumeView, CoverLetterView, GenerateResumeView, GenerateCoverLetterView, ScrapableDomainView, ResumeDetailView, CoverLetterDetailView, test_page, ScrapeView
+from .views import RegisterView, JobPostingView, ResumeView, CoverLetterView, GenerateResumeView, GenerateCoverLetterView, ScrapableDomainView, ResumeDetailView, CoverLetterDetailView, test_page, ScrapeView, UserCountView
 from .admin_views import AdminMenuView
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -21,4 +21,5 @@ urlpatterns = [
     path('scrapable-domains/', ScrapableDomainView.as_view(), name='scrapable_domains'),
     path('scrape/', ScrapeView.as_view(), name='scrape'),
     path('test/', test_page, name='test_page'),
+    path('user-count/', UserCountView.as_view(), name='user_count'),
 ]
