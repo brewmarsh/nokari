@@ -119,7 +119,7 @@ class ScrapeView(APIView):
         domains = ScrapableDomain.objects.all()
         scraped_count = 0
         for domain in domains:
-            jobs = scrape_jobs(domain.url)
+            jobs = scrape_jobs(domain.domain)
             for job_data in jobs:
                 obj, created = JobPosting.objects.get_or_create(
                     title=job_data['title'],
