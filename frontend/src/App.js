@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate, Link } from 'react-router-dom';
 import Login from './components/Login';
 import Register from './components/Register';
 import Dashboard from './components/Dashboard';
 import Onboarding from './components/Onboarding';
-import PrivateRoute from './components/PrivateRoute';
 import { api_unauthenticated } from './services/api';
 
 function App() {
@@ -26,6 +25,17 @@ function App() {
     return <div>Loading...</div>;
   }
 
+  if (userCount === 0 && window.location.pathname !== '/onboarding') {
+    return (
+      <Router>
+        <Routes>
+          <Route path="/*" element={<Navigate to="/onboarding" />} />
+          <Route path="/onboarding" element={<Onboarding />} />
+        </Routes>
+      </Router>
+    );
+  }
+
   return (
     <Router>
       <nav>
@@ -35,7 +45,7 @@ function App() {
         <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/" element={<PrivateRoute userCount={userCount}><Dashboard /></PrivateRoute>} />
+        <Route path="/" element={<Dashboard />} />
       </Routes>
     </Router>
   );
