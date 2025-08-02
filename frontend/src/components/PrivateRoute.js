@@ -1,8 +1,10 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 
 const PrivateRoute = ({ children, userCount }) => {
-  if (userCount === 0) {
+  const location = useLocation();
+
+  if (userCount === 0 && location.pathname !== '/onboarding') {
     return <Navigate to="/onboarding" />;
   }
 
