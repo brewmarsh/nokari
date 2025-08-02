@@ -27,4 +27,31 @@ export const api_unauthenticated = axios.create({
   },
 });
 
+api.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  async (error) => {
+    const originalRequest = error.config;
+    if (error.response.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      const refreshToken = localStorage.getItem('refresh_token');
+      if (refreshToken) {
+        try {
+          const res = await api_unauthenticated.post('/login/refresh/', {
+            refresh: refreshToken,
+          });
+          localStorage.setItem('access_token', res.data.access);
+          api.defaults.headers.common['Authorization'] =
+            'Bearer ' + res.data.access;
+          return api(originalRequest);
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;
