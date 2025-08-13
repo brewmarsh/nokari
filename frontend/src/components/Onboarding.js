@@ -26,10 +26,20 @@ const Onboarding = () => {
           password,
           is_superuser: true,
         });
-        const res = await api_unauthenticated.post('/login/', { email, password });
-        localStorage.setItem('access_token', res.data.access);
-        localStorage.setItem('refresh_token', res.data.refresh);
-        navigate('/');
+        try {
+          const res = await api_unauthenticated.post('/login/', { email, password });
+          localStorage.setItem('access_token', res.data.access);
+          localStorage.setItem('refresh_token', res.data.refresh);
+          navigate('/');
+        } catch (loginErr) {
+            if (loginErr.response) {
+                alert('Login after registration failed: ' + JSON.stringify(loginErr.response.data));
+            } else if (loginErr.request) {
+                alert('Login after registration failed: No response from server.');
+            } else {
+                alert('Login after registration failed: ' + loginErr.message);
+            }
+        }
       } catch (err) {
         if (err.response) {
           alert('Onboarding failed: ' + JSON.stringify(err.response.data));
