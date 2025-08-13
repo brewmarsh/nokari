@@ -17,9 +17,11 @@ class Command(BaseCommand):
             # Note: JobPosting requires a company, so we'll create dummy entries
             # This can be adjusted based on more specific requirements
             JobPosting.objects.get_or_create(
-                title=job_title,
-                company='Default Company',
-                description='Default description',
-                posting_date='2025-01-01'
+                link=f"http://default.com/{job_title.replace(' ', '-').lower()}",
+                defaults={
+                    'title': job_title,
+                    'company': 'Default Company',
+                    'description': 'Default description',
+                }
             )
             self.stdout.write(self.style.SUCCESS(f'Successfully added job title "{job_title}"'))
