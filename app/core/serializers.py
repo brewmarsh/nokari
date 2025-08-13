@@ -1,15 +1,16 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import JobPosting, Resume, CoverLetter, ScrapableDomain
+from .models import JobPosting, Resume, CoverLetter, ScrapableDomain, ScrapeHistory
 
 User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('email', 'password')
+        fields = ('id', 'username', 'email', 'password', 'role')
         extra_kwargs = {
             'password': {'write_only': True},
+            'role': {'read_only': True},
         }
 
     def create(self, validated_data):
@@ -38,4 +39,9 @@ class CoverLetterSerializer(serializers.ModelSerializer):
 class ScrapableDomainSerializer(serializers.ModelSerializer):
     class Meta:
         model = ScrapableDomain
+        fields = '__all__'
+
+class ScrapeHistorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ScrapeHistory
         fields = '__all__'

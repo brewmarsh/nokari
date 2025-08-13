@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import Jobs from './Jobs';
 import ScrapableDomains from './ScrapableDomains';
+import ScrapeHistory from './ScrapeHistory';
 import api from '../services/api';
 
-const Dashboard = () => {
+const Dashboard = ({ user }) => {
   const [scrapeStatus, setScrapeStatus] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -29,7 +30,12 @@ const Dashboard = () => {
       </button>
       {scrapeStatus && <p>{scrapeStatus}</p>}
       <Jobs />
-      <ScrapableDomains />
+      {user && user.role === 'admin' && (
+        <>
+          <ScrapableDomains />
+          <ScrapeHistory />
+        </>
+      )}
     </div>
   );
 };

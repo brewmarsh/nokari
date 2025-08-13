@@ -78,3 +78,17 @@ class ScrapableDomain(models.Model):
 
     def __str__(self):
         return self.domain
+
+class ScrapeHistory(models.Model):
+    STATUS_CHOICES = [
+        ('success', 'Success'),
+        ('failure', 'Failure'),
+    ]
+    timestamp = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES)
+    jobs_found = models.IntegerField(default=0)
+    details = models.TextField(blank=True)
+
+    def __str__(self):
+        return f"Scrape by {self.user} at {self.timestamp} - {self.status}"

@@ -4,10 +4,26 @@ import Login from './components/Login';
 import Register from './components/Register';
 import Dashboard from './components/Dashboard';
 import Onboarding from './components/Onboarding';
-import { api_unauthenticated } from './services/api';
+import api, { api_unauthenticated } from './services/api';
 
 function App() {
   const [userCount, setUserCount] = useState(null);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const token = localStorage.getItem('access_token');
+      if (token) {
+        try {
+          const res = await api.get('/me/');
+          setUser(res.data);
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    };
+    fetchUser();
+  }, []);
 
   useEffect(() => {
     const checkUserCount = async () => {
@@ -45,7 +61,7 @@ function App() {
         <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/" element={<Dashboard />} />
+        <Route path="/" element={<Dashboard user={user} />} />
       </Routes>
     </Router>
   );
