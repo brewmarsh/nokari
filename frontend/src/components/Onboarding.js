@@ -26,7 +26,10 @@ const Onboarding = () => {
           password,
           is_superuser: true,
         });
-        navigate('/login');
+        const res = await api_unauthenticated.post('/login/', { email, password });
+        localStorage.setItem('access_token', res.data.access);
+        localStorage.setItem('refresh_token', res.data.refresh);
+        navigate('/');
       } catch (err) {
         if (err.response) {
           alert('Onboarding failed: ' + JSON.stringify(err.response.data));

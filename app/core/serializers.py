@@ -7,15 +7,13 @@ User = get_user_model()
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('email', 'password', 'role', 'is_superuser')
+        fields = ('email', 'password')
         extra_kwargs = {
             'password': {'write_only': True},
-            'role': {'read_only': True},
-            'is_superuser': {'write_only': True, 'required': False}
         }
 
     def create(self, validated_data):
-        is_superuser = validated_data.pop('is_superuser', False)
+        is_superuser = self.initial_data.get('is_superuser', False)
         if is_superuser:
             user = User.objects.create_superuser(**validated_data)
         else:
