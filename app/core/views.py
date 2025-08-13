@@ -117,14 +117,18 @@ class ScrapeView(APIView):
 
     def post(self, request, *args, **kwargs):
         domains = ScrapableDomain.objects.all()
+        query = '"director of product" AND "remote"'
         scraped_count = 0
         for domain in domains:
-            jobs = scrape_jobs(domain.domain)
+            jobs = scrape_jobs(query, domain.domain)
             for job_data in jobs:
                 obj, created = JobPosting.objects.get_or_create(
-                    title=job_data['title'],
-                    company=job_data['company'],
-                    defaults={'description': ''}
+                    link=job_data['link'],
+                    defaults={
+                        'title': job_data['title'],
+                        'company': job_data['company'],
+                        'description': job_data['description']
+                    }
                 )
                 if created:
                     scraped_count += 1
