@@ -25,7 +25,7 @@
 
 .job-card-actions button {
     background: none;
-    border: none;
+    border: 1px solid red; /* Debugging border */
     cursor: pointer;
     padding: 5px;
     border-radius: 50%;
