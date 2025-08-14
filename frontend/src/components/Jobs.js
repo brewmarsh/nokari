@@ -18,7 +18,7 @@ const Jobs = () => {
           search,
         },
       });
-      setJobs(res.data.results);
+      setJobs(res.data);
     } catch (err) {
       setError(err);
     }
