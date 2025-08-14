@@ -209,3 +209,18 @@ The refactoring tasks are prioritized as follows:
 
 **Plan:**
 *   Follow the detailed plan in the original `REFACTOR.md` to set up Dependabot.
+
+---
+
+## Known Linting Issues
+
+The following `flake8` errors could not be automatically fixed and should be addressed manually:
+
+- `app/core/urls.py:35:80: E501 line too long (80 > 79 characters)`
+
+The following `mypy` errors could not be automatically fixed and should be addressed manually:
+
+- `app/core/models.py:44: error: Cannot override class variable (previously declared on base class "AbstractUser") with instance variable`
+- `app/core/models.py:44: error: Incompatible types in assignment (expression has type "app.core.models.UserManager[Any]", base class "AbstractUser" defined the type as "django.contrib.auth.models.UserManager[User]")`
+
+The project is missing a large number of docstrings. Running `pydocstyle .` will show all the missing docstrings. These should be added to improve code quality and maintainability, following the Google Python Style Guide format as specified in `AGENTS.md`.

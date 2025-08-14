@@ -89,7 +89,7 @@ pyjwt==2.10.1
     # via djangorestframework-simplejwt
 pyparsing==3.2.3
     # via httplib2
-=python-json-logger==3.3.0
+python-json-logger==3.3.0
     # via -r requirements.in
 pyyaml==6.0.2
     # via

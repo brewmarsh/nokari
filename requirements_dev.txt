@@ -12,3 +12,8 @@ bump2version
 safety
 mkdocs
 mkdocs-material
+
+# Added for mypy support
+django-stubs
+djangorestframework-stubs
+sqlalchemy-stubs

@@ -1,94 +1,156 @@
+"""Core models for the Nokari application."""
+
+from __future__ import annotations
+
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
-from django.conf import settings
+
 
 class UserManager(BaseUserManager):
+    """A custom user manager for the User model."""
+
     def create_user(self, email, password=None, **extra_fields):
+        """
+        Create and save a User with the given email and password.
+
+        Args:
+            email (str): The user's email address.
+            password (str, optional): The user's password. Defaults to None.
+            **extra_fields: Additional fields to pass to the User model.
+
+        Returns:
+            User: The created user.
+        """
         if not email:
-            raise ValueError('The Email field must be set')
+            raise ValueError("The Email field must be set")
         email = self.normalize_email(email)
-        if 'username' not in extra_fields or not extra_fields['username']:
-            extra_fields['username'] = email
-        if 'role' not in extra_fields:
-            extra_fields['role'] = 'user'
+        if "username" not in extra_fields or not extra_fields["username"]:
+            extra_fields["username"] = email
+        if "role" not in extra_fields:
+            extra_fields["role"] = "user"
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
     def create_superuser(self, email, password=None, **extra_fields):
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('role', 'admin')
+        """
+        Create and save a SuperUser with the given email and password.
 
-        if extra_fields.get('is_staff') is not True:
-            raise ValueError('Superuser must have is_staff=True.')
-        if extra_fields.get('is_superuser') is not True:
-            raise ValueError('Superuser must have is_superuser=True.')
+        Args:
+            email (str): The user's email address.
+            password (str, optional): The user's password. Defaults to None.
+            **extra_fields: Additional fields to pass to the User model.
+
+        Returns:
+            User: The created superuser.
+        """
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
+        extra_fields.setdefault("role", "admin")
+
+        if extra_fields.get("is_staff") is not True:
+            raise ValueError("Superuser must have is_staff=True.")
+        if extra_fields.get("is_superuser") is not True:
+            raise ValueError("Superuser must have is_superuser=True.")
 
         return self.create_user(email, password, **extra_fields)
 
-class User(AbstractUser):
-    username = models.CharField(max_length=150, unique=True, null=True, blank=True)
-    email = models.EmailField(unique=True)
-    role = models.CharField(max_length=10, choices=[('admin', 'Admin'), ('user', 'User')])
 
-    USERNAME_FIELD = 'email'
+class User(AbstractUser):
+    """A custom user model that uses email as the unique identifier."""
+
+    username = models.CharField(max_length=150, unique=True, blank=True)
+    email = models.EmailField(unique=True)
+    role = models.CharField(
+        max_length=10, choices=[("admin", "Admin"), ("user", "User")]
+    )
+
+    USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
-    objects = UserManager()
+    objects: UserManager = UserManager()
 
     class Meta:
+        """Meta options for the User model."""
+
         verbose_name = "User"
         verbose_name_plural = "Users"
 
     def __str__(self):
+        """Return the email of the user."""
         return self.email
 
+
 class JobPosting(models.Model):
+    """A model to store job postings."""
+
     link = models.URLField(primary_key=True)
     company = models.CharField(max_length=255)
     title = models.CharField(max_length=255)
-    description = models.TextField(default='')
+    description = models.TextField(default="")
     confidence_score = models.FloatField(default=0)
 
     def __str__(self):
+        """Return the title and company of the job posting."""
         return f"{self.title} at {self.company}"
 
+
 class Resume(models.Model):
+    """A model to store user resumes."""
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    name = models.CharField(max_length=255, default='default_resume_name')
-    file = models.FileField(upload_to='resumes/')
+    name = models.CharField(max_length=255, default="default_resume_name")
+    file = models.FileField(upload_to="resumes/")
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
+        """Return the name of the resume."""
         return self.name
+
 
 class CoverLetter(models.Model):
+    """A model to store user cover letters."""
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    name = models.CharField(max_length=255, default='default_cover_letter_name')
-    file = models.FileField(upload_to='cover_letters/')
+    name = models.CharField(max_length=255, default="default_cover_letter_name")
+    file = models.FileField(upload_to="cover_letters/")
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
+        """Return the name of the cover letter."""
         return self.name
 
+
 class ScrapableDomain(models.Model):
+    """A model to store domains that can be scraped for jobs."""
+
     domain = models.CharField(max_length=255, unique=True)
 
     def __str__(self):
+        """Return the domain name."""
         return self.domain
 
+
 class ScrapeHistory(models.Model):
+    """A model to store the history of scraping tasks."""
+
     STATUS_CHOICES = [
-        ('success', 'Success'),
-        ('failure', 'Failure'),
+        ("success", "Success"),
+        ("failure", "Failure"),
     ]
     timestamp = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+    )
     status = models.CharField(max_length=10, choices=STATUS_CHOICES)
     jobs_found = models.IntegerField(default=0)
     details = models.TextField(blank=True)
 
     def __str__(self):
+        """Return a string representation of the scrape history."""
         return f"Scrape by {self.user} at {self.timestamp} - {self.status}"

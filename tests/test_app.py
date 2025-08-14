@@ -1,7 +1,8 @@
 import unittest
 import json
 from backend.app import app, db
-from backend.models import User, Resume, CoverLetter
+from backend.models import User
+
 
 class AppTestCase(unittest.TestCase):
     def setUp(self):
@@ -16,36 +17,55 @@ class AppTestCase(unittest.TestCase):
         self.app_context.pop()
 
     def test_create_user(self):
-        response = self.app.post('/users',
-                                 data=json.dumps({'email': 'test@example.com', 'role': 'user'}),
-                                 content_type='application/json')
+        response = self.app.post(
+            "/users",
+            data=json.dumps({"email": "test@example.com", "role": "user"}),
+            content_type="application/json",
+        )
         self.assertEqual(response.status_code, 201)
         data = json.loads(response.data)
-        self.assertEqual(data['email'], 'test@example.com')
+        self.assertEqual(data["email"], "test@example.com")
 
     def test_create_resume(self):
-        user = User(email='test@example.com', role='user')
+        user = User(email="test@example.com", role="user")
         db.session.add(user)
         db.session.commit()
 
-        response = self.app.post('/resumes',
-                                 data=json.dumps({'name': 'test_resume', 'file': 'resumes/test.pdf', 'user_id': user.id}),
-                                 content_type='application/json')
+        response = self.app.post(
+            "/resumes",
+            data=json.dumps(
+                {
+                    "name": "test_resume",
+                    "file": "resumes/test.pdf",
+                    "user_id": user.id,
+                }
+            ),
+            content_type="application/json",
+        )
         self.assertEqual(response.status_code, 201)
         data = json.loads(response.data)
-        self.assertEqual(data['name'], 'test_resume')
+        self.assertEqual(data["name"], "test_resume")
 
     def test_create_cover_letter(self):
-        user = User(email='test@example.com', role='user')
+        user = User(email="test@example.com", role="user")
         db.session.add(user)
         db.session.commit()
 
-        response = self.app.post('/cover-letters',
-                                 data=json.dumps({'name': 'test_cover_letter', 'file': 'cover_letters/test.pdf', 'user_id': user.id}),
-                                 content_type='application/json')
+        response = self.app.post(
+            "/cover-letters",
+            data=json.dumps(
+                {
+                    "name": "test_cover_letter",
+                    "file": "cover_letters/test.pdf",
+                    "user_id": user.id,
+                }
+            ),
+            content_type="application/json",
+        )
         self.assertEqual(response.status_code, 201)
         data = json.loads(response.data)
-        self.assertEqual(data['name'], 'test_cover_letter')
+        self.assertEqual(data["name"], "test_cover_letter")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()
