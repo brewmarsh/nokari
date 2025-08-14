@@ -27,4 +27,5 @@ urlpatterns = [
     path('scrape-history/', ScrapeHistoryView.as_view(), name='scrape_history'),
     path('test/', test_page, name='test_page'),
     path('user-count/', UserCountView.as_view(), name='user_count'),
+    path('health/', HealthCheckView.as_view(), name='health_check'),
 ]
