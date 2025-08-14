@@ -8,7 +8,7 @@ WORKDIR /app
 COPY . /app
 
 # Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+    RUN apt-get update --allow-insecure-repositories && apt-get install -y postgresql-client && pip install --no-cache-dir -r requirements.txt && apt-get clean
 
 # Make port 8000 available to the world outside this container
 EXPOSE 8000
@@ -17,4 +17,4 @@ EXPOSE 8000
 ENV NAME World
 
 # Run app.py when the container launches
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "nokari.wsgi"]
+CMD ["sh", "-c", "python manage.py migrate && python manage.py load_initial_data && gunicorn nokari.wsgi:application --bind 0.0.0.0:8000"]

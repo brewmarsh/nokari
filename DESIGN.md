@@ -1,8 +1,8 @@
 # Design Decisions
 
-## Web Scraping Tool
+## Job Search Engine
 
-We will use **Beautiful Soup** for web scraping. It is a lightweight and easy-to-use library that is well-suited for parsing HTML and XML documents. It is also well-documented and has a large community, which will be helpful if we run into any issues.
+Instead of direct web scraping, we will use the **Google Custom Search API** to find job postings. This approach is more robust and less likely to break if the target websites change their HTML structure. It leverages Google's powerful search capabilities to find relevant job postings across specified domains.
 
 ## Resume Matching Model
 

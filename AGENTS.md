@@ -27,6 +27,7 @@ This project consists of a Django backend and a React frontend.
 ### Backend
 *   Follow the PEP 8 style guide for Python.
 *   Use a linter like `flake8` or `pylint` to check for style issues.
+*   Run `black .` and `flake8 .` before submitting any changes to the backend.
 *   All public functions and classes must have comprehensive docstrings using the Google Python Style Guide format.
 *   All configuration data must be validated using `voluptuous` schemas.
 *   Define constants in `custom_components/meraki_ha/const.py`.

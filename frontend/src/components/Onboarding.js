@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api_unauthenticated } from '../services/api';
 
-const Register = () => {
+const Onboarding = ({ onOnboardingSuccess }) => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -24,19 +24,30 @@ const Register = () => {
         await api_unauthenticated.post('/register/', {
           email,
           password,
+          is_superuser: true,
         });
-        navigate('/login');
+        try {
+          const res = await api_unauthenticated.post('/login/', { email, password });
+          localStorage.setItem('access_token', res.data.access);
+          localStorage.setItem('refresh_token', res.data.refresh);
+          onOnboardingSuccess();
+          navigate('/');
+        } catch (loginErr) {
+            if (loginErr.response) {
+                alert('Login after registration failed: ' + JSON.stringify(loginErr.response.data));
+            } else if (loginErr.request) {
+                alert('Login after registration failed: No response from server.');
+            } else {
+                alert('Login after registration failed: ' + loginErr.message);
+            }
+        }
       } catch (err) {
         if (err.response) {
-          // The request was made and the server responded with a status code
-          // that falls out of the range of 2xx
-          alert('Registration failed: ' + JSON.stringify(err.response.data));
+          alert('Onboarding failed: ' + JSON.stringify(err.response.data));
         } else if (err.request) {
-          // The request was made but no response was received
-          alert('Registration failed: No response from server.');
+          alert('Onboarding failed: No response from server.');
         } else {
-          // Something happened in setting up the request that triggered an Error
-          alert('Registration failed: ' + err.message);
+          alert('Onboarding failed: ' + err.message);
         }
       }
     }
@@ -44,7 +55,7 @@ const Register = () => {
 
   return (
     <div>
-      <h1>Register</h1>
+      <h1>Welcome! Create a Superuser Account</h1>
       <form onSubmit={onSubmit}>
         <div>
           <input
@@ -76,10 +87,10 @@ const Register = () => {
             required
           />
         </div>
-        <button type="submit">Register</button>
+        <button type="submit">Create Superuser</button>
       </form>
     </div>
   );
 };
 
-export default Register;
+export default Onboarding;

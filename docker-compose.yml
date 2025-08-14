@@ -6,14 +6,20 @@ services:
     volumes:
       - .:/app
       - logs:/var/log/
+    env_file:
+      - ./.env
+    command: ["./wait-for-it.sh", "db", "sh", "-c", "python manage.py migrate && python manage.py load_initial_data && gunicorn nokari.wsgi:application --bind 0.0.0.0:8000"]
     depends_on:
-      - db
+      db:
+        condition: service_healthy
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     volumes:
       - ./frontend:/app
+    ports:
+      - "${WEB_APP_PORT:-3000}:80"
     depends_on:
       - backend
   db:
@@ -22,6 +28,11 @@ services:
       - postgres_data:/var/lib/postgresql/data/
     env_file:
       - ./.env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nokari"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:

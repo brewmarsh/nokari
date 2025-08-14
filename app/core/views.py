@@ -1,13 +1,22 @@
 from rest_framework import generics
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
-from .serializers import UserSerializer, JobPostingSerializer, ResumeSerializer, CoverLetterSerializer, ScrapableDomainSerializer
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from .permissions import IsAdmin
+from .serializers import UserSerializer, JobPostingSerializer, ResumeSerializer, CoverLetterSerializer, ScrapableDomainSerializer, ScrapeHistorySerializer
 from django.contrib.auth import get_user_model
-from .models import JobPosting, Resume, CoverLetter, ScrapableDomain
-from .matcher import match_resume
+from .models import JobPosting, Resume, CoverLetter, ScrapableDomain, ScrapeHistory
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.shortcuts import render
+from .scraper import scrape_jobs
 
 User = get_user_model()
+
+class MeView(generics.RetrieveAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
 
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -106,5 +115,58 @@ class GenerateCoverLetterView(APIView):
 
 class ScrapableDomainView(generics.ListCreateAPIView):
     serializer_class = ScrapableDomainSerializer
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated, IsAdmin]
     queryset = ScrapableDomain.objects.all()
+
+
+class ScrapeHistoryView(generics.ListAPIView):
+    serializer_class = ScrapeHistorySerializer
+    permission_classes = [IsAdmin]
+    queryset = ScrapeHistory.objects.all().order_by('-timestamp')
+
+class ScrapeView(APIView):
+    permission_classes = [IsAdmin]
+
+    def post(self, request, *args, **kwargs):
+        scraped_count = 0
+        try:
+            domains = ScrapableDomain.objects.all()
+            query = '"director of product" AND "remote"'
+            for domain in domains:
+                jobs = scrape_jobs(query, domain.domain)
+                for job_data in jobs:
+                    obj, created = JobPosting.objects.get_or_create(
+                        link=job_data['link'],
+                        defaults={
+                            'title': job_data['title'],
+                            'company': job_data['company'],
+                            'description': job_data['description']
+                        }
+                    )
+                    if created:
+                        scraped_count += 1
+            ScrapeHistory.objects.create(
+                user=request.user,
+                status='success',
+                jobs_found=scraped_count
+            )
+            return Response({'detail': f'Scraped {scraped_count} new jobs.'})
+        except Exception as e:
+            ScrapeHistory.objects.create(
+                user=request.user,
+                status='failure',
+                details=str(e)
+            )
+            return Response({'detail': f'An error occurred: {e}'}, status=500)
+
+
+def test_page(request):
+    User = get_user_model()
+    user = User.objects.first()
+    return render(request, 'test_page.html', {'user': user})
+
+class UserCountView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        return Response({'user_count': User.objects.count()})

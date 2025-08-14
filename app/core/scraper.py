@@ -1,27 +1,33 @@
-import requests
-from bs4 import BeautifulSoup
+import os
+from googleapiclient.discovery import build
 
-def scrape_jobs(url):
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        print(f"Error fetching url: {e}")
-        return []
+class ScraperException(Exception):
+    pass
 
-    soup = BeautifulSoup(response.content, 'html.parser')
+def scrape_jobs(query, domain):
+    api_key = os.environ.get('GOOGLE_API_KEY')
+    search_engine_id = os.environ.get('CUSTOM_SEARCH_ENGINE_ID')
+
+    if not api_key or not search_engine_id:
+        raise ScraperException("GOOGLE_API_KEY and CUSTOM_SEARCH_ENGINE_ID must be set in the environment.")
+
+    service = build("customsearch", "v1", developerKey=api_key)
+
+    search_query = f'{query} site:{domain}'
+
+    result = service.cse().list(
+        q=search_query,
+        cx=search_engine_id,
+        num=10,  # Number of results to return
+    ).execute()
+
     jobs = []
-
-    # This is a placeholder for the actual scraping logic.
-    # You will need to inspect the HTML of the target website to determine the correct selectors.
-    for job_element in soup.find_all('div', class_='job-listing'):
-        title_element = job_element.find('h2', class_='job-title')
-        company_element = job_element.find('div', class_='company-name')
-
-        if title_element and company_element:
+    if 'items' in result:
+        for item in result['items']:
             jobs.append({
-                'title': title_element.text.strip(),
-                'company': company_element.text.strip(),
+                'title': item.get('title'),
+                'link': item.get('link'),
+                'company': item.get('pagemap', {}).get('metatags', [{}])[0].get('og:site_name', ''),
+                'description': item.get('snippet'),
             })
-
     return jobs
