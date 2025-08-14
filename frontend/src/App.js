@@ -42,34 +42,40 @@ function App() {
     checkUserCount();
   }, []);
 
-  if (userCount === null) {
-    return <div>Loading...</div>;
-  }
+  const AppRoutes = () => {
+    if (userCount === null) {
+      return <div>Loading...</div>;
+    }
 
-  if (userCount === 0 && window.location.pathname !== '/onboarding') {
-    return (
-      <Router>
+    if (userCount === 0) {
+      return (
         <Routes>
-          <Route path="/*" element={<Navigate to="/onboarding" />} />
           <Route path="/onboarding" element={<Onboarding onOnboardingSuccess={handleOnboardingSuccess} />} />
+          <Route path="/*" element={<Navigate to="/onboarding" />} />
         </Routes>
-      </Router>
+      );
+    }
+
+    return (
+        <>
+          <nav>
+            <Link to="/login">Login</Link> | <Link to="/register">Register</Link> | <Link to="/">Dashboard</Link>
+          </nav>
+          <div className="container">
+            <Routes>
+              <Route path="/onboarding" element={<Onboarding onOnboardingSuccess={handleOnboardingSuccess} />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/" element={<Dashboard user={user} />} />
+            </Routes>
+          </div>
+        </>
     );
-  }
+  };
 
   return (
     <Router>
-      <nav>
-        <Link to="/login">Login</Link> | <Link to="/register">Register</Link> | <Link to="/">Dashboard</Link>
-      </nav>
-      <div className="container">
-        <Routes>
-          <Route path="/onboarding" element={<Onboarding onOnboardingSuccess={handleOnboardingSuccess} />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/" element={<Dashboard user={user} />} />
-        </Routes>
-      </div>
+      <AppRoutes />
     </Router>
   );
 }
