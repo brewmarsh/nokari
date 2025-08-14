@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+from rest_framework_simplejwt.exceptions import InvalidToken
 from .models import JobPosting, Resume, CoverLetter, ScrapableDomain, ScrapeHistory
 
 User = get_user_model()
@@ -40,6 +42,13 @@ class ScrapableDomainSerializer(serializers.ModelSerializer):
     class Meta:
         model = ScrapableDomain
         fields = '__all__'
+
+class CustomTokenRefreshSerializer(TokenRefreshSerializer):
+    def validate(self, attrs):
+        try:
+            return super().validate(attrs)
+        except User.DoesNotExist:
+            raise InvalidToken("User not found")
 
 class ScrapeHistorySerializer(serializers.ModelSerializer):
     class Meta:
