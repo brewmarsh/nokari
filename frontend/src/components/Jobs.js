@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
+import './Jobs.css';
 
 const Jobs = () => {
   const [jobs, setJobs] = useState([]);
@@ -54,13 +55,15 @@ const Jobs = () => {
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
-      {jobs.map((job) => (
-        <div key={job.link}>
-          <h2><a href={job.link} target="_blank" rel="noopener noreferrer">{job.title}</a></h2>
-          <p>{job.company}</p>
-          <p>{job.description}</p>
-        </div>
-      ))}
+      <div className="jobs-container">
+        {jobs.map((job) => (
+          <div key={job.link} className="job-card">
+            <h2><a href={job.link} target="_blank" rel="noopener noreferrer">{job.title}</a></h2>
+            <p className="company">{job.company}</p>
+            <p className="description">{job.description}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

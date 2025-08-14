@@ -5,6 +5,7 @@ import Register from './components/Register';
 import Dashboard from './components/Dashboard';
 import Onboarding from './components/Onboarding';
 import api, { api_unauthenticated } from './services/api';
+import './App.css';
 
 function App() {
   const [userCount, setUserCount] = useState(null);
@@ -61,12 +62,14 @@ function App() {
       <nav>
         <Link to="/login">Login</Link> | <Link to="/register">Register</Link> | <Link to="/">Dashboard</Link>
       </nav>
-      <Routes>
-        <Route path="/onboarding" element={<Onboarding onOnboardingSuccess={handleOnboardingSuccess} />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/" element={<Dashboard user={user} />} />
-      </Routes>
+      <div className="container">
+        <Routes>
+          <Route path="/onboarding" element={<Onboarding onOnboardingSuccess={handleOnboardingSuccess} />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/" element={<Dashboard user={user} />} />
+        </Routes>
+      </div>
     </Router>
   );
 }

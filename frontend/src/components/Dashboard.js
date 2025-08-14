@@ -3,6 +3,7 @@ import Jobs from './Jobs';
 import ScrapableDomains from './ScrapableDomains';
 import ScrapeHistory from './ScrapeHistory';
 import api from '../services/api';
+import './Dashboard.css';
 
 const Dashboard = ({ user }) => {
   const [scrapeStatus, setScrapeStatus] = useState('');
@@ -27,18 +28,21 @@ const Dashboard = ({ user }) => {
   };
 
   return (
-    <div>
-      <h1>Dashboard</h1>
-      <button onClick={handleScrape} disabled={loading}>
-        {loading ? 'Scraping...' : 'Scrape Jobs'}
-      </button>
+    <div className="dashboard">
+      <div className="dashboard-header">
+        <h1>Dashboard</h1>
+        <button onClick={handleScrape} disabled={loading}>
+          {loading ? 'Scraping...' : 'Scrape Jobs'}
+        </button>
+      </div>
       {scrapeStatus && <p>{scrapeStatus}</p>}
       <Jobs />
       {user && user.role === 'admin' && (
-        <>
+        <div className="admin-section">
+          <h2>Admin Tools</h2>
           <ScrapableDomains />
           <ScrapeHistory />
-        </>
+        </div>
       )}
     </div>
   );
