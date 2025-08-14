@@ -1,225 +1,133 @@
 # Refactoring and Improvement Plan
 
-This document outlines potential future improvements for the project, broken down into actionable plans that can be executed by an AI agent.
+This document outlines potential future improvements for the project, broken down into actionable plans that can be executed by an AI agent. The tasks are prioritized based on their impact on the project's security, reliability, and maintainability.
 
 ---
 
-## 1. Expand Test Coverage
+## Prioritization
 
-**Goal:** Increase confidence in code quality and prevent regressions by adding comprehensive unit and integration tests for the backend and frontend, aiming for at least 80% code coverage as per `AGENTS.md`.
-
-### Backend Plan (Django/Pytest)
-1.  **Analyze Application:**
-    *   **Action:** Use `ls -R app/` to list all files in the Django application.
-    *   **Action:** Read `app/models.py`, `app/views.py`, `app/serializers.py`, and `app/urls.py` to identify key business logic, models, and API endpoints.
-    *   **Goal:** Create a list of test cases covering all public functions and API endpoints.
-
-2.  **Configure Test Suite:**
-    *   **Action:** Create a `pytest.ini` file in the root directory.
-    *   **Content:**
-        ```ini
-        [pytest]
-        DJANGO_SETTINGS_MODULE = nokari.settings
-        python_files = tests.py test_*.py *_tests.py
-        ```
-    *   **Action:** Add `pytest-django` and `coverage` to `requirements_dev.txt`.
-
-3.  **Write Model Tests:**
-    *   **Action:** Create `app/core/tests/test_models.py`.
-    *   **Implementation:** For each model in `app/core/models.py`, write a `TestCase` that validates all fields, properties, and custom methods. Ensure model instances can be created, saved, and deleted successfully.
-
-4.  **Write API Tests:**
-    *   **Action:** Create `app/core/tests/test_views.py`.
-    *   **Implementation:** Use Django REST Framework's `APITestCase`. For each endpoint in `app/core/urls.py`, write tests that cover:
-        *   GET, POST, PUT, DELETE methods as appropriate.
-        *   Successful responses (200, 201, 204 status codes).
-        *   Authentication and permission checks (401, 403 status codes).
-        *   Invalid input and error handling (400, 404 status codes).
-
-5.  **Integrate Code Coverage:**
-    *   **Action:** Modify the `pytest` command in the `.github/workflows/python-lint.yaml` workflow.
-    *   **Change:**
-        ```yaml
-        # From:
-        run: pytest
-        # To:
-        run: |
-          pip install coverage
-          coverage run -m pytest
-          coverage report --fail-under=80
-        ```
-    *   **(Optional) Action:** Add a step to upload the coverage report.
-        ```yaml
-        - name: Upload coverage to Codecov
-          uses: codecov/codecov-action@v3
-          with:
-            token: ${{ secrets.CODECOV_TOKEN }}
-        ```
-
-### Frontend Plan (React/Jest)
-1.  **Configure Coverage:**
-    *   **Action:** Modify the `test` script in `frontend/package.json`.
-    *   **Change:**
-        ```json
-        "test": "react-scripts test --coverage --watchAll=false"
-        ```
-    *   **Action:** Add a `jest` block to `frontend/package.json` to enforce coverage.
-        ```json
-        "jest": {
-          "coverageThreshold": {
-            "global": {
-              "branches": 80,
-              "functions": 80,
-              "lines": 80,
-              "statements": 80
-            }
-          }
-        }
-        ```
-
-2.  **Write Component Tests:**
-    *   **Action:** For each component in `frontend/src/components`, create a corresponding `*.test.js` file.
-    *   **Implementation:** Use `@testing-library/react` to render the component and assert that it displays correctly with various props. Simulate user events (`userEvent.click`, `userEvent.type`) to test interactivity.
-
-3.  **Create Frontend CI Workflow:**
-    *   **Action:** Create a new file `.github/workflows/frontend-ci.yaml`.
-    *   **Content:**
-        ```yaml
-        name: Frontend CI
-        on:
-          push:
-            branches: [ main ]
-          pull_request:
-            branches: [ main ]
-        jobs:
-          test:
-            runs-on: ubuntu-latest
-            defaults:
-              run:
-                working-directory: ./frontend
-            steps:
-              - uses: actions/checkout@v3
-              - name: Use Node.js 18
-                uses: actions/setup-node@v3
-                with:
-                  node-version: 18
-              - run: npm ci
-              - run: npm test
-        ```
+The refactoring tasks are prioritized as follows:
+1.  **Security:** Addressing security vulnerabilities and hardening the application is the highest priority.
+2.  **Reliability:** Ensuring the application is stable, resilient, and performs as expected.
+3.  **Maintainability:** Improving the codebase, documentation, and development processes to make the project easier to manage and extend.
 
 ---
 
-## 2. Add Project Documentation
+## Phase 1: Security Hardening (High Priority)
 
-**Goal:** Improve project maintainability and make it easier for new contributors to get started by creating and deploying comprehensive documentation using MkDocs.
+### 1.1. Pin Dependencies
 
-### Plan
-1.  **Add Dependencies:**
-    *   **Action:** Add `mkdocs` and `mkdocs-material` to `requirements_dev.txt`.
+**Goal:** Prevent security vulnerabilities and ensure reproducible builds by pinning all dependencies to specific versions.
 
-2.  **Create `docs/` Directory and Content:**
-    *   **Action:** `mkdir docs`
-    *   **Action:** Create the following files with placeholder content:
-        *   `docs/index.md` (Project overview)
-        *   `docs/development-setup.md` (How to set up the local environment)
-        *   `docs/architecture.md` (High-level architecture overview)
+**Plan:**
+1.  **Backend (pip):**
+    *   Create a `requirements.in` file listing the top-level dependencies.
+    *   Use `pip-tools` to compile `requirements.in` into a fully-pinned `requirements.txt` file.
+    *   Update the Dockerfile to use the new `requirements.txt`.
+2.  **Frontend (npm):**
+    *   Run `npm audit` to identify and fix any known vulnerabilities.
+    *   Ensure that `package-lock.json` is committed to the repository and used for installations (`npm ci`).
 
-3.  **Configure MkDocs:**
-    *   **Action:** Create `mkdocs.yml` in the root directory.
-    *   **Content:**
-        ```yaml
-        site_name: Nokari Project
-        theme:
-          name: material
-        nav:
-          - 'Overview': 'index.md'
-          - 'Development Setup': 'development-setup.md'
-          - 'Architecture': 'architecture.md'
-        ```
+### 1.2. Automate Vulnerability Scanning
 
-4.  **Create Deployment Workflow:**
-    *   **Action:** Create `.github/workflows/mkdocs-deploy.yaml`.
-    *   **Content:**
-        ```yaml
-        name: Deploy Documentation
-        on:
-          push:
-            branches:
-              - main
-        jobs:
-          deploy:
-            runs-on: ubuntu-latest
-            steps:
-              - uses: actions/checkout@v3
-              - name: Set up Python
-                uses: actions/setup-python@v4
-                with:
-                  python-version: 3.9
-              - name: Install dependencies
-                run: pip install -r requirements_dev.txt
-              - name: Deploy to GitHub Pages
-                run: mkdocs gh-deploy --force
-        ```
+**Goal:** Proactively identify and address security vulnerabilities in dependencies.
 
----
+**Plan:**
+1.  **Backend:**
+    *   Add a step to the `.github/workflows/python-lint.yaml` workflow to run `safety` against `requirements.txt`.
+2.  **Frontend:**
+    *   Add a step to a new frontend CI workflow to run `npm audit --audit-level=high`.
 
-## 3. Enhance Docker Workflow
+### 1.3. Secure Django Settings
 
-**Goal:** Improve consistency between environments and optimize Docker images.
+**Goal:** Harden the Django application by configuring security settings appropriately.
 
-### Plan
-1.  **Optimize with Multi-Stage Builds:**
-    *   **Action:** Refactor `Dockerfile.backend` to use a `builder` stage for installing dependencies and a slim final stage for the runtime.
-    *   **Action:** Refactor `frontend/Dockerfile` to use a `node` stage for `npm run build` and a final `nginx` stage to serve the static files.
+**Plan:**
+1.  **Review `nokari/settings.py`:**
+    *   Ensure `SECRET_KEY` is loaded from environment variables and not hardcoded.
+    *   Ensure `DEBUG` is set to `False` in production.
+    *   Configure `ALLOWED_HOSTS` properly.
+    *   Review middleware for security best practices.
 
-2.  **Integrate Testing into Docker:**
-    *   **Action:** Add a `test` service to `docker-compose.yml`.
-    *   **Implementation:** The service will use the backend Dockerfile, but override the command to run `pytest`.
-        ```yaml
-        services:
-          # ... other services
-          backend-tests:
-            build:
-              context: .
-              dockerfile: Dockerfile.backend
-            command: ["pytest"]
-            # ... env vars and volumes
-        ```
+### 1.4. Harden Docker Images
 
-3.  **Enable Live-Reloading:**
-    *   **Action:** Modify the `backend` and `frontend` services in `docker-compose.yml`.
-    *   **Implementation:** Add volume mounts to map the host source code directories to the container directories.
-        ```yaml
-        volumes:
-          - .:/app  # For backend
-          - ./frontend:/app/frontend # For frontend
-        ```
+**Goal:** Improve the security of the Docker images.
+
+**Plan:**
+1.  **Run as Non-Root User:**
+    *   Update `Dockerfile.backend` and `frontend/Dockerfile` to create and use a non-root user.
+2.  **Multi-Stage Builds:**
+    *   Refactor the Dockerfiles to use multi-stage builds to reduce the size and attack surface of the final images.
+
+### 1.5. Fix Frontend Directory Structure
+
+**Goal:** Rebuild the frontend directory to follow a standard React project structure, enabling proper dependency management and vulnerability scanning.
+
+**Problem:** The `frontend` directory has a deeply nested and corrupted structure (e.g., `frontend/frontend/frontend/...`), which prevents `npm` commands from running correctly.
+
+**Plan:**
+1.  **Create a new React application:**
+    *   `npx create-react-app temp-frontend`
+2.  **Copy existing source code:**
+    *   `cp -R frontend/src/* temp-frontend/src/`
+    *   `cp -R frontend/public/* temp-frontend/public/`
+3.  **Copy other essential files:**
+    *   Copy any other necessary files, such as `.gitignore`, `nginx.conf`, and `Dockerfile`, into the `temp-frontend` directory.
+4.  **Replace the old `frontend` directory:**
+    *   `rm -rf frontend`
+    *   `mv temp-frontend frontend`
+5.  **Re-run security checks:**
+    *   `cd frontend && npm audit`
 
 ---
 
-## 4. Automate Dependency Updates
+## Phase 2: Reliability Enhancements (Medium Priority)
 
-**Goal:** Enhance security and maintenance by automatically keeping dependencies up-to-date using Dependabot.
+### 2.1. Expand Test Coverage
 
-### Plan
-1.  **Create Dependabot Config:**
-    *   **Action:** Create the file `.github/dependabot.yml`.
-    *   **Content:**
-        ```yaml
-        version: 2
-        updates:
-          # Python dependencies
-          - package-ecosystem: "pip"
-            directory: "/"
-            schedule:
-              interval: "weekly"
-            target-branch: "main"
-          # Frontend dependencies
-          - package-ecosystem: "npm"
-            directory: "/frontend"
-            schedule:
-              interval: "weekly"
-            target-branch: "main"
-        ```
-2.  **Commit and Activate:**
-    *   **Action:** Add, commit, and push the `.github/dependabot.yml` file to the `main` branch. Dependabot will be activated automatically.
+**Goal:** Increase confidence in code quality and prevent regressions by adding comprehensive tests.
+
+**Plan:**
+*   Follow the detailed plan in the original `REFACTOR.md` to add unit and integration tests for the backend and frontend, aiming for at least 80% coverage.
+
+### 2.2. Implement Health Checks
+
+**Goal:** Improve the resilience of the application by adding health checks to the services.
+
+**Plan:**
+1.  **Add a health check endpoint to the Django application.**
+2.  **Add a `healthcheck` to the `backend` service in `docker-compose.yml`.**
+
+### 2.3. Improve Logging
+
+**Goal:** Implement a more robust logging solution to facilitate debugging and monitoring.
+
+**Plan:**
+1.  **Configure Django's logging framework in `nokari/settings.py` to output structured logs.**
+2.  **Consider sending logs to a centralized logging service in a production environment.**
+
+---
+
+## Phase 3: Maintainability Improvements (Low Priority)
+
+### 3.1. Enhance CI/CD Pipeline
+
+**Goal:** Automate quality checks and streamline the development process.
+
+**Plan:**
+1.  **Add linting and testing stages to the CI/CD workflows for both backend and frontend.**
+2.  **Consolidate Docker build and push steps into a single workflow.**
+
+### 3.2. Add Project Documentation
+
+**Goal:** Improve project maintainability by creating comprehensive documentation.
+
+**Plan:**
+*   Follow the detailed plan in the original `REFACTOR.md` to set up `mkdocs` and create initial documentation.
+
+### 3.3. Automate Dependency Updates
+
+**Goal:** Keep dependencies up-to-date automatically.
+
+**Plan:**
+*   Follow the detailed plan in the original `REFACTOR.md` to set up Dependabot.

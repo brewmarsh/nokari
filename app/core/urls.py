@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import MeView, RegisterView, JobPostingView, ResumeView, CoverLetterView, GenerateResumeView, GenerateCoverLetterView, ScrapableDomainView, ResumeDetailView, CoverLetterDetailView, test_page, ScrapeView, UserCountView, ScrapeHistoryView
+from .views import MeView, RegisterView, JobPostingView, ResumeView, CoverLetterView, GenerateResumeView, GenerateCoverLetterView, ScrapableDomainView, ResumeDetailView, CoverLetterDetailView, test_page, ScrapeView, UserCountView, ScrapeHistoryView, HealthCheckView
 from .admin_views import AdminMenuView
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -24,4 +24,5 @@ urlpatterns = [
     path('scrape-history/', ScrapeHistoryView.as_view(), name='scrape_history'),
     path('test/', test_page, name='test_page'),
     path('user-count/', UserCountView.as_view(), name='user_count'),
+    path('health/', HealthCheckView.as_view(), name='health_check'),
 ]

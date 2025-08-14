@@ -7,3 +7,6 @@ pydocstyle
 bandit
 pytest
 bump2version
+safety
+mkdocs
+mkdocs-material
