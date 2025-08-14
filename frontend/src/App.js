@@ -10,6 +10,10 @@ function App() {
   const [userCount, setUserCount] = useState(null);
   const [user, setUser] = useState(null);
 
+  const handleOnboardingSuccess = () => {
+    setUserCount(1); // Optimistically update user count
+  };
+
   useEffect(() => {
     const fetchUser = async () => {
       const token = localStorage.getItem('access_token');
@@ -46,7 +50,7 @@ function App() {
       <Router>
         <Routes>
           <Route path="/*" element={<Navigate to="/onboarding" />} />
-          <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/onboarding" element={<Onboarding onOnboardingSuccess={handleOnboardingSuccess} />} />
         </Routes>
       </Router>
     );
@@ -58,7 +62,7 @@ function App() {
         <Link to="/login">Login</Link> | <Link to="/register">Register</Link> | <Link to="/">Dashboard</Link>
       </nav>
       <Routes>
-        <Route path="/onboarding" element={<Onboarding />} />
+        <Route path="/onboarding" element={<Onboarding onOnboardingSuccess={handleOnboardingSuccess} />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/" element={<Dashboard user={user} />} />

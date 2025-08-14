@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api_unauthenticated } from '../services/api';
 
-const Onboarding = () => {
+const Onboarding = ({ onOnboardingSuccess }) => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -30,6 +30,7 @@ const Onboarding = () => {
           const res = await api_unauthenticated.post('/login/', { email, password });
           localStorage.setItem('access_token', res.data.access);
           localStorage.setItem('refresh_token', res.data.refresh);
+          onOnboardingSuccess();
           navigate('/');
         } catch (loginErr) {
             if (loginErr.response) {
