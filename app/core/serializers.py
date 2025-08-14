@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.exceptions import InvalidToken
-from .models import JobPosting, Resume, CoverLetter, ScrapableDomain, ScrapeHistory, UserJobInteraction, HiddenCompany
+from .models import JobPosting, Resume, CoverLetter, ScrapableDomain, ScrapeHistory, UserJobInteraction, HiddenCompany, SearchableJobTitle
 
 User = get_user_model()
 
@@ -65,4 +65,9 @@ class UserJobInteractionSerializer(serializers.ModelSerializer):
 class HiddenCompanySerializer(serializers.ModelSerializer):
     class Meta:
         model = HiddenCompany
+        fields = '__all__'
+
+class SearchableJobTitleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SearchableJobTitle
         fields = '__all__'

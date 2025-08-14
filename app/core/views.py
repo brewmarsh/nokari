@@ -1,9 +1,9 @@
-from rest_framework import generics, status
+from rest_framework import generics, status, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from .permissions import IsAdmin
-from .serializers import UserSerializer, JobPostingSerializer, ResumeSerializer, CoverLetterSerializer, ScrapableDomainSerializer, ScrapeHistorySerializer, UserJobInteractionSerializer, HiddenCompanySerializer
+from .serializers import UserSerializer, JobPostingSerializer, ResumeSerializer, CoverLetterSerializer, ScrapableDomainSerializer, ScrapeHistorySerializer, UserJobInteractionSerializer, HiddenCompanySerializer, SearchableJobTitleSerializer
 from django.contrib.auth import get_user_model
-from .models import JobPosting, Resume, CoverLetter, ScrapableDomain, ScrapeHistory, UserJobInteraction, HiddenCompany
+from .models import JobPosting, Resume, CoverLetter, ScrapableDomain, ScrapeHistory, UserJobInteraction, HiddenCompany, SearchableJobTitle
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import render
@@ -146,7 +146,13 @@ class ScrapeView(APIView):
         scraped_count = 0
         try:
             domains = ScrapableDomain.objects.all()
-            query = '"director of product" AND "remote"'
+            job_titles = SearchableJobTitle.objects.all()
+            if not job_titles:
+                return Response({'detail': 'No job titles to search for.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            query_parts = [f'"{title.title}"' for title in job_titles]
+            query = f'({" OR ".join(query_parts)}) AND "remote"'
+
             for domain in domains:
                 jobs = scrape_jobs(query, domain.domain)
                 for job_data in jobs:
@@ -209,6 +215,11 @@ class HideJobPostingView(APIView):
         interaction.save()
 
         return Response(status=status.HTTP_200_OK)
+
+class SearchableJobTitleViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAdmin]
+    serializer_class = SearchableJobTitleSerializer
+    queryset = SearchableJobTitle.objects.all()
 
 class HideCompanyView(APIView):
     permission_classes = [IsAuthenticated]

@@ -6,7 +6,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 from django.contrib.auth import get_user_model
-from .models import JobPosting, UserJobInteraction, HiddenCompany
+from .models import JobPosting, UserJobInteraction, HiddenCompany, SearchableJobTitle
 
 User = get_user_model()
 
@@ -150,6 +150,52 @@ class PinJobPostingViewTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['results'][0]['link'], self.job_posting2.link)
         self.assertEqual(response.data['results'][1]['link'], self.job_posting1.link)
+
+
+class SearchableJobTitleViewSetTest(APITestCase):
+    def setUp(self):
+        self.admin_user = User.objects.create_superuser(email='admin@example.com', password='password')
+        self.user = User.objects.create_user(email='user@example.com', password='password')
+        self.job_title1 = SearchableJobTitle.objects.create(title='Software Engineer')
+        self.job_title2 = SearchableJobTitle.objects.create(title='Product Manager')
+
+    def test_list_job_titles_as_admin(self):
+        self.client.force_authenticate(user=self.admin_user)
+        url = reverse('job_title-list')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+
+    def test_list_job_titles_as_user(self):
+        self.client.force_authenticate(user=self.user)
+        url = reverse('job_title-list')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_create_job_title_as_admin(self):
+        self.client.force_authenticate(user=self.admin_user)
+        url = reverse('job_title-list')
+        data = {'title': 'Data Scientist'}
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(SearchableJobTitle.objects.count(), 3)
+
+    def test_delete_job_title_as_admin(self):
+        self.client.force_authenticate(user=self.admin_user)
+        url = reverse('job_title-detail', kwargs={'pk': self.job_title1.pk})
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(SearchableJobTitle.objects.count(), 1)
+
+    @patch('app.core.views.scrape_jobs')
+    def test_scrape_view_uses_job_titles(self, mock_scrape_jobs):
+        self.client.force_authenticate(user=self.admin_user)
+        url = reverse('scrape')
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_scrape_jobs.assert_called()
+        expected_query = '("Software Engineer" OR "Product Manager") AND "remote"'
+        self.assertEqual(mock_scrape_jobs.call_args[0][0], expected_query)
 
 
 class ScraperTests(TestCase):

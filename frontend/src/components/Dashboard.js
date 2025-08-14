@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Jobs from './Jobs';
 import ScrapableDomains from './ScrapableDomains';
 import ScrapeHistory from './ScrapeHistory';
+import JobTitles from './JobTitles';
 import api from '../services/api';
 import './Dashboard.css';
 
@@ -40,6 +41,7 @@ const Dashboard = ({ user }) => {
       {user && user.role === 'admin' && (
         <div className="admin-section">
           <h2>Admin Tools</h2>
+          <JobTitles />
           <ScrapableDomains />
           <ScrapeHistory />
         </div>
