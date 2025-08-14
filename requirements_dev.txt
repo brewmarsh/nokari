@@ -1,0 +1,9 @@
+black
+ruff
+codespell
+flake8
+mypy
+pydocstyle
+bandit
+pytest
+bump2version
