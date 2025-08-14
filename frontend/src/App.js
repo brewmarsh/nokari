@@ -7,6 +7,37 @@ import Onboarding from './components/Onboarding';
 import api, { api_unauthenticated } from './services/api';
 import './App.css';
 
+const AppRoutes = ({ userCount, user, onOnboardingSuccess }) => {
+  if (userCount === null) {
+    return <div>Loading...</div>;
+  }
+
+  if (userCount === 0) {
+    return (
+      <Routes>
+        <Route path="/onboarding" element={<Onboarding onOnboardingSuccess={onOnboardingSuccess} />} />
+        <Route path="/*" element={<Navigate to="/onboarding" />} />
+      </Routes>
+    );
+  }
+
+  return (
+      <>
+        <nav>
+          <Link to="/login">Login</Link> | <Link to="/register">Register</Link> | <Link to="/">Dashboard</Link>
+        </nav>
+        <div className="container">
+          <Routes>
+            <Route path="/onboarding" element={<Onboarding onOnboardingSuccess={onOnboardingSuccess} />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/" element={<Dashboard user={user} />} />
+          </Routes>
+        </div>
+      </>
+  );
+};
+
 function App() {
   const [userCount, setUserCount] = useState(null);
   const [user, setUser] = useState(null);
@@ -42,40 +73,13 @@ function App() {
     checkUserCount();
   }, []);
 
-  const AppRoutes = () => {
-    if (userCount === null) {
-      return <div>Loading...</div>;
-    }
-
-    if (userCount === 0) {
-      return (
-        <Routes>
-          <Route path="/onboarding" element={<Onboarding onOnboardingSuccess={handleOnboardingSuccess} />} />
-          <Route path="/*" element={<Navigate to="/onboarding" />} />
-        </Routes>
-      );
-    }
-
-    return (
-        <>
-          <nav>
-            <Link to="/login">Login</Link> | <Link to="/register">Register</Link> | <Link to="/">Dashboard</Link>
-          </nav>
-          <div className="container">
-            <Routes>
-              <Route path="/onboarding" element={<Onboarding onOnboardingSuccess={handleOnboardingSuccess} />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/" element={<Dashboard user={user} />} />
-            </Routes>
-          </div>
-        </>
-    );
-  };
-
   return (
     <Router>
-      <AppRoutes />
+      <AppRoutes
+        userCount={userCount}
+        user={user}
+        onOnboardingSuccess={handleOnboardingSuccess}
+      />
     </Router>
   );
 }
