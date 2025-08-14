@@ -24,14 +24,15 @@ const AppRoutes = ({ userCount, user, onOnboardingSuccess }) => {
   return (
       <>
         <nav>
-          <Link to="/login">Login</Link> | <Link to="/register">Register</Link> | <Link to="/">Dashboard</Link>
+          <Link to="/login">Login</Link> | <Link to="/register">Register</Link> | <Link to="/dashboard">Dashboard</Link>
         </nav>
         <div className="container">
           <Routes>
             <Route path="/onboarding" element={<Onboarding onOnboardingSuccess={onOnboardingSuccess} />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/" element={<Dashboard user={user} />} />
+            <Route path="/dashboard" element={<Dashboard user={user} />} />
+            <Route path="/" element={<Navigate to="/dashboard" />} />
           </Routes>
         </div>
       </>

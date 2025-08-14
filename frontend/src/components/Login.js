@@ -20,7 +20,7 @@ const Login = () => {
       const res = await api_unauthenticated.post('/login/', { email, password });
       localStorage.setItem('access_token', res.data.access);
       localStorage.setItem('refresh_token', res.data.refresh);
-      navigate('/');
+      navigate('/dashboard');
     } catch (err) {
       console.error(err);
       // Handle login error
