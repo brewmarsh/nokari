@@ -6,6 +6,8 @@ mypy
 pydocstyle
 bandit
 pytest
+pytest-django
+coverage
 bump2version
 safety
 mkdocs
