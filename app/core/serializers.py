@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.exceptions import InvalidToken
-from .models import JobPosting, Resume, CoverLetter, ScrapableDomain, ScrapeHistory
+from .models import JobPosting, Resume, CoverLetter, ScrapableDomain, ScrapeHistory, UserJobInteraction, HiddenCompany, SearchableJobTitle
 
 User = get_user_model()
 
@@ -24,6 +24,8 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
 class JobPostingSerializer(serializers.ModelSerializer):
+    is_pinned = serializers.BooleanField(read_only=True)
+
     class Meta:
         model = JobPosting
         fields = '__all__'
@@ -53,4 +55,19 @@ class CustomTokenRefreshSerializer(TokenRefreshSerializer):
 class ScrapeHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = ScrapeHistory
+        fields = '__all__'
+
+class UserJobInteractionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserJobInteraction
+        fields = '__all__'
+
+class HiddenCompanySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HiddenCompany
+        fields = '__all__'
+
+class SearchableJobTitleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SearchableJobTitle
         fields = '__all__'
