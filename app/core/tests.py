@@ -2,6 +2,201 @@ from django.test import TestCase
 from unittest.mock import patch, MagicMock
 from app.core.scraper import scrape_jobs, ScraperException
 import os
+from django.urls import reverse
+from rest_framework import status
+from rest_framework.test import APITestCase
+from django.contrib.auth import get_user_model
+from .models import JobPosting, UserJobInteraction, HiddenCompany, SearchableJobTitle
+
+User = get_user_model()
+
+
+class HideJobPostingViewTest(APITestCase):
+
+    def setUp(self):
+        self.user = User.objects.create_user(email='test@example.com', password='password')
+        self.job_posting = JobPosting.objects.create(
+            link='http://example.com/job/1',
+            title='Test Job',
+            company='Test Company',
+            description='Test Description'
+        )
+        self.client.force_authenticate(user=self.user)
+
+    def test_hide_job_posting(self):
+        """
+        Ensure that a user can hide a job posting.
+        """
+        url = reverse('hide_job_posting')
+        data = {'job_posting_link': self.job_posting.link}
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(
+            UserJobInteraction.objects.filter(
+                user=self.user,
+                job_posting=self.job_posting,
+                hidden=True
+            ).exists()
+        )
+
+    def test_get_job_postings_excludes_hidden(self):
+        """
+        Ensure that hidden job postings are not included in the list of job postings.
+        """
+        UserJobInteraction.objects.create(
+            user=self.user,
+            job_posting=self.job_posting,
+            hidden=True
+        )
+        url = reverse('job_postings')
+        response = self.client.get(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 0)
+
+
+class HideCompanyViewTest(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(email='test@example.com', password='password')
+        self.client.force_authenticate(user=self.user)
+        self.company_name = 'Test Company'
+        self.job_posting = JobPosting.objects.create(
+            link='http://example.com/job/1',
+            title='Test Job',
+            company=self.company_name,
+            description='Test Description'
+        )
+
+    def test_hide_company(self):
+        """
+        Ensure that a user can hide a company.
+        """
+        url = reverse('hide_company')
+        data = {'name': self.company_name}
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(
+            HiddenCompany.objects.filter(
+                user=self.user,
+                name=self.company_name
+            ).exists()
+        )
+
+    def test_get_job_postings_excludes_hidden_company(self):
+        """
+        Ensure that job postings from hidden companies are not included in the list of job postings.
+        """
+        HiddenCompany.objects.create(user=self.user, name=self.company_name)
+        url = reverse('job_postings')
+        response = self.client.get(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 0)
+
+
+class PinJobPostingViewTest(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(email='test@example.com', password='password')
+        self.client.force_authenticate(user=self.user)
+        self.job_posting1 = JobPosting.objects.create(
+            link='http://example.com/job/1',
+            title='Test Job 1',
+            company='Test Company',
+            description='Test Description'
+        )
+        self.job_posting2 = JobPosting.objects.create(
+            link='http://example.com/job/2',
+            title='Test Job 2',
+            company='Test Company',
+            description='Test Description'
+        )
+
+    def test_pin_job_posting(self):
+        """
+        Ensure that a user can pin a job posting.
+        """
+        url = reverse('pin_job_posting')
+        data = {'job_posting_link': self.job_posting1.link, 'pinned': True}
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(
+            UserJobInteraction.objects.get(
+                user=self.user,
+                job_posting=self.job_posting1
+            ).pinned
+        )
+
+    def test_unpin_job_posting(self):
+        """
+        Ensure that a user can unpin a job posting.
+        """
+        UserJobInteraction.objects.create(user=self.user, job_posting=self.job_posting1, pinned=True)
+        url = reverse('pin_job_posting')
+        data = {'job_posting_link': self.job_posting1.link, 'pinned': False}
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(
+            UserJobInteraction.objects.get(
+                user=self.user,
+                job_posting=self.job_posting1
+            ).pinned
+        )
+
+    def test_get_job_postings_orders_by_pinned(self):
+        """
+        Ensure that job postings are ordered by pinned status.
+        """
+        UserJobInteraction.objects.create(user=self.user, job_posting=self.job_posting2, pinned=True)
+        url = reverse('job_postings')
+        response = self.client.get(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['results'][0]['link'], self.job_posting2.link)
+        self.assertEqual(response.data['results'][1]['link'], self.job_posting1.link)
+
+
+class SearchableJobTitleViewSetTest(APITestCase):
+    def setUp(self):
+        self.admin_user = User.objects.create_superuser(email='admin@example.com', password='password')
+        self.user = User.objects.create_user(email='user@example.com', password='password')
+        self.job_title1 = SearchableJobTitle.objects.create(title='Software Engineer')
+        self.job_title2 = SearchableJobTitle.objects.create(title='Product Manager')
+
+    def test_list_job_titles_as_admin(self):
+        self.client.force_authenticate(user=self.admin_user)
+        url = reverse('job_title-list')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+
+    def test_list_job_titles_as_user(self):
+        self.client.force_authenticate(user=self.user)
+        url = reverse('job_title-list')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_create_job_title_as_admin(self):
+        self.client.force_authenticate(user=self.admin_user)
+        url = reverse('job_title-list')
+        data = {'title': 'Data Scientist'}
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(SearchableJobTitle.objects.count(), 3)
+
+    def test_delete_job_title_as_admin(self):
+        self.client.force_authenticate(user=self.admin_user)
+        url = reverse('job_title-detail', kwargs={'pk': self.job_title1.pk})
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(SearchableJobTitle.objects.count(), 1)
+
+    @patch('app.core.views.scrape_jobs')
+    def test_scrape_view_uses_job_titles(self, mock_scrape_jobs):
+        self.client.force_authenticate(user=self.admin_user)
+        url = reverse('scrape')
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_scrape_jobs.assert_called()
+        expected_query = '("Software Engineer" OR "Product Manager") AND "remote"'
+        self.assertEqual(mock_scrape_jobs.call_args[0][0], expected_query)
+
 
 class ScraperTests(TestCase):
 
