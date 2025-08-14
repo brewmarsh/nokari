@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import api, { api_unauthenticated } from '../services/api';
+import { api_unauthenticated } from '../services/api';
 
-const Login = ({ onLogin }) => {
+const Login = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
-  const navigate = useNavigate();
 
   const { email, password } = formData;
 
@@ -20,12 +18,7 @@ const Login = ({ onLogin }) => {
       const res = await api_unauthenticated.post('/login/', { email, password });
       localStorage.setItem('access_token', res.data.access);
       localStorage.setItem('refresh_token', res.data.refresh);
-
-      // After login, fetch user data and update App state
-      const userRes = await api.get('/me/');
-      onLogin(userRes.data);
-
-      navigate('/dashboard');
+      window.location.href = '/dashboard';
     } catch (err) {
       console.error(err);
       // Handle login error
