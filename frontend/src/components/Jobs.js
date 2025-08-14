@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import './Jobs.css';
+import PinIcon from './PinIcon';
+import HideIcon from './HideIcon';
 
 const Jobs = () => {
   const [jobs, setJobs] = useState([]);
@@ -95,10 +97,10 @@ const Jobs = () => {
               <button onClick={() => handleHideCompany(job.company)}>Hide Company</button>
             </p>
             <p className="description">{job.description}</p>
-            <button onClick={() => handleHide(job.link)}>Hide</button>
-            <button onClick={() => handlePin(job.link, job.is_pinned)}>
-              {job.is_pinned ? 'Unpin' : 'Pin'}
-            </button>
+            <div className="job-card-actions">
+              <button onClick={() => handleHide(job.link)} title="Hide Job"><HideIcon /></button>
+              <button onClick={() => handlePin(job.link, job.is_pinned)} title={job.is_pinned ? 'Unpin Job' : 'Pin Job'}><PinIcon /></button>
+            </div>
             <button onClick={() => handleFindRelated(job.title)}>Find Related</button>
           </div>
         ))}
