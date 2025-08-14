@@ -32,6 +32,15 @@ const Jobs = () => {
     return <div>Error: {error.message}</div>;
   }
 
+  const handleHide = async (jobLink) => {
+    try {
+      await api.post('/jobs/hide/', { job_posting_link: jobLink });
+      setJobs(jobs.filter((job) => job.link !== jobLink));
+    } catch (err) {
+      setError(err);
+    }
+  };
+
   return (
     <div>
       <h1>Job Postings</h1>
@@ -61,6 +70,7 @@ const Jobs = () => {
             <h2><a href={job.link} target="_blank" rel="noopener noreferrer">{job.title}</a></h2>
             <p className="company">{job.company}</p>
             <p className="description">{job.description}</p>
+            <button onClick={() => handleHide(job.link)}>Hide</button>
           </div>
         ))}
       </div>

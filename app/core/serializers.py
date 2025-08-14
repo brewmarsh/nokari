@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.exceptions import InvalidToken
-from .models import JobPosting, Resume, CoverLetter, ScrapableDomain, ScrapeHistory
+from .models import JobPosting, Resume, CoverLetter, ScrapableDomain, ScrapeHistory, UserJobInteraction
 
 User = get_user_model()
 
@@ -53,4 +53,9 @@ class CustomTokenRefreshSerializer(TokenRefreshSerializer):
 class ScrapeHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = ScrapeHistory
+        fields = '__all__'
+
+class UserJobInteractionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserJobInteraction
         fields = '__all__'

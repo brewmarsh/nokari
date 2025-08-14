@@ -1,9 +1,9 @@
-from rest_framework import generics
+from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from .permissions import IsAdmin
-from .serializers import UserSerializer, JobPostingSerializer, ResumeSerializer, CoverLetterSerializer, ScrapableDomainSerializer, ScrapeHistorySerializer
+from .serializers import UserSerializer, JobPostingSerializer, ResumeSerializer, CoverLetterSerializer, ScrapableDomainSerializer, ScrapeHistorySerializer, UserJobInteractionSerializer
 from django.contrib.auth import get_user_model
-from .models import JobPosting, Resume, CoverLetter, ScrapableDomain, ScrapeHistory
+from .models import JobPosting, Resume, CoverLetter, ScrapableDomain, ScrapeHistory, UserJobInteraction
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import render
@@ -28,7 +28,9 @@ class JobPostingView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        queryset = JobPosting.objects.all()
+        user = self.request.user
+        hidden_job_postings = UserJobInteraction.objects.filter(user=user, hidden=True).values_list('job_posting_id', flat=True)
+        queryset = JobPosting.objects.exclude(link__in=hidden_job_postings)
         title = self.request.query_params.get('title')
         if title is not None:
             queryset = queryset.filter(title__icontains=title)
@@ -170,3 +172,27 @@ class UserCountView(APIView):
 
     def get(self, request, *args, **kwargs):
         return Response({'user_count': User.objects.count()})
+
+class HideJobPostingView(APIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserJobInteractionSerializer
+
+    def post(self, request, *args, **kwargs):
+        job_posting_link = request.data.get('job_posting_link')
+        if not job_posting_link:
+            return Response({'error': 'Job posting link not provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            job_posting = JobPosting.objects.get(link=job_posting_link)
+        except JobPosting.DoesNotExist:
+            return Response({'error': 'Job posting not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        interaction, created = UserJobInteraction.objects.get_or_create(
+            user=request.user,
+            job_posting=job_posting
+        )
+
+        interaction.hidden = True
+        interaction.save()
+
+        return Response(status=status.HTTP_200_OK)

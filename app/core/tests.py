@@ -2,6 +2,57 @@ from django.test import TestCase
 from unittest.mock import patch, MagicMock
 from app.core.scraper import scrape_jobs, ScraperException
 import os
+from django.urls import reverse
+from rest_framework import status
+from rest_framework.test import APITestCase
+from django.contrib.auth import get_user_model
+from .models import JobPosting, UserJobInteraction
+
+User = get_user_model()
+
+
+class HideJobPostingViewTest(APITestCase):
+
+    def setUp(self):
+        self.user = User.objects.create_user(email='test@example.com', password='password')
+        self.job_posting = JobPosting.objects.create(
+            link='http://example.com/job/1',
+            title='Test Job',
+            company='Test Company',
+            description='Test Description'
+        )
+        self.client.force_authenticate(user=self.user)
+
+    def test_hide_job_posting(self):
+        """
+        Ensure that a user can hide a job posting.
+        """
+        url = reverse('hide_job_posting')
+        data = {'job_posting_link': self.job_posting.link}
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(
+            UserJobInteraction.objects.filter(
+                user=self.user,
+                job_posting=self.job_posting,
+                hidden=True
+            ).exists()
+        )
+
+    def test_get_job_postings_excludes_hidden(self):
+        """
+        Ensure that hidden job postings are not included in the list of job postings.
+        """
+        UserJobInteraction.objects.create(
+            user=self.user,
+            job_posting=self.job_posting,
+            hidden=True
+        )
+        url = reverse('job_postings')
+        response = self.client.get(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 0)
+
 
 class ScraperTests(TestCase):
 
