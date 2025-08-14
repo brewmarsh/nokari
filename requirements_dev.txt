@@ -9,3 +9,6 @@ pytest
 pytest-django
 coverage
 bump2version
+safety
+mkdocs
+mkdocs-material

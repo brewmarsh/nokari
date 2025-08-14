@@ -170,3 +170,10 @@ class UserCountView(APIView):
 
     def get(self, request, *args, **kwargs):
         return Response({'user_count': User.objects.count()})
+
+
+class HealthCheckView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, *args, **kwargs):
+        return Response({'status': 'ok'})
