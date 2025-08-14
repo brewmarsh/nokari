@@ -7,7 +7,7 @@ import Onboarding from './components/Onboarding';
 import api, { api_unauthenticated } from './services/api';
 import './App.css';
 
-const AppRoutes = ({ userCount, user, onOnboardingSuccess }) => {
+const AppRoutes = ({ userCount, user, onOnboardingSuccess, onLogin }) => {
   console.log('AppRoutes render, userCount:', userCount);
   if (userCount === null) {
     return <div>Loading...</div>;
@@ -30,7 +30,7 @@ const AppRoutes = ({ userCount, user, onOnboardingSuccess }) => {
         <div className="container">
           <Routes>
             <Route path="/onboarding" element={<Onboarding onOnboardingSuccess={onOnboardingSuccess} />} />
-            <Route path="/login" element={<Login />} />
+            <Route path="/login" element={<Login onLogin={onLogin} />} />
             <Route path="/register" element={<Register />} />
             <Route path="/dashboard" element={<Dashboard user={user} />} />
             <Route path="/" element={<Navigate to="/dashboard" />} />
@@ -89,6 +89,7 @@ function App() {
         userCount={userCount}
         user={user}
         onOnboardingSuccess={handleOnboardingSuccess}
+        onLogin={setUser}
       />
     </Router>
   );
