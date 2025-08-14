@@ -1,9 +1,9 @@
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from .permissions import IsAdmin
-from .serializers import UserSerializer, JobPostingSerializer, ResumeSerializer, CoverLetterSerializer, ScrapableDomainSerializer, ScrapeHistorySerializer, UserJobInteractionSerializer
+from .serializers import UserSerializer, JobPostingSerializer, ResumeSerializer, CoverLetterSerializer, ScrapableDomainSerializer, ScrapeHistorySerializer, UserJobInteractionSerializer, HiddenCompanySerializer
 from django.contrib.auth import get_user_model
-from .models import JobPosting, Resume, CoverLetter, ScrapableDomain, ScrapeHistory, UserJobInteraction
+from .models import JobPosting, Resume, CoverLetter, ScrapableDomain, ScrapeHistory, UserJobInteraction, HiddenCompany
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import render
@@ -30,7 +30,8 @@ class JobPostingView(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         hidden_job_postings = UserJobInteraction.objects.filter(user=user, hidden=True).values_list('job_posting_id', flat=True)
-        queryset = JobPosting.objects.exclude(link__in=hidden_job_postings)
+        hidden_companies = HiddenCompany.objects.filter(user=user).values_list('name', flat=True)
+        queryset = JobPosting.objects.exclude(link__in=hidden_job_postings).exclude(company__in=hidden_companies)
         title = self.request.query_params.get('title')
         if title is not None:
             queryset = queryset.filter(title__icontains=title)
@@ -196,3 +197,22 @@ class HideJobPostingView(APIView):
         interaction.save()
 
         return Response(status=status.HTTP_200_OK)
+
+class HideCompanyView(APIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = HiddenCompanySerializer
+
+    def post(self, request, *args, **kwargs):
+        company_name = request.data.get('name')
+        if not company_name:
+            return Response({'error': 'Company name not provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+        hidden_company, created = HiddenCompany.objects.get_or_create(
+            user=request.user,
+            name=company_name
+        )
+
+        if created:
+            return Response(status=status.HTTP_201_CREATED)
+        else:
+            return Response(status=status.HTTP_200_OK)

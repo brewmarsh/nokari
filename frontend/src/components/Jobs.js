@@ -41,6 +41,15 @@ const Jobs = () => {
     }
   };
 
+  const handleHideCompany = async (companyName) => {
+    try {
+      await api.post('/companies/hide/', { name: companyName });
+      setJobs(jobs.filter((job) => job.company !== companyName));
+    } catch (err) {
+      setError(err);
+    }
+  };
+
   return (
     <div>
       <h1>Job Postings</h1>
@@ -68,7 +77,10 @@ const Jobs = () => {
         {jobs.map((job) => (
           <div key={job.link} className="job-card">
             <h2><a href={job.link} target="_blank" rel="noopener noreferrer">{job.title}</a></h2>
-            <p className="company">{job.company}</p>
+            <p className="company">
+              {job.company}
+              <button onClick={() => handleHideCompany(job.company)}>Hide Company</button>
+            </p>
             <p className="description">{job.description}</p>
             <button onClick={() => handleHide(job.link)}>Hide</button>
           </div>
