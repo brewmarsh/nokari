@@ -10,6 +10,11 @@ Authentication is handled via JWT (JSON Web Tokens). To access protected endpoin
 
 *   **POST /api/register/**: Register a new user.
 *   **POST /api/login/**: Log in and receive a JWT.
+*   **POST /api/login/refresh/**: Refresh an access token.
+
+## Users
+
+*   **GET /api/me/**: Get the details of the currently authenticated user.
 
 ## Job Postings
 
@@ -32,5 +37,10 @@ Authentication is handled via JWT (JSON Web Tokens). To access protected endpoin
 
 ## Scrapable Domains
 
-*   **GET /api/scrapable-domains/**: Get a list of all scrapable domains.
-*   **POST /api/scrapable-domains/**: Add a new scrapable domain.
+*   **GET /api/scrapable-domains/**: Get a list of all scrapable domains. (Admin only)
+*   **POST /api/scrapable-domains/**: Add a new scrapable domain. (Admin only)
+
+## Scraping
+
+*   **POST /api/scrape/**: Trigger the job scraping process. (Admin only)
+*   **GET /api/scrape-history/**: Get the history of scraping events. (Admin only)
