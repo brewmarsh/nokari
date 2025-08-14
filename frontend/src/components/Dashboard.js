@@ -7,6 +7,7 @@ import api from '../services/api';
 import './Dashboard.css';
 
 const Dashboard = ({ user }) => {
+  console.log('Dashboard render, user:', user);
   const [scrapeStatus, setScrapeStatus] = useState('');
   const [loading, setLoading] = useState(false);
 

@@ -8,6 +8,7 @@ import api, { api_unauthenticated } from './services/api';
 import './App.css';
 
 const AppRoutes = ({ userCount, user, onOnboardingSuccess }) => {
+  console.log('AppRoutes render, userCount:', userCount);
   if (userCount === null) {
     return <div>Loading...</div>;
   }
@@ -40,35 +41,43 @@ const AppRoutes = ({ userCount, user, onOnboardingSuccess }) => {
 };
 
 function App() {
+  console.log('App render');
   const [userCount, setUserCount] = useState(null);
   const [user, setUser] = useState(null);
 
   const handleOnboardingSuccess = () => {
-    setUserCount(1); // Optimistically update user count
+    console.log('handleOnboardingSuccess');
+    setUserCount(1);
   };
 
   useEffect(() => {
+    console.log('useEffect fetchUser');
     const fetchUser = async () => {
       const token = localStorage.getItem('access_token');
       if (token) {
         try {
           const res = await api.get('/me/');
+          console.log('fetchUser success', res.data);
           setUser(res.data);
         } catch (err) {
-          console.error(err);
+          console.error('fetchUser error', err);
         }
+      } else {
+        console.log('fetchUser no token');
       }
     };
     fetchUser();
   }, []);
 
   useEffect(() => {
+    console.log('useEffect checkUserCount');
     const checkUserCount = async () => {
       try {
         const res = await api_unauthenticated.get('/user-count/');
+        console.log('checkUserCount success', res.data);
         setUserCount(res.data.user_count);
       } catch (err) {
-        console.error(err);
+        console.error('checkUserCount error', err);
       }
     };
     checkUserCount();
