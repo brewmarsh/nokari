@@ -24,6 +24,8 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
 class JobPostingSerializer(serializers.ModelSerializer):
+    is_pinned = serializers.BooleanField(read_only=True)
+
     class Meta:
         model = JobPosting
         fields = '__all__'

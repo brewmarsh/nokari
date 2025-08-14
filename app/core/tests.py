@@ -92,6 +92,66 @@ class HideCompanyViewTest(APITestCase):
         self.assertEqual(len(response.data['results']), 0)
 
 
+class PinJobPostingViewTest(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(email='test@example.com', password='password')
+        self.client.force_authenticate(user=self.user)
+        self.job_posting1 = JobPosting.objects.create(
+            link='http://example.com/job/1',
+            title='Test Job 1',
+            company='Test Company',
+            description='Test Description'
+        )
+        self.job_posting2 = JobPosting.objects.create(
+            link='http://example.com/job/2',
+            title='Test Job 2',
+            company='Test Company',
+            description='Test Description'
+        )
+
+    def test_pin_job_posting(self):
+        """
+        Ensure that a user can pin a job posting.
+        """
+        url = reverse('pin_job_posting')
+        data = {'job_posting_link': self.job_posting1.link, 'pinned': True}
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(
+            UserJobInteraction.objects.get(
+                user=self.user,
+                job_posting=self.job_posting1
+            ).pinned
+        )
+
+    def test_unpin_job_posting(self):
+        """
+        Ensure that a user can unpin a job posting.
+        """
+        UserJobInteraction.objects.create(user=self.user, job_posting=self.job_posting1, pinned=True)
+        url = reverse('pin_job_posting')
+        data = {'job_posting_link': self.job_posting1.link, 'pinned': False}
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(
+            UserJobInteraction.objects.get(
+                user=self.user,
+                job_posting=self.job_posting1
+            ).pinned
+        )
+
+    def test_get_job_postings_orders_by_pinned(self):
+        """
+        Ensure that job postings are ordered by pinned status.
+        """
+        UserJobInteraction.objects.create(user=self.user, job_posting=self.job_posting2, pinned=True)
+        url = reverse('job_postings')
+        response = self.client.get(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['results'][0]['link'], self.job_posting2.link)
+        self.assertEqual(response.data['results'][1]['link'], self.job_posting1.link)
+
+
 class ScraperTests(TestCase):
 
     @patch('app.core.scraper.build')

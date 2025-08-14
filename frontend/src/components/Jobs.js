@@ -18,7 +18,7 @@ const Jobs = () => {
           search,
         },
       });
-      setJobs(res.data);
+      setJobs(res.data.results);
     } catch (err) {
       setError(err);
     }
@@ -50,6 +50,15 @@ const Jobs = () => {
     }
   };
 
+  const handlePin = async (jobLink, isPinned) => {
+    try {
+      await api.post('/jobs/pin/', { job_posting_link: jobLink, pinned: !isPinned });
+      fetchJobs();
+    } catch (err) {
+      setError(err);
+    }
+  };
+
   return (
     <div>
       <h1>Job Postings</h1>
@@ -75,7 +84,7 @@ const Jobs = () => {
       </div>
       <div className="jobs-container">
         {jobs.map((job) => (
-          <div key={job.link} className="job-card">
+          <div key={job.link} className={`job-card ${job.is_pinned ? 'pinned' : ''}`}>
             <h2><a href={job.link} target="_blank" rel="noopener noreferrer">{job.title}</a></h2>
             <p className="company">
               {job.company}
@@ -83,6 +92,9 @@ const Jobs = () => {
             </p>
             <p className="description">{job.description}</p>
             <button onClick={() => handleHide(job.link)}>Hide</button>
+            <button onClick={() => handlePin(job.link, job.is_pinned)}>
+              {job.is_pinned ? 'Unpin' : 'Pin'}
+            </button>
           </div>
         ))}
       </div>

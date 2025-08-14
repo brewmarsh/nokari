@@ -8,6 +8,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import render
 from .scraper import scrape_jobs
+from django.db.models import OuterRef, Subquery, BooleanField, Value
+from django.db.models.functions import Coalesce
 
 User = get_user_model()
 
@@ -29,9 +31,19 @@ class JobPostingView(generics.ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
+
+        # Annotate with pinned status
+        pinned_status = UserJobInteraction.objects.filter(
+            user=user,
+            job_posting=OuterRef('pk')
+        ).values('pinned')
+        queryset = JobPosting.objects.annotate(
+            is_pinned=Coalesce(Subquery(pinned_status, output_field=BooleanField()), Value(False))
+        ).order_by('-is_pinned')
+
         hidden_job_postings = UserJobInteraction.objects.filter(user=user, hidden=True).values_list('job_posting_id', flat=True)
         hidden_companies = HiddenCompany.objects.filter(user=user).values_list('name', flat=True)
-        queryset = JobPosting.objects.exclude(link__in=hidden_job_postings).exclude(company__in=hidden_companies)
+        queryset = queryset.exclude(link__in=hidden_job_postings).exclude(company__in=hidden_companies)
         title = self.request.query_params.get('title')
         if title is not None:
             queryset = queryset.filter(title__icontains=title)
@@ -216,3 +228,29 @@ class HideCompanyView(APIView):
             return Response(status=status.HTTP_201_CREATED)
         else:
             return Response(status=status.HTTP_200_OK)
+
+class PinJobPostingView(APIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserJobInteractionSerializer
+
+    def post(self, request, *args, **kwargs):
+        job_posting_link = request.data.get('job_posting_link')
+        pinned = request.data.get('pinned', False)
+
+        if not job_posting_link:
+            return Response({'error': 'Job posting link not provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            job_posting = JobPosting.objects.get(link=job_posting_link)
+        except JobPosting.DoesNotExist:
+            return Response({'error': 'Job posting not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        interaction, created = UserJobInteraction.objects.get_or_create(
+            user=request.user,
+            job_posting=job_posting
+        )
+
+        interaction.pinned = pinned
+        interaction.save()
+
+        return Response(status=status.HTTP_200_OK)

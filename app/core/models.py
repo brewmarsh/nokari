@@ -97,6 +97,7 @@ class UserJobInteraction(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     job_posting = models.ForeignKey(JobPosting, on_delete=models.CASCADE)
     hidden = models.BooleanField(default=False)
+    pinned = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ('user', 'job_posting')

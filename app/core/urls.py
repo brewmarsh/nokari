@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import MeView, RegisterView, JobPostingView, ResumeView, CoverLetterView, GenerateResumeView, GenerateCoverLetterView, ScrapableDomainView, ResumeDetailView, CoverLetterDetailView, test_page, ScrapeView, UserCountView, ScrapeHistoryView, HideJobPostingView, HideCompanyView
+from .views import MeView, RegisterView, JobPostingView, ResumeView, CoverLetterView, GenerateResumeView, GenerateCoverLetterView, ScrapableDomainView, ResumeDetailView, CoverLetterDetailView, test_page, ScrapeView, UserCountView, ScrapeHistoryView, HideJobPostingView, HideCompanyView, PinJobPostingView
 from .admin_views import AdminMenuView
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -14,6 +14,7 @@ urlpatterns = [
     path('admin/menu/', AdminMenuView.as_view(), name='admin_menu'),
     path('jobs/', JobPostingView.as_view(), name='job_postings'),
     path('jobs/hide/', HideJobPostingView.as_view(), name='hide_job_posting'),
+    path('jobs/pin/', PinJobPostingView.as_view(), name='pin_job_posting'),
     path('companies/hide/', HideCompanyView.as_view(), name='hide_company'),
     path('resumes/', ResumeView.as_view(), name='resumes'),
     path('resumes/<int:pk>/', ResumeDetailView.as_view(), name='resume_detail'),
