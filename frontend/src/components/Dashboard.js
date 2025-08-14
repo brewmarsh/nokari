@@ -16,7 +16,11 @@ const Dashboard = ({ user }) => {
       setScrapeStatus(response.data.detail);
     } catch (error) {
       console.error('Error scraping jobs:', error);
-      setScrapeStatus('An error occurred while scraping jobs.');
+      if (error.response && error.response.data && error.response.data.detail) {
+        setScrapeStatus(error.response.data.detail);
+      } else {
+        setScrapeStatus('An error occurred while scraping jobs.');
+      }
     } finally {
       setLoading(false);
     }
