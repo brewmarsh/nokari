@@ -91,16 +91,21 @@ const Jobs = () => {
       <div className="jobs-container">
         {jobs.map((job) => (
           <div key={job.link} className={`job-card ${job.is_pinned ? 'pinned' : ''}`}>
-            <h2><a href={job.link} target="_blank" rel="noopener noreferrer">{job.title}</a></h2>
-            <p className="company">
+            <div className="job-card-header">
+              <h2 className="job-title"><a href={job.link} target="_blank" rel="noopener noreferrer">{job.title}</a></h2>
+              <div className="job-card-icons">
+                <button onClick={() => handlePin(job.link, job.is_pinned)} title={job.is_pinned ? 'Unpin Job' : 'Pin Job'} className="pin-icon"><PinIcon /></button>
+                <button onClick={() => handleHide(job.link)} title="Hide Job" className="hide-icon"><HideIcon /></button>
+              </div>
+            </div>
+            <p className="company-name">
               {job.company}
               <button onClick={() => handleHideCompany(job.company)}>Hide Company</button>
             </p>
             <p className="description">{job.description}</p>
-            <div className="job-card-actions">
-              <button onClick={() => handleHide(job.link)} title="Hide Job"><HideIcon /></button>
-              <button onClick={() => handlePin(job.link, job.is_pinned)} title={job.is_pinned ? 'Unpin Job' : 'Pin Job'}><PinIcon /></button>
-            </div>
+            <p className="posting-date">
+              {new Date(job.posting_date).toLocaleDateString()}
+            </p>
             <button onClick={() => handleFindRelated(job.title)}>Find Related</button>
           </div>
         ))}
