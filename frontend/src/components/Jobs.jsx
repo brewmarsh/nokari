@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import './Jobs.css';
 import PinIcon from './PinIcon.jsx';
@@ -11,7 +11,7 @@ const Jobs = () => {
   const [company, setCompany] = useState('');
   const [search, setSearch] = useState('');
 
-  const fetchJobs = useCallback(async () => {
+  const fetchJobs = async () => {
     try {
       const res = await api.get('/jobs/', {
         params: {
@@ -24,7 +24,7 @@ const Jobs = () => {
     } catch (err) {
       setError(err);
     }
-  }, [title, company, search]);
+  };
 
   useEffect(() => {
     fetchJobs();
@@ -34,36 +34,36 @@ const Jobs = () => {
     return <div>Error: {error.message}</div>;
   }
 
-  const handleHide = useCallback(async (jobLink) => {
+  const handleHide = async (jobLink) => {
     try {
       await api.post('/jobs/hide/', { job_posting_link: jobLink });
       setJobs(jobs.filter((job) => job.link !== jobLink));
     } catch (err) {
       setError(err);
     }
-  }, [jobs]);
+  };
 
-  const handleHideCompany = useCallback(async (companyName) => {
+  const handleHideCompany = async (companyName) => {
     try {
       await api.post('/companies/hide/', { name: companyName });
       setJobs(jobs.filter((job) => job.company !== companyName));
     } catch (err) {
       setError(err);
     }
-  }, [jobs]);
+  };
 
-  const handlePin = useCallback(async (jobLink, isPinned) => {
+  const handlePin = async (jobLink, isPinned) => {
     try {
       await api.post('/jobs/pin/', { job_posting_link: jobLink, pinned: !isPinned });
       fetchJobs();
     } catch (err) {
       setError(err);
     }
-  }, [fetchJobs]);
+  };
 
-  const handleFindRelated = useCallback((jobTitle) => {
+  const handleFindRelated = (jobTitle) => {
     setTitle(jobTitle);
-  }, []);
+  };
 
   return (
     <div>
