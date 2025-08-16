@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import './Jobs.css';
-import PinIcon from './PinIcon';
-import HideIcon from './HideIcon';
+import PinIcon from './PinIcon.jsx';
+import HideIcon from './HideIcon.jsx';
 
 const Jobs = () => {
   const [jobs, setJobs] = useState([]);
