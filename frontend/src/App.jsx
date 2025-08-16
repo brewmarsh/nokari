@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate, Link } from 'react-router-dom';
 import Login from './components/Login.jsx';
 import Register from './components/Register.jsx';
@@ -7,7 +7,7 @@ import Onboarding from './components/Onboarding.jsx';
 import api, { api_unauthenticated } from './services/api';
 import './App.css';
 
-const AppRoutes = ({ userCount, user, onOnboardingSuccess }) => {
+const AppRoutes = memo(({ userCount, user, onOnboardingSuccess }) => {
   console.log('AppRoutes render, userCount:', userCount);
   if (userCount === null) {
     return <div>Loading...</div>;
@@ -38,17 +38,17 @@ const AppRoutes = ({ userCount, user, onOnboardingSuccess }) => {
         </div>
       </>
   );
-};
+});
 
 function App() {
   console.log('App render');
   const [userCount, setUserCount] = useState(null);
   const [user, setUser] = useState(null);
 
-  const handleOnboardingSuccess = () => {
+  const handleOnboardingSuccess = useCallback(() => {
     console.log('handleOnboardingSuccess');
     setUserCount(1);
-  };
+  }, []);
 
   useEffect(() => {
     console.log('useEffect fetchUser');

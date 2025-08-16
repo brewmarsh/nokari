@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import Jobs from './Jobs.jsx';
 import ScrapableDomains from './ScrapableDomains.jsx';
 import ScrapeHistory from './ScrapeHistory.jsx';
@@ -11,7 +11,7 @@ const Dashboard = ({ user }) => {
   const [scrapeStatus, setScrapeStatus] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleScrape = async () => {
+  const handleScrape = useCallback(async () => {
     setLoading(true);
     setScrapeStatus('Scraping...');
     try {
@@ -27,7 +27,7 @@ const Dashboard = ({ user }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   return (
     <div className="dashboard">
