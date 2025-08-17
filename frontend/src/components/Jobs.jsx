@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import './Jobs.css';
+import PinIcon from './PinIcon.jsx';
+import HideIcon from './HideIcon.jsx';
 
 const Jobs = () => {
   const [jobs, setJobs] = useState([]);
@@ -59,6 +61,10 @@ const Jobs = () => {
     }
   };
 
+  const handleFindRelated = (jobTitle) => {
+    setTitle(jobTitle);
+  };
+
   return (
     <div>
       <h1>Job Postings</h1>
@@ -85,16 +91,22 @@ const Jobs = () => {
       <div className="jobs-container">
         {jobs.map((job) => (
           <div key={job.link} className={`job-card ${job.is_pinned ? 'pinned' : ''}`}>
-            <h2><a href={job.link} target="_blank" rel="noopener noreferrer">{job.title}</a></h2>
-            <p className="company">
+            <div className="job-card-header">
+              <h2 className="job-title"><a href={job.link} target="_blank" rel="noopener noreferrer">{job.title}</a></h2>
+              <div className="job-card-icons">
+                <button onClick={() => handlePin(job.link, job.is_pinned)} title={job.is_pinned ? 'Unpin Job' : 'Pin Job'} className="pin-icon"><PinIcon /></button>
+                <button onClick={() => handleHide(job.link)} title="Hide Job" className="hide-icon"><HideIcon /></button>
+              </div>
+            </div>
+            <p className="company-name">
               {job.company}
               <button onClick={() => handleHideCompany(job.company)}>Hide Company</button>
             </p>
             <p className="description">{job.description}</p>
-            <button onClick={() => handleHide(job.link)}>Hide</button>
-            <button onClick={() => handlePin(job.link, job.is_pinned)}>
-              {job.is_pinned ? 'Unpin' : 'Pin'}
-            </button>
+            <p className="posting-date">
+              {new Date(job.posting_date).toLocaleDateString()}
+            </p>
+            <button onClick={() => handleFindRelated(job.title)}>Find Related</button>
           </div>
         ))}
       </div>

@@ -45,12 +45,15 @@ class User(AbstractUser):
     def __str__(self):
         return self.email
 
+from django.utils import timezone
+
 class JobPosting(models.Model):
     link = models.URLField(primary_key=True)
     company = models.CharField(max_length=255)
     title = models.CharField(max_length=255)
     description = models.TextField(default='')
     confidence_score = models.FloatField(default=0)
+    posting_date = models.DateField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.title} at {self.company}"

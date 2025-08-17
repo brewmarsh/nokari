@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import Jobs from './Jobs';
-import ScrapableDomains from './ScrapableDomains';
-import ScrapeHistory from './ScrapeHistory';
-import JobTitles from './JobTitles';
+import Jobs from './Jobs.jsx';
+import ScrapableDomains from './ScrapableDomains.jsx';
+import ScrapeHistory from './ScrapeHistory.jsx';
+import JobTitles from './JobTitles.jsx';
 import api from '../services/api';
 import './Dashboard.css';
 

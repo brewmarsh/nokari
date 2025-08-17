@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate, Link } from 'react-router-dom';
-import Login from './components/Login';
-import Register from './components/Register';
-import Dashboard from './components/Dashboard';
-import Onboarding from './components/Onboarding';
+import Login from './components/Login.jsx';
+import Register from './components/Register.jsx';
+import Dashboard from './components/Dashboard.jsx';
+import Onboarding from './components/Onboarding.jsx';
 import api, { api_unauthenticated } from './services/api';
 import './App.css';
 

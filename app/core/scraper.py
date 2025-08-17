@@ -1,5 +1,6 @@
 import os
 from googleapiclient.discovery import build
+from datetime import datetime, timezone
 
 class ScraperException(Exception):
     pass
@@ -24,10 +25,29 @@ def scrape_jobs(query, domain):
     jobs = []
     if 'items' in result:
         for item in result['items']:
+            pagemap = item.get('pagemap', {})
+            metatags = pagemap.get('metatags', [{}])[0]
+
+            # Try to find a date in the metatags
+            posting_date = metatags.get('pubdate') or metatags.get('date') or metatags.get('publishdate')
+
+            if posting_date:
+                try:
+                    # Attempt to parse the date. This is a best-effort approach and might need refinement
+                    # based on the actual date formats encountered.
+                    posting_date = datetime.strptime(posting_date, '%Y-%m-%d').date()
+                except (ValueError, TypeError):
+                    # If parsing fails, fall back to the current date
+                    posting_date = datetime.now(timezone.utc).date()
+            else:
+                # If no date is found, use the current date
+                posting_date = datetime.now(timezone.utc).date()
+
             jobs.append({
                 'title': item.get('title'),
                 'link': item.get('link'),
-                'company': item.get('pagemap', {}).get('metatags', [{}])[0].get('og:site_name', ''),
+                'company': pagemap.get('cse_thumbnail', [{}])[0].get('src', '') or metatags.get('og:site_name', ''),
                 'description': item.get('snippet'),
+                'posting_date': posting_date,
             })
     return jobs

@@ -1,0 +1,19 @@
+black
+ruff
+codespell
+flake8
+mypy
+pydocstyle
+bandit
+pytest
+pytest-django
+coverage
+bump2version
+safety
+mkdocs
+mkdocs-material
+
+# Added for mypy support
+django-stubs
+djangorestframework-stubs
+sqlalchemy-stubs

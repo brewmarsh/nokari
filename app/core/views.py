@@ -161,7 +161,8 @@ class ScrapeView(APIView):
                         defaults={
                             'title': job_data['title'],
                             'company': job_data['company'],
-                            'description': job_data['description']
+                            'description': job_data['description'],
+                            'posting_date': job_data['posting_date']
                         }
                     )
                     if created:

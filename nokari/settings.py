@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,12 +22,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-^-vign&+6l3llde@huzc2*nla+if&4+xgaz8e8-^mkt-pmoyxc"
+SECRET_KEY = os.environ.get(
+    "DJANGO_SECRET_KEY",
+    "django-insecure-^-vign&+6l3llde@huzc2*nla+if&4+xgaz8e8-^mkt-pmoyxc",
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DJANGO_DEBUG", "") != "False"
 
-ALLOWED_HOSTS = ['backend', 'localhost', 'marshall-server.local']
+ALLOWED_HOSTS = os.environ.get(
+    "DJANGO_ALLOWED_HOSTS", "backend,localhost,marshall-server.local"
+).split(",")
 
 
 # Application definition
@@ -38,13 +44,13 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    'app.core',
-    'rest_framework',
-    'rest_framework_simplejwt',
-    'corsheaders',
+    "app.core",
+    "rest_framework",
+    "rest_framework_simplejwt",
+    "corsheaders",
 ]
 
-AUTH_USER_MODEL = 'core.User'
+AUTH_USER_MODEL = "core.User"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -57,9 +63,9 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-]
+CORS_ALLOWED_ORIGINS = os.environ.get(
+    "CORS_ALLOWED_ORIGINS", "http://localhost:3000"
+).split(",")
 
 ROOT_URLCONF = "nokari.urls"
 
@@ -86,12 +92,12 @@ WSGI_APPLICATION = "nokari.wsgi.application"
 
 DATABASES = {
     "default": {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'nokari',
-        'USER': 'nokari',
-        'PASSWORD': 'password',
-        'HOST': 'db',
-        'PORT': '5432',
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ.get("POSTGRES_DB", "nokari"),
+        "USER": os.environ.get("POSTGRES_USER", "nokari"),
+        "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "password"),
+        "HOST": os.environ.get("POSTGRES_HOST", "db"),
+        "PORT": os.environ.get("POSTGRES_PORT", "5432"),
     }
 }
 
@@ -101,16 +107,17 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "NAME": "django.contrib.auth.password_validation"
+        ".UserAttributeSimilarityValidator",
     },
     {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "NAME": "django.contrib.auth.password_validation" ".MinimumLengthValidator",
     },
     {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+        "NAME": "django.contrib.auth.password_validation" ".CommonPasswordValidator",
     },
     {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+        "NAME": "django.contrib.auth.password_validation" ".NumericPasswordValidator",
     },
 ]
 
@@ -133,16 +140,17 @@ USE_TZ = True
 STATIC_URL = "static/"
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    )
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
 }
 
 SIMPLE_JWT = {
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-    'ROTATE_REFRESH_TOKENS': False,
-    'TOKEN_OBTAIN_SERIALIZER': 'rest_framework_simplejwt.serializers.TokenObtainPairSerializer',
-    'TOKEN_REFRESH_SERIALIZER': 'app.core.serializers.CustomTokenRefreshSerializer',
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "ROTATE_REFRESH_TOKENS": False,
+    "TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers"
+    ".TokenObtainPairSerializer",
+    "TOKEN_REFRESH_SERIALIZER": "app.core.serializers" ".CustomTokenRefreshSerializer",
 }
 
 # Default primary key field type
@@ -151,15 +159,23 @@ SIMPLE_JWT = {
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "json": {
+            "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
+            "format": "%(asctime)s %(name)s %(levelname)s %(message)s "
+            "%(lineno)d %(pathname)s",
         },
     },
-    'root': {
-        'handlers': ['console'],
-        'level': 'WARNING',
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "json",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
     },
 }
