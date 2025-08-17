@@ -1,96 +1,96 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate, Link } from 'react-router-dom';
+import React, { useState, useEffect, useCallback, memo } from 'react';
+import { Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
 import Login from './components/Login.jsx';
 import Register from './components/Register.jsx';
 import Dashboard from './components/Dashboard.jsx';
 import Onboarding from './components/Onboarding.jsx';
-import api, { api_unauthenticated } from './services/api';
+import api from './services/api';
 import './App.css';
 
-const AppRoutes = ({ userCount, user, onOnboardingSuccess }) => {
-  console.log('AppRoutes render, userCount:', userCount);
-  if (userCount === null) {
+const AppRoutes = memo(({ user, onOnboardingSuccess, onLoginSuccess, handleLogout }) => {
+  if (user === undefined) {
     return <div>Loading...</div>;
   }
 
-  if (userCount === 0) {
-    return (
-      <Routes>
-        <Route path="/onboarding" element={<Onboarding onOnboardingSuccess={onOnboardingSuccess} />} />
-        <Route path="/*" element={<Navigate to="/onboarding" />} />
-      </Routes>
-    );
-  }
-
   return (
-      <>
-        <nav>
-          <Link to="/login">Login</Link> | <Link to="/register">Register</Link> | <Link to="/dashboard">Dashboard</Link>
-        </nav>
-        <div className="container">
-          <Routes>
-            <Route path="/onboarding" element={<Onboarding onOnboardingSuccess={onOnboardingSuccess} />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/dashboard" element={<Dashboard user={user} />} />
-            <Route path="/" element={<Navigate to="/dashboard" />} />
-          </Routes>
-        </div>
-      </>
+    <>
+      <nav>
+        {user ? (
+          <>
+            <Link to="/dashboard">Dashboard</Link> | <button onClick={handleLogout}>Logout</button>
+          </>
+        ) : (
+          <>
+            <Link to="/login">Login</Link> | <Link to="/register">Register</Link>
+          </>
+        )}
+      </nav>
+      <div className="container">
+        <Routes>
+          {user ? (
+            <>
+              <Route path="/dashboard" element={<Dashboard user={user} />} />
+              <Route path="/*" element={<Navigate to="/dashboard" />} />
+            </>
+          ) : (
+            <>
+              <Route path="/onboarding" element={<Onboarding onOnboardingSuccess={onOnboardingSuccess} onLoginSuccess={onLoginSuccess} />} />
+              <Route path="/login" element={<Login onLoginSuccess={onLoginSuccess} />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/*" element={<Navigate to="/login" />} />
+            </>
+          )}
+        </Routes>
+      </div>
+    </>
   );
-};
+});
 
 function App() {
-  console.log('App render');
-  const [userCount, setUserCount] = useState(null);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(undefined);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
 
-  const handleOnboardingSuccess = () => {
-    console.log('handleOnboardingSuccess');
-    setUserCount(1);
-  };
+  const handleLoginSuccess = useCallback(() => {
+    setIsLoggedIn(true);
+  }, []);
+
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    setUser(null);
+    setIsLoggedIn(false);
+    navigate('/login');
+  }, [navigate]);
+
+  const handleOnboardingSuccess = useCallback(() => {
+    setIsLoggedIn(true);
+  }, []);
 
   useEffect(() => {
-    console.log('useEffect fetchUser');
     const fetchUser = async () => {
       const token = localStorage.getItem('access_token');
       if (token) {
         try {
           const res = await api.get('/me/');
-          console.log('fetchUser success', res.data);
           setUser(res.data);
         } catch (err) {
-          console.error('fetchUser error', err);
+          setUser(null);
         }
       } else {
-        console.log('fetchUser no token');
+        setUser(null);
       }
     };
     fetchUser();
-  }, []);
-
-  useEffect(() => {
-    console.log('useEffect checkUserCount');
-    const checkUserCount = async () => {
-      try {
-        const res = await api_unauthenticated.get('/user-count/');
-        console.log('checkUserCount success', res.data);
-        setUserCount(res.data.user_count);
-      } catch (err) {
-        console.error('checkUserCount error', err);
-      }
-    };
-    checkUserCount();
-  }, []);
+  }, [isLoggedIn]);
 
   return (
-    <Router>
-      <AppRoutes
-        userCount={userCount}
-        user={user}
-        onOnboardingSuccess={handleOnboardingSuccess}
-      />
-    </Router>
+    <AppRoutes
+      user={user}
+      onOnboardingSuccess={handleOnboardingSuccess}
+      onLoginSuccess={handleLoginSuccess}
+      handleLogout={handleLogout}
+    />
   );
 }
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import Jobs from './Jobs.jsx';
 import ScrapableDomains from './ScrapableDomains.jsx';
 import ScrapeHistory from './ScrapeHistory.jsx';
@@ -10,13 +10,15 @@ const Dashboard = ({ user }) => {
   console.log('Dashboard render, user:', user);
   const [scrapeStatus, setScrapeStatus] = useState('');
   const [loading, setLoading] = useState(false);
+  const [scrapeCount, setScrapeCount] = useState(0);
 
-  const handleScrape = async () => {
+  const handleScrape = useCallback(async () => {
     setLoading(true);
     setScrapeStatus('Scraping...');
     try {
       const response = await api.post('/scrape/');
       setScrapeStatus(response.data.detail);
+      setScrapeCount(prev => prev + 1);
     } catch (error) {
       console.error('Error scraping jobs:', error);
       if (error.response && error.response.data && error.response.data.detail) {
@@ -27,7 +29,7 @@ const Dashboard = ({ user }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   return (
     <div className="dashboard">
@@ -38,7 +40,7 @@ const Dashboard = ({ user }) => {
         </button>
       </div>
       {scrapeStatus && <p>{scrapeStatus}</p>}
-      <Jobs />
+      <Jobs key={scrapeCount} />
       {user && user.role === 'admin' && (
         <div className="admin-section">
           <h2>Admin Tools</h2>

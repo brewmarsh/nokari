@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api_unauthenticated } from '../services/api';
 
-const Login = () => {
+const Login = ({ onLoginSuccess }) => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
+  const navigate = useNavigate();
 
   const { email, password } = formData;
 
@@ -18,7 +20,8 @@ const Login = () => {
       const res = await api_unauthenticated.post('/login/', { email, password });
       localStorage.setItem('access_token', res.data.access);
       localStorage.setItem('refresh_token', res.data.refresh);
-      window.location.href = '/dashboard';
+      onLoginSuccess();
+      navigate('/dashboard');
     } catch (err) {
       console.error(err);
       // Handle login error
