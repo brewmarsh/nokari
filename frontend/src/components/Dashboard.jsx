@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import Jobs from './Jobs';
-import ScrapableDomains from './ScrapableDomains';
-import ScrapeHistory from './ScrapeHistory';
+import Jobs from './Jobs.jsx';
+import ScrapableDomains from './ScrapableDomains.jsx';
+import ScrapeHistory from './ScrapeHistory.jsx';
+import JobTitles from './JobTitles.jsx';
 import api from '../services/api';
 import './Dashboard.css';
 
 const Dashboard = ({ user }) => {
+  console.log('Dashboard render, user:', user);
   const [scrapeStatus, setScrapeStatus] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -40,6 +42,7 @@ const Dashboard = ({ user }) => {
       {user && user.role === 'admin' && (
         <div className="admin-section">
           <h2>Admin Tools</h2>
+          <JobTitles />
           <ScrapableDomains />
           <ScrapeHistory />
         </div>

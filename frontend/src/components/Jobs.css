@@ -6,6 +6,7 @@
 }
 
 .job-card {
+    position: relative;
     background-color: #fff;
     border: 1px solid #ddd;
     border-radius: 8px;
@@ -14,28 +15,60 @@
     transition: box-shadow 0.3s ease;
 }
 
-.job-card:hover {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.job-card h2 {
-    margin-top: 0;
-    font-size: 1.25rem;
-}
-
-.job-card h2 a {
-    text-decoration: none;
-    color: #333;
-}
-
-.job-card h2 a:hover {
-    color: #007bff;
-}
-
-.job-card .company {
-    font-weight: bold;
-    color: #555;
+.job-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 10px;
+}
+
+.job-title a {
+    font-weight: bold;
+    color: #0056b3;
+    text-decoration: none;
+}
+
+.job-title a:hover {
+    text-decoration: underline;
+}
+
+.company-name {
+    font-family: 'Georgia', serif;
+    font-style: italic;
+    color: #555;
+    margin-bottom: 15px;
+}
+
+.posting-date {
+    font-size: 0.8rem;
+    color: #777;
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+}
+
+.job-card-icons {
+    display: flex;
+    gap: 10px;
+}
+
+.pin-icon, .hide-icon {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+.pin-icon {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+}
+
+.hide-icon {
+    position: absolute;
+    top: 10px;
+    right: 10px;
 }
 
 .job-card .description {
