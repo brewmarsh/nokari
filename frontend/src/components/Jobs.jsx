@@ -48,12 +48,16 @@ const Jobs = () => {
   const [company, setCompany] = useState('');
   const [search, setSearch] = useState('');
   const [openMenu, setOpenMenu] = useState(null);
+  const [isLoadingSimilar, setIsLoadingSimilar] = useState(false);
+  const [similarJobsTitle, setSimilarJobsTitle] = useState('');
 
   const debouncedTitle = useDebounce(title, 500);
   const debouncedCompany = useDebounce(company, 500);
   const debouncedSearch = useDebounce(search, 500);
 
   const fetchJobs = useCallback(async () => {
+    setIsLoadingSimilar(false);
+    setSimilarJobsTitle('');
     try {
       const res = await api.get('/jobs/', {
         params: {
@@ -103,13 +107,30 @@ const Jobs = () => {
     }
   }, [fetchJobs]);
 
-  const handleFindRelated = useCallback((jobTitle) => {
-    setTitle(jobTitle);
+  const handleFindSimilar = useCallback(async (job) => {
+    setIsLoadingSimilar(true);
+    setSimilarJobsTitle(job.title);
+    setOpenMenu(null);
+    try {
+      const res = await api.post(`/jobs/${job.link}/find-similar/`);
+      setJobs(res.data);
+    } catch (err) {
+      setError(err);
+    } finally {
+      setIsLoadingSimilar(false);
+    }
   }, []);
 
   return (
     <div>
-      <h1>Job Postings</h1>
+      {similarJobsTitle ? (
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
+          <h1>Jobs similar to "{similarJobsTitle}"</h1>
+          <button onClick={fetchJobs} style={{ marginLeft: '20px' }}>Clear</button>
+        </div>
+      ) : (
+        <h1>Job Postings</h1>
+      )}
       <div>
         <input
           type="text"
@@ -130,49 +151,54 @@ const Jobs = () => {
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
-      <div className="jobs-container">
-        {jobs.map((job) => (
-          <div key={job.link} className={`job-card ${job.is_pinned ? 'pinned' : ''}`}>
-            <button onClick={() => handlePin(job.link, job.is_pinned)} title={job.is_pinned ? 'Unpin Job' : 'Pin Job'} className="pin-icon">
-                <PinIcon isPinned={job.is_pinned} />
-            </button>
-            <div className="job-card-header">
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <h2 className="job-title"><a href={job.link} target="_blank" rel="noopener noreferrer">{job.title}</a></h2>
-                    <Badge workArrangement={job.work_arrangement} />
-                </div>
-                <p className="company-name">{job.company}</p>
-              </div>
-              <div className="action-menu">
-                <button onClick={() => setOpenMenu(openMenu === job.link ? null : job.link)} className="three-dots-icon">
-                  <ThreeDotsIcon />
-                </button>
-                {openMenu === job.link && (
-                  <div className="dropdown-menu">
-                    <button onClick={() => { handleHide(job.link); setOpenMenu(null); }}>Hide Job</button>
+      {isLoadingSimilar ? (
+        <div>Finding similar jobs...</div>
+      ) : (
+        <div className="jobs-container">
+          {jobs.map((job) => (
+            <div key={job.link} className={`job-card ${job.is_pinned ? 'pinned' : ''}`}>
+              <button onClick={() => handlePin(job.link, job.is_pinned)} title={job.is_pinned ? 'Unpin Job' : 'Pin Job'} className="pin-icon">
+                  <PinIcon isPinned={job.is_pinned} />
+              </button>
+              <div className="job-card-header">
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <h2 className="job-title"><a href={job.link} target="_blank" rel="noopener noreferrer">{job.title}</a></h2>
+                      <Badge workArrangement={job.work_arrangement} />
                   </div>
-                )}
-              </div>
-            </div>
-
-            {job.location && (
-                <div className="job-location">
-                    <span>{job.location}</span>
-                    {job.work_arrangement === 'remote' && <RemoteIcon style={{ color: 'var(--neutral-gray)' }} />}
-                    {job.work_arrangement === 'hybrid' && job.days_in_office && (
-                        <span style={{ marginLeft: '10px' }}>({job.days_in_office} days in office)</span>
-                    )}
+                  <p className="company-name">{job.company}</p>
                 </div>
-            )}
+                <div className="action-menu">
+                  <button onClick={() => setOpenMenu(openMenu === job.link ? null : job.link)} className="three-dots-icon">
+                    <ThreeDotsIcon />
+                  </button>
+                  {openMenu === job.link && (
+                    <div className="dropdown-menu">
+                      <button onClick={() => { handleHide(job.link); setOpenMenu(null); }}>Hide Job</button>
+                      <button onClick={() => handleFindSimilar(job)}>Find similar</button>
+                    </div>
+                  )}
+                </div>
+              </div>
 
-            <p className="description">{job.description}</p>
-            <p className="posting-date">
-              {new Date(job.posting_date).toLocaleDateString()}
-            </p>
-          </div>
-        ))}
-      </div>
+              {job.location && (
+                  <div className="job-location">
+                      <span>{job.location}</span>
+                      {job.work_arrangement === 'remote' && <RemoteIcon style={{ color: 'var(--neutral-gray)' }} />}
+                      {job.work_arrangement === 'hybrid' && job.days_in_office && (
+                          <span style={{ marginLeft: '10px' }}>({job.days_in_office} days in office)</span>
+                      )}
+                  </div>
+              )}
+
+              <p className="description">{job.description}</p>
+              <p className="posting-date">
+                {new Date(job.posting_date).toLocaleDateString()}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
