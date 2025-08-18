@@ -10,6 +10,7 @@ from django.shortcuts import render
 from .scraper import scrape_jobs
 from django.db.models import OuterRef, Subquery, BooleanField, Value
 from django.db.models.functions import Coalesce
+import difflib
 
 User = get_user_model()
 
@@ -216,6 +217,44 @@ class HideJobPostingView(APIView):
         interaction.save()
 
         return Response(status=status.HTTP_200_OK)
+
+class FindSimilarJobsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        job_pk = kwargs.get('pk')
+        try:
+            target_job = JobPosting.objects.get(pk=job_pk)
+        except JobPosting.DoesNotExist:
+            return Response({"error": "Job posting not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        all_jobs = JobPosting.objects.exclude(link=job_link)
+
+        similar_jobs = []
+        for job in all_jobs:
+            title_similarity = difflib.SequenceMatcher(None, target_job.title.lower(), job.title.lower()).ratio()
+
+            target_keywords = set(target_job.title.lower().split())
+            job_text = (job.title + ' ' + job.description).lower()
+            keyword_matches = sum(1 for keyword in target_keywords if keyword in job_text)
+
+            # Normalize keyword matches
+            keyword_similarity = keyword_matches / len(target_keywords) if target_keywords else 0
+
+            # Combine scores (you can adjust the weighting)
+            combined_score = (0.6 * title_similarity) + (0.4 * keyword_similarity)
+
+            if combined_score > 0.3: # Adjust threshold as needed
+                similar_jobs.append((job, combined_score))
+
+        # Sort by score in descending order
+        similar_jobs.sort(key=lambda x: x[1], reverse=True)
+
+        # Get the top N jobs
+        top_jobs = [job for job, score in similar_jobs[:10]]
+
+        serializer = JobPostingSerializer(top_jobs, many=True)
+        return Response(serializer.data)
 
 class SearchableJobTitleViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdmin]
