@@ -47,11 +47,6 @@
     right: 10px;
 }
 
-.job-card-icons {
-    display: flex;
-    gap: 10px;
-}
-
 .pin-icon, .hide-icon {
     background: none;
     border: none;
