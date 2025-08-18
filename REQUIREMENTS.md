@@ -28,6 +28,7 @@ To provide a simple way of finding jobs and helping to tailor the resume and cov
 *   ...be able to generate an updated resume based on a job posting.
 *   ...be able to generate an updated cover letter based on a job posting.
 *   ...be able to change my password securely.
+*   ...be able to find jobs similar to one I'm interested in, so I can discover more relevant opportunities.
 
 ### 3.3 As a system administrator, I want to...
 *   ...be able to see administrative options that are not available to non-adminstrator users.
@@ -143,3 +144,27 @@ To provide a simple way of finding jobs and helping to tailor the resume and cov
     * **Onsite:** A gray badge.
 * For hybrid roles, the job posting details must specify the number of required days in the office and the office location.
 * The platform will **remember a user's preferred work arrangement** and prioritize those job types in search results and email alerts.
+
+### 8.3. Find Similar Jobs Feature
+
+#### 8.3.1. User Experience
+
+*   **Trigger:** A "Find similar" button or link will be displayed on each job posting card.
+*   **Interaction:**
+    *   When a user clicks the "Find similar" button, the main job list will be updated to show only jobs that are similar to the selected one.
+    *   A clear heading, such as "Jobs similar to [Original Job Title]", will be displayed above the results.
+    *   A loading indicator will be shown while the search is in progress.
+*   **Display:** The similar jobs will be ranked by their similarity score, with the most similar jobs appearing first.
+
+#### 8.3.2. Similarity Engine (MVP)
+
+For the initial implementation (MVP), similarity will be determined based on the following factors:
+
+*   **Job Title:** Matching keywords and phrases in the job title.
+*   **Key Skills:** Automatically extracting key skills and technologies from the job description (e.g., "Python", "React", "Project Management") and finding other jobs that mention the same skills.
+
+#### 8.3.3. Future Enhancements (Post-MVP)
+
+*   **Semantic Understanding:** Enhance the similarity model using advanced NLP techniques (e.g., document embeddings) to understand the meaning and context of the job description, not just keywords.
+*   **Company & Industry:** Factor in the company's industry, size, and reputation to improve similarity matching.
+*   **User Feedback:** Introduce a mechanism for users to provide feedback on the similarity results (e.g., "This job is not similar"), which can be used to fine-tune the model over time.
