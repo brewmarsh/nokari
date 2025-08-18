@@ -228,7 +228,7 @@ class FindSimilarJobsView(APIView):
         except JobPosting.DoesNotExist:
             return Response({"error": "Job posting not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        all_jobs = JobPosting.objects.exclude(link=job_link)
+        all_jobs = JobPosting.objects.exclude(link=job_pk)
 
         similar_jobs = []
         for job in all_jobs:

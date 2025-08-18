@@ -6,7 +6,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 from django.contrib.auth import get_user_model
-from .models import JobPosting, UserJobInteraction, HiddenCompany, SearchableJobTitle
+from .models import JobPosting, UserJobInteraction, HiddenCompany, SearchableJobTitle, ScrapableDomain
 
 User = get_user_model()
 
@@ -89,7 +89,7 @@ class HideCompanyViewTest(APITestCase):
         url = reverse('job_postings')
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 0)
+        self.assertEqual(len(response.data), 0)
 
 
 class PinJobPostingViewTest(APITestCase):
@@ -148,8 +148,8 @@ class PinJobPostingViewTest(APITestCase):
         url = reverse('job_postings')
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['results'][0]['link'], self.job_posting2.link)
-        self.assertEqual(response.data['results'][1]['link'], self.job_posting1.link)
+        self.assertEqual(response.data[0]['link'], self.job_posting2.link)
+        self.assertEqual(response.data[1]['link'], self.job_posting1.link)
 
 
 class SearchableJobTitleViewSetTest(APITestCase):
@@ -158,6 +158,7 @@ class SearchableJobTitleViewSetTest(APITestCase):
         self.user = User.objects.create_user(email='user@example.com', password='password')
         self.job_title1 = SearchableJobTitle.objects.create(title='Software Engineer')
         self.job_title2 = SearchableJobTitle.objects.create(title='Product Manager')
+        ScrapableDomain.objects.create(domain='example.com')
 
     def test_list_job_titles_as_admin(self):
         self.client.force_authenticate(user=self.admin_user)
@@ -270,3 +271,42 @@ class ScraperTests(TestCase):
             with self.assertRaises(Exception) as context:
                 scrape_jobs("test query", "test.com")
             self.assertEqual(str(context.exception), "Google API Error")
+
+
+class FindSimilarJobsViewTest(APITestCase):
+
+    def setUp(self):
+        self.user = User.objects.create_user(email='test@example.com', password='password')
+        self.client.force_authenticate(user=self.user)
+
+        self.target_job = JobPosting.objects.create(
+            link='http://example.com/job/1',
+            title='Senior Software Engineer',
+            company='Tech Corp',
+            description='Develop and maintain web applications using Python and Django.'
+        )
+
+        self.similar_job = JobPosting.objects.create(
+            link='http://example.com/job/2',
+            title='Software Engineer',
+            company='Innovate LLC',
+            description='Experience with Python and Django is a plus.'
+        )
+
+        self.dissimilar_job = JobPosting.objects.create(
+            link='http://example.com/job/3',
+            title='Product Manager',
+            company='Business Inc.',
+            description='Define product strategy and roadmap.'
+        )
+
+    def test_find_similar_jobs(self):
+        """
+        Ensure that the find-similar-jobs endpoint returns similar jobs.
+        """
+        url = reverse('find_similar_jobs', kwargs={'pk': self.target_job.link})
+        response = self.client.post(url, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['link'], self.similar_job.link)
