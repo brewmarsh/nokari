@@ -9,3 +9,4 @@ djangorestframework-simplejwt==5.5.1
 django-cors-headers
 google-api-python-client
 pip-tools
+python-json-logger
