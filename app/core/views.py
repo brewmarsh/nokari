@@ -13,7 +13,7 @@ from django.db.models.functions import Coalesce
 
 User = get_user_model()
 
-class MeView(generics.RetrieveAPIView):
+class MeView(generics.RetrieveUpdateAPIView):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
 

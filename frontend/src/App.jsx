@@ -5,24 +5,51 @@ import Register from './components/Register.jsx';
 import Dashboard from './components/Dashboard.jsx';
 import Onboarding from './components/Onboarding.jsx';
 import Documents from './components/Documents.jsx';
+import Profile from './components/Profile.jsx';
+import Settings from './components/Settings.jsx';
+import UserProfileIcon from './components/UserProfileIcon.jsx';
 import api from './services/api';
 import './App.css';
 
 const AppRoutes = memo(({ user, onOnboardingSuccess, onLoginSuccess, handleLogout }) => {
+  const [isDropdownOpen, setDropdownOpen] = useState(false);
+
   if (user === undefined) {
     return <div>Loading...</div>;
   }
+
+  const registerButtonStyle = {
+    backgroundColor: 'var(--accent-orange)',
+    color: 'white',
+    padding: '10px 15px',
+    textDecoration: 'none',
+    borderRadius: '5px',
+  };
 
   return (
     <>
       <nav>
         {user ? (
           <>
-            <Link to="/dashboard">Dashboard</Link> | <Link to="/documents">Documents</Link> | <button onClick={handleLogout}>Logout</button>
+            <Link to="/dashboard">Dashboard</Link>
+            <div style={{ position: 'relative', marginLeft: 'auto' }}>
+              <button onClick={() => setDropdownOpen(!isDropdownOpen)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                <UserProfileIcon />
+              </button>
+              {isDropdownOpen && (
+                <div style={{ position: 'absolute', right: 0, backgroundColor: 'white', border: '1px solid #ccc', borderRadius: '5px', zIndex: 10 }}>
+                  <Link to="/profile" style={{ display: 'block', padding: '10px', textDecoration: 'none', color: 'black' }}>Profile</Link>
+                  <Link to="/settings" style={{ display: 'block', padding: '10px', textDecoration: 'none', color: 'black' }}>Settings</Link>
+                  <Link to="/documents" style={{ display: 'block', padding: '10px', textDecoration: 'none', color: 'black' }}>Documents</Link>
+                  <button onClick={() => { handleLogout(); setDropdownOpen(false); }} style={{ display: 'block', width: '100%', padding: '10px', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer' }}>Logout</button>
+                </div>
+              )}
+            </div>
           </>
         ) : (
           <>
-            <Link to="/login">Login</Link> | <Link to="/register">Register</Link>
+            <Link to="/login">Login</Link>
+            <Link to="/register" style={registerButtonStyle}>Register</Link>
           </>
         )}
       </nav>
@@ -32,6 +59,8 @@ const AppRoutes = memo(({ user, onOnboardingSuccess, onLoginSuccess, handleLogou
             <>
               <Route path="/dashboard" element={<Dashboard user={user} />} />
               <Route path="/documents" element={<Documents />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/settings" element={<Settings />} />
               <Route path="/*" element={<Navigate to="/dashboard" />} />
             </>
           ) : (

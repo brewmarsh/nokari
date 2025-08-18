@@ -2,8 +2,44 @@ import React, { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
 import './Jobs.css';
 import PinIcon from './PinIcon.jsx';
-import HideIcon from './HideIcon.jsx';
 import useDebounce from '../hooks/useDebounce.js';
+
+const ThreeDotsIcon = (props) => (
+  <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+    <path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/>
+  </svg>
+);
+
+const RemoteIcon = (props) => (
+  <svg {...props} xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
+    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+  </svg>
+);
+
+const Badge = ({ workArrangement }) => {
+    const badgeStyle = {
+      padding: '4px 8px',
+      borderRadius: '12px',
+      color: 'white',
+      fontSize: '0.8rem',
+      fontWeight: 'bold',
+      marginLeft: '10px',
+      textTransform: 'capitalize',
+    };
+
+    const badgeColors = {
+      remote: 'var(--secondary-green)',
+      hybrid: 'var(--primary-blue)',
+      onsite: 'var(--neutral-gray)',
+    };
+
+    const style = {
+      ...badgeStyle,
+      backgroundColor: badgeColors[workArrangement],
+    };
+
+    return <span style={style}>{workArrangement}</span>;
+  };
 
 const Jobs = () => {
   const [jobs, setJobs] = useState([]);
@@ -11,6 +47,7 @@ const Jobs = () => {
   const [title, setTitle] = useState('');
   const [company, setCompany] = useState('');
   const [search, setSearch] = useState('');
+  const [openMenu, setOpenMenu] = useState(null);
 
   const debouncedTitle = useDebounce(title, 500);
   const debouncedCompany = useDebounce(company, 500);
@@ -96,14 +133,39 @@ const Jobs = () => {
       <div className="jobs-container">
         {jobs.map((job) => (
           <div key={job.link} className={`job-card ${job.is_pinned ? 'pinned' : ''}`}>
+            <button onClick={() => handlePin(job.link, job.is_pinned)} title={job.is_pinned ? 'Unpin Job' : 'Pin Job'} className="pin-icon">
+                <PinIcon isPinned={job.is_pinned} />
+            </button>
             <div className="job-card-header">
-              <h2 className="job-title"><a href={job.link} target="_blank" rel="noopener noreferrer">{job.title}</a></h2>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <h2 className="job-title"><a href={job.link} target="_blank" rel="noopener noreferrer">{job.title}</a></h2>
+                    <Badge workArrangement={job.work_arrangement} />
+                </div>
+                <p className="company-name">{job.company}</p>
+              </div>
+              <div className="action-menu">
+                <button onClick={() => setOpenMenu(openMenu === job.link ? null : job.link)} className="three-dots-icon">
+                  <ThreeDotsIcon />
+                </button>
+                {openMenu === job.link && (
+                  <div className="dropdown-menu">
+                    <button onClick={() => { handleHide(job.link); setOpenMenu(null); }}>Hide Job</button>
+                  </div>
+                )}
+              </div>
             </div>
-            <button onClick={() => handlePin(job.link, job.is_pinned)} title={job.is_pinned ? 'Unpin Job' : 'Pin Job'} className="pin-icon"><PinIcon /></button>
-            <button onClick={() => handleHide(job.link)} title="Hide Job" className="hide-icon"><HideIcon /></button>
-            <p className="company-name">
-              {job.company}
-            </p>
+
+            {job.location && (
+                <div className="job-location">
+                    <span>{job.location}</span>
+                    {job.work_arrangement === 'remote' && <RemoteIcon style={{ color: 'var(--neutral-gray)' }} />}
+                    {job.work_arrangement === 'hybrid' && job.days_in_office && (
+                        <span style={{ marginLeft: '10px' }}>({job.days_in_office} days in office)</span>
+                    )}
+                </div>
+            )}
+
             <p className="description">{job.description}</p>
             <p className="posting-date">
               {new Date(job.posting_date).toLocaleDateString()}

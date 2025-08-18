@@ -88,3 +88,58 @@ To provide a simple way of finding jobs and helping to tailor the resume and cov
 
 *   The version of `npm` should be updated to the latest version.
 *   The application should be containerized using Docker.
+
+## 8. New Requirements
+
+### 8.1. User Interface Requirements
+
+---
+
+#### **Brand Colors**
+
+* **Primary Blue:** `#2F4C82` (Trust, Professionalism)
+* **Secondary Green:** `#4CAF50` (Growth, Success)
+* **Accent Orange:** `#FF9800` (Energy, Motivation)
+* **Neutral Gray:** `#607D8B` (Balance, Seriousness)
+* **Light Gray/White:** `#EFEFEF` (Cleanliness, Readability)
+
+---
+
+#### **Job Posting Card**
+
+* Each Job Posting card must display a single **Pin/Unpin toggle icon** in the top left corner.
+    * The icon should be an outline when the job is not pinned and a solid fill when the job is pinned.
+    * Clicking the solid icon will unpin the job, returning it to its original position in the list.
+    * Clicking the outline icon will pin the job to the top of the list.
+* The card must include a **three-dot action menu** (`...`) in the top right corner.
+    * This menu will contain a "Hide Job" action.
+* The **Company Name** will be displayed below the Job Posting title.
+* The **Remote icon** will be displayed to the right of the job's location, using the Neutral Gray color (`#607D8B`).
+
+---
+
+#### **Top Navigation Menu**
+
+* When a user is logged in, the top menu will show a **Dashboard link** and a **user profile icon** that, when clicked, opens a dropdown menu containing **Profile, Settings, and Logout** links.
+* When a user is not logged in, the top menu will display a **Login link** and a visually distinct **Register button** using the Accent Orange color (`#FF9800`).
+
+---
+
+#### **Admin User Interface**
+
+* On the **Job Titles list** and the **Scrapable Domains list**, a **Delete icon** will appear to the right of each item.
+    * The Delete icon should be colored red to signify a destructive action.
+    * Clicking the Delete icon will trigger a **confirmation pop-up** that requires the user to confirm the action before the item is permanently deleted.
+
+---
+
+### 8.2. **Geolocation & Proximity Requirements**
+
+* The platform will include a **map-based search interface** that shows job postings as interactive pins.
+* Users can filter jobs by a **"commute time"** (e.g., 30-minute drive, transit, or bike ride) from a user-specified address.
+* Job postings must be clearly distinguished by their work arrangement. Each job card and search result will display a **visual badge** that indicates if the role is:
+    * **Remote:** A green badge.
+    * **Hybrid:** A blue badge.
+    * **Onsite:** A gray badge.
+* For hybrid roles, the job posting details must specify the number of required days in the office and the office location.
+* The platform will **remember a user's preferred work arrangement** and prioritize those job types in search results and email alerts.

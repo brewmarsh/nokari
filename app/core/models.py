@@ -32,6 +32,11 @@ class User(AbstractUser):
     username = models.CharField(max_length=150, unique=True, null=True, blank=True)
     email = models.EmailField(unique=True)
     role = models.CharField(max_length=10, choices=[('admin', 'Admin'), ('user', 'User')])
+    preferred_work_arrangement = models.CharField(
+        max_length=10,
+        choices=[('remote', 'Remote'), ('hybrid', 'Hybrid'), ('onsite', 'Onsite'), ('any', 'Any')],
+        default='any'
+    )
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
@@ -54,6 +59,13 @@ class JobPosting(models.Model):
     description = models.TextField(default='')
     confidence_score = models.FloatField(default=0)
     posting_date = models.DateField(null=True, blank=True)
+    location = models.CharField(max_length=255, blank=True, null=True)
+    work_arrangement = models.CharField(
+        max_length=10,
+        choices=[('remote', 'Remote'), ('hybrid', 'Hybrid'), ('onsite', 'Onsite')],
+        default='onsite'
+    )
+    days_in_office = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.title} at {self.company}"

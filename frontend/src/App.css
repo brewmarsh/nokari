@@ -4,7 +4,7 @@ body {
       sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: #f4f7f6;
+    background-color: var(--light-gray);
     color: #333;
     margin: 0;
 }
@@ -16,11 +16,11 @@ body {
 }
 
 h1 {
-    color: #2c3e50;
+    color: var(--primary-blue);
 }
 
 button {
-    background-color: #3498db;
+    background-color: var(--primary-blue);
     color: white;
     border: none;
     padding: 10px 15px;
@@ -31,7 +31,7 @@ button {
 }
 
 button:hover {
-    background-color: #2980b9;
+    opacity: 0.9;
 }
 
 button:disabled {
@@ -51,7 +51,7 @@ input[type="password"] {
 }
 
 nav {
-    background-color: #34495e;
+    background-color: var(--primary-blue);
     padding: 1rem;
     display: flex;
     justify-content: center;

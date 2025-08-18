@@ -30,7 +30,7 @@ const Register = () => {
         if (err.response) {
           // The request was made and the server responded with a status code
           // that falls out of the range of 2xx
-          alert('Registration failed: ' + JSON.stringify(err.response.data));
+          alert('Registration failed: ' + (err.response ? JSON.stringify(err.response.data, null, 2) : err.message));
         } else if (err.request) {
           // The request was made but no response was received
           alert('Registration failed: No response from server.');
