@@ -3,6 +3,7 @@ import api from '../services/api';
 import './Jobs.css';
 import PinIcon from './PinIcon.jsx';
 import HideIcon from './HideIcon.jsx';
+import useDebounce from '../hooks/useDebounce.js';
 
 const Jobs = () => {
   const [jobs, setJobs] = useState([]);
@@ -11,24 +12,28 @@ const Jobs = () => {
   const [company, setCompany] = useState('');
   const [search, setSearch] = useState('');
 
+  const debouncedTitle = useDebounce(title, 500);
+  const debouncedCompany = useDebounce(company, 500);
+  const debouncedSearch = useDebounce(search, 500);
+
   const fetchJobs = useCallback(async () => {
     try {
       const res = await api.get('/jobs/', {
         params: {
-          title,
-          company,
-          search,
+          title: debouncedTitle,
+          company: debouncedCompany,
+          search: debouncedSearch,
         },
       });
       setJobs(res.data);
     } catch (err) {
       setError(err);
     }
-  }, [title, company, search]);
+  }, [debouncedTitle, debouncedCompany, debouncedSearch]);
 
   useEffect(() => {
     fetchJobs();
-  }, [title, company, search]);
+  }, [debouncedTitle, debouncedCompany, debouncedSearch, fetchJobs]);
 
   if (error) {
     return <div>Error: {error.message}</div>;
