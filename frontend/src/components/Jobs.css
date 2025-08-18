@@ -48,6 +48,11 @@
 }
 
 .pin-icon {
+    background-color: red !important;
+    border: 5px solid red !important;
+    width: 50px !important;
+    height: 50px !important;
+    z-index: 9999 !important;
     background: none;
     border: none;
     cursor: pointer;
@@ -62,6 +67,11 @@
 }
 
 .three-dots-icon {
+    background-color: red !important;
+    border: 5px solid red !important;
+    width: 50px !important;
+    height: 50px !important;
+    z-index: 9999 !important;
     background: none;
     border: none;
     cursor: pointer;
