@@ -57,7 +57,9 @@ To provide a simple way of finding jobs and helping to tailor the resume and cov
 *   The application should be available and functioning correctly with minimal downtime.
 
 ## 5. Future Features
-
+*   As a registered user, I can quickly identify from the card view if a posting is for a remote role.
+*   As a registered user, I can search for roles that match a company's industry.
+*   As a registered user, I can use a specific posting to find similar roles, relying on the company, job title and job description as similar keywords. 
 *   Users can upload multiple resumes and cover letters.
 *   Users can choose a default resume and cover letter.
 *   Users can delete resumes and cover letters.
