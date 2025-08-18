@@ -4,6 +4,7 @@ import Login from './components/Login.jsx';
 import Register from './components/Register.jsx';
 import Dashboard from './components/Dashboard.jsx';
 import Onboarding from './components/Onboarding.jsx';
+import Documents from './components/Documents.jsx';
 import api from './services/api';
 import './App.css';
 
@@ -17,7 +18,7 @@ const AppRoutes = memo(({ user, onOnboardingSuccess, onLoginSuccess, handleLogou
       <nav>
         {user ? (
           <>
-            <Link to="/dashboard">Dashboard</Link> | <button onClick={handleLogout}>Logout</button>
+            <Link to="/dashboard">Dashboard</Link> | <Link to="/documents">Documents</Link> | <button onClick={handleLogout}>Logout</button>
           </>
         ) : (
           <>
@@ -30,6 +31,7 @@ const AppRoutes = memo(({ user, onOnboardingSuccess, onLoginSuccess, handleLogou
           {user ? (
             <>
               <Route path="/dashboard" element={<Dashboard user={user} />} />
+              <Route path="/documents" element={<Documents />} />
               <Route path="/*" element={<Navigate to="/dashboard" />} />
             </>
           ) : (
