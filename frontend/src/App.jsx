@@ -79,47 +79,38 @@ const AppRoutes = memo(({ user, onOnboardingSuccess, onLoginSuccess, handleLogou
 
 function App() {
   const [user, setUser] = useState(undefined);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
 
-  const handleLoginSuccess = useCallback(() => {
-    setIsLoggedIn(true);
+  const fetchUser = useCallback(async () => {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      try {
+        const res = await api.get('/me/');
+        setUser(res.data);
+      } catch (err) {
+        setUser(null);
+      }
+    } else {
+      setUser(null);
+    }
   }, []);
 
   const handleLogout = useCallback(() => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     setUser(null);
-    setIsLoggedIn(false);
     navigate('/login');
   }, [navigate]);
 
-  const handleOnboardingSuccess = useCallback(() => {
-    setIsLoggedIn(true);
-  }, []);
-
   useEffect(() => {
-    const fetchUser = async () => {
-      const token = localStorage.getItem('access_token');
-      if (token) {
-        try {
-          const res = await api.get('/me/');
-          setUser(res.data);
-        } catch (err) {
-          setUser(null);
-        }
-      } else {
-        setUser(null);
-      }
-    };
     fetchUser();
-  }, [isLoggedIn]);
+  }, [fetchUser]);
 
   return (
     <AppRoutes
       user={user}
-      onOnboardingSuccess={handleOnboardingSuccess}
-      onLoginSuccess={handleLoginSuccess}
+      onOnboardingSuccess={fetchUser}
+      onLoginSuccess={fetchUser}
       handleLogout={handleLogout}
     />
   );
