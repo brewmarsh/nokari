@@ -22,6 +22,10 @@
     margin-bottom: 10px;
 }
 
+.job-card-header > div:first-child {
+    flex-grow: 1;
+}
+
 .job-title a {
     font-weight: bold;
     color: var(--primary-blue);
@@ -48,11 +52,6 @@
 }
 
 .pin-icon {
-    background-color: red !important;
-    border: 5px solid red !important;
-    width: 50px !important;
-    height: 50px !important;
-    z-index: 9999 !important;
     background: none;
     border: none;
     cursor: pointer;
@@ -62,20 +61,20 @@
     right: 40px;
 }
 
+.pin-icon svg {
+    fill: #333;
+}
+
 .action-menu {
     position: relative;
 }
 
 .three-dots-icon {
-    background-color: red !important;
-    border: 5px solid red !important;
-    width: 50px !important;
-    height: 50px !important;
-    z-index: 9999 !important;
     background: none;
     border: none;
     cursor: pointer;
     padding: 0;
+    color: #333;
 }
 
 .dropdown-menu {
