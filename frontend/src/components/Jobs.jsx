@@ -157,9 +157,6 @@ const Jobs = () => {
         <div className="jobs-container">
           {jobs.map((job) => (
             <div key={job.link} className={`job-card ${job.is_pinned ? 'pinned' : ''}`}>
-              <button onClick={() => handlePin(job.link, job.is_pinned)} title={job.is_pinned ? 'Unpin Job' : 'Pin Job'} className="pin-icon">
-                  <PinIcon isPinned={job.is_pinned} />
-              </button>
               <div className="job-card-header">
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -168,16 +165,21 @@ const Jobs = () => {
                   </div>
                   <p className="company-name">{job.company}</p>
                 </div>
-                <div className="action-menu">
-                  <button onClick={() => setOpenMenu(openMenu === job.link ? null : job.link)} className="three-dots-icon">
-                    <ThreeDotsIcon />
+                <div className="card-actions">
+                  <button onClick={() => handlePin(job.link, job.is_pinned)} title={job.is_pinned ? 'Unpin Job' : 'Pin Job'} className="pin-icon">
+                      <PinIcon isPinned={job.is_pinned} />
                   </button>
-                  {openMenu === job.link && (
-                    <div className="dropdown-menu">
-                      <button onClick={() => { handleHide(job.link); setOpenMenu(null); }}>Hide Job</button>
-                      <button onClick={() => handleFindSimilar(job)}>Find similar</button>
-                    </div>
-                  )}
+                  <div className="action-menu">
+                    <button onClick={() => setOpenMenu(openMenu === job.link ? null : job.link)} className="three-dots-icon">
+                      <ThreeDotsIcon />
+                    </button>
+                    {openMenu === job.link && (
+                      <div className="dropdown-menu">
+                        <button onClick={() => { handleHide(job.link); setOpenMenu(null); }}>Hide Job</button>
+                        <button onClick={() => handleFindSimilar(job)}>Find similar</button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
