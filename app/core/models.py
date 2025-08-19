@@ -66,6 +66,7 @@ class JobPosting(models.Model):
         default='onsite'
     )
     days_in_office = models.IntegerField(blank=True, null=True)
+    embedding = models.JSONField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.title} at {self.company}"

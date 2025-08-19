@@ -8,11 +8,35 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import render
 from .scraper import scrape_jobs
+import numpy as np
+from numpy.linalg import norm
 from django.db.models import OuterRef, Subquery, BooleanField, Value
 from django.db.models.functions import Coalesce
-import difflib
+from transformers import AutoTokenizer, AutoModel
+import torch
 
 User = get_user_model()
+
+# Load model and tokenizer
+tokenizer = AutoTokenizer.from_pretrained('sentence-transformers/all-MiniLM-L6-v2')
+model = AutoModel.from_pretrained('sentence-transformers/all-MiniLM-L6-v2')
+
+def generate_embedding(text):
+    inputs = tokenizer(text, return_tensors='pt', truncation=True, max_length=512)
+    with torch.no_grad():
+        outputs = model(**inputs)
+
+    # Mean pooling
+    embeddings = outputs.last_hidden_state
+    mask = inputs['attention_mask'].unsqueeze(-1).expand(embeddings.size()).float()
+    masked_embeddings = embeddings * mask
+    summed = torch.sum(masked_embeddings, 1)
+    counted = torch.clamp(mask.sum(1), min=1e-9)
+    mean_pooled = summed / counted
+
+    # Normalize
+    mean_pooled = torch.nn.functional.normalize(mean_pooled, p=2, dim=1)
+    return mean_pooled.tolist()[0]
 
 class MeView(generics.RetrieveUpdateAPIView):
     serializer_class = UserSerializer
@@ -167,6 +191,9 @@ class ScrapeView(APIView):
                         }
                     )
                     if created:
+                        text = f"{obj.title} {obj.description}"
+                        obj.embedding = generate_embedding(text)
+                        obj.save()
                         scraped_count += 1
             ScrapeHistory.objects.create(
                 user=request.user,
@@ -218,6 +245,9 @@ class HideJobPostingView(APIView):
 
         return Response(status=status.HTTP_200_OK)
 
+import numpy as np
+from numpy.linalg import norm
+
 class FindSimilarJobsView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -228,24 +258,20 @@ class FindSimilarJobsView(APIView):
         except JobPosting.DoesNotExist:
             return Response({"error": "Job posting not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        all_jobs = JobPosting.objects.exclude(link=job_pk)
+        if not target_job.embedding:
+            return Response({"error": "Target job has no embedding."}, status=status.HTTP_400_BAD_REQUEST)
+
+        all_jobs = JobPosting.objects.exclude(link=job_pk).exclude(embedding__isnull=True)
+
+        target_embedding = np.array(target_job.embedding)
 
         similar_jobs = []
         for job in all_jobs:
-            title_similarity = difflib.SequenceMatcher(None, target_job.title.lower(), job.title.lower()).ratio()
+            job_embedding = np.array(job.embedding)
+            cosine_similarity = np.dot(target_embedding, job_embedding) / (norm(target_embedding) * norm(job_embedding))
 
-            target_keywords = set(target_job.title.lower().split())
-            job_text = (job.title + ' ' + job.description).lower()
-            keyword_matches = sum(1 for keyword in target_keywords if keyword in job_text)
-
-            # Normalize keyword matches
-            keyword_similarity = keyword_matches / len(target_keywords) if target_keywords else 0
-
-            # Combine scores (you can adjust the weighting)
-            combined_score = (0.6 * title_similarity) + (0.4 * keyword_similarity)
-
-            if combined_score > 0.3: # Adjust threshold as needed
-                similar_jobs.append((job, combined_score))
+            if cosine_similarity > 0.7: # Adjust threshold as needed
+                similar_jobs.append((job, cosine_similarity))
 
         # Sort by score in descending order
         similar_jobs.sort(key=lambda x: x[1], reverse=True)

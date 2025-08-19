@@ -279,34 +279,38 @@ class FindSimilarJobsViewTest(APITestCase):
         self.user = User.objects.create_user(email='test@example.com', password='password')
         self.client.force_authenticate(user=self.user)
 
-        self.target_job = JobPosting.objects.create(
-            link='http://example.com/job/1',
-            title='Senior Software Engineer',
-            company='Tech Corp',
-            description='Develop and maintain web applications using Python and Django.'
-        )
-
-        self.similar_job = JobPosting.objects.create(
-            link='http://example.com/job/2',
-            title='Software Engineer',
-            company='Innovate LLC',
-            description='Experience with Python and Django is a plus.'
-        )
-
-        self.dissimilar_job = JobPosting.objects.create(
-            link='http://example.com/job/3',
-            title='Product Manager',
-            company='Business Inc.',
-            description='Define product strategy and roadmap.'
-        )
-
-    def test_find_similar_jobs(self):
+    @patch('app.core.views.generate_embedding')
+    def test_find_similar_jobs(self, mock_generate_embedding):
         """
         Ensure that the find-similar-jobs endpoint returns similar jobs.
         """
-        url = reverse('find_similar_jobs', kwargs={'pk': self.target_job.link})
+        target_job = JobPosting.objects.create(
+            link='http://example.com/job/1',
+            title='Senior Software Engineer',
+            company='Tech Corp',
+            description='Develop and maintain web applications using Python and Django.',
+            embedding=[1.0, 0.0, 0.0]
+        )
+
+        similar_job = JobPosting.objects.create(
+            link='http://example.com/job/2',
+            title='Software Engineer',
+            company='Innovate LLC',
+            description='Experience with Python and Django is a plus.',
+            embedding=[0.9, 0.1, 0.0]
+        )
+
+        dissimilar_job = JobPosting.objects.create(
+            link='http://example.com/job/3',
+            title='Product Manager',
+            company='Business Inc.',
+            description='Define product strategy and roadmap.',
+            embedding=[0.0, 1.0, 0.0]
+        )
+
+        url = reverse('find_similar_jobs', kwargs={'pk': target_job.link})
         response = self.client.post(url, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]['link'], self.similar_job.link)
+        self.assertEqual(response.data[0]['link'], similar_job.link)
