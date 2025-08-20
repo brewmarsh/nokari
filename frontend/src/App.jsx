@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, memo } from 'react';
+import React, { useState, useEffect, useCallback, memo, useRef } from 'react';
 import { Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
 import Login from './components/Login.jsx';
 import Register from './components/Register.jsx';
@@ -14,6 +14,20 @@ import './App.css';
 
 const AppRoutes = memo(({ user, onOnboardingSuccess, onLoginSuccess, handleLogout }) => {
   const [isDropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   if (user === undefined) {
     return <div>Loading...</div>;
@@ -34,7 +48,7 @@ const AppRoutes = memo(({ user, onOnboardingSuccess, onLoginSuccess, handleLogou
           <>
             <Link to="/dashboard">Dashboard</Link>
             {user.role === 'admin' && <Link to="/admin">Admin</Link>}
-            <div style={{ position: 'relative', marginLeft: 'auto' }}>
+            <div style={{ position: 'relative', marginLeft: 'auto' }} ref={dropdownRef}>
               <button onClick={() => setDropdownOpen(!isDropdownOpen)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
                 <UserProfileIcon />
               </button>
