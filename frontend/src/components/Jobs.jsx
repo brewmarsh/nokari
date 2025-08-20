@@ -16,14 +16,14 @@ const RemoteIcon = (props) => (
   </svg>
 );
 
-const Badge = ({ workArrangement }) => {
+const Badge = ({ location }) => {
     const badgeStyle = {
       padding: '4px 8px',
       borderRadius: '12px',
       color: 'white',
       fontSize: '0.8rem',
       fontWeight: 'bold',
-      marginLeft: '10px',
+      marginRight: '5px',
       textTransform: 'capitalize',
     };
 
@@ -35,10 +35,10 @@ const Badge = ({ workArrangement }) => {
 
     const style = {
       ...badgeStyle,
-      backgroundColor: badgeColors[workArrangement],
+      backgroundColor: badgeColors[location.type],
     };
 
-    return <span style={style}>{workArrangement}</span>;
+    return <span style={style}>{location.type}</span>;
   };
 
 const Jobs = () => {
@@ -190,14 +190,18 @@ const Jobs = () => {
                 <button onClick={() => handleHideCompany(job.company)} style={{ background: 'none', border: 'none', color: 'var(--neutral-gray)', cursor: 'pointer' }}>Hide</button>
               </div>
 
-              {job.location && (
-                  <div className="job-location">
-                      <span>{job.location}</span>
-                      <Badge workArrangement={job.work_arrangement} />
-                      {job.work_arrangement === 'hybrid' && job.days_in_office && (
-                          <span style={{ marginLeft: '10px' }}>({job.days_in_office} days in office)</span>
-                      )}
-                  </div>
+              {job.locations && job.locations.length > 0 && (
+                <div className="job-location">
+                  {job.locations.map((loc, index) => (
+                    <div key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: '5px' }}>
+                      <Badge location={loc} />
+                      {loc.location_string && <span>{loc.location_string}</span>}
+                    </div>
+                  ))}
+                  {job.days_in_office && (
+                    <span style={{ marginLeft: '10px' }}>({job.days_in_office} days in office)</span>
+                  )}
+                </div>
               )}
 
               <p className="description">{job.description}</p>

@@ -194,7 +194,8 @@ class ScrapeView(APIView):
                             'title': title,
                             'company': job_data['company'],
                             'description': job_data['description'],
-                            'posting_date': job_data['posting_date']
+                            'posting_date': job_data['posting_date'],
+                            'locations': job_data['locations'],
                         }
                     )
                     if created:
@@ -283,7 +284,8 @@ def scrape_in_background(query):
                         'title': job_data['title'],
                         'company': job_data['company'],
                         'description': job_data['description'],
-                        'posting_date': job_data['posting_date']
+                        'posting_date': job_data['posting_date'],
+                        'locations': job_data['locations'],
                     }
                 )
                 if created:

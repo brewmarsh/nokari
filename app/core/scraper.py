@@ -32,27 +32,43 @@ def scrape_jobs(query, domain, days=None):
         for item in result['items']:
             pagemap = item.get('pagemap', {})
             metatags = pagemap.get('metatags', [{}])[0]
+            title = item.get('title', '')
+            description = item.get('snippet', '')
+            full_text = f"{title.lower()} {description.lower()}"
+
+            # Process locations
+            locations = []
+            location_string = metatags.get('joblocation')
+
+            is_remote = 'remote' in full_text
+            is_hybrid = 'hybrid' in full_text
+            is_onsite = 'onsite' in full_text or location_string
+
+            if is_remote:
+                locations.append({"type": "remote"})
+            if is_hybrid:
+                locations.append({"type": "hybrid", "location_string": location_string or ''})
+            if is_onsite and not is_hybrid: # Avoid duplicating for hybrid jobs that mention onsite
+                locations.append({"type": "onsite", "location_string": location_string or ''})
+
+            if not locations and location_string: # Default to onsite if a location is present
+                locations.append({"type": "onsite", "location_string": location_string})
 
             # Try to find a date in the metatags
-            posting_date = metatags.get('pubdate') or metatags.get('date') or metatags.get('publishdate')
-
-            if posting_date:
+            posting_date_str = metatags.get('pubdate') or metatags.get('date') or metatags.get('publishdate')
+            posting_date = None
+            if posting_date_str:
                 try:
-                    # Attempt to parse the date. This is a best-effort approach and might need refinement
-                    # based on the actual date formats encountered.
-                    posting_date = datetime.strptime(posting_date, '%Y-%m-%d').date()
+                    posting_date = datetime.strptime(posting_date_str, '%Y-%m-%d').date()
                 except (ValueError, TypeError):
-                    # If parsing fails, fall back to the current date
-                    posting_date = datetime.now(timezone.utc).date()
-            else:
-                # If no date is found, use the current date
-                posting_date = datetime.now(timezone.utc).date()
+                    pass  # Keep as None if parsing fails
 
             jobs.append({
-                'title': item.get('title'),
+                'title': title,
                 'link': item.get('link'),
                 'company': pagemap.get('cse_thumbnail', [{}])[0].get('src', '') or metatags.get('og:site_name', ''),
-                'description': item.get('snippet'),
+                'description': description,
+                'locations': locations,
                 'posting_date': posting_date,
             })
     return jobs

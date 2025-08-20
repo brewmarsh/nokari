@@ -59,12 +59,7 @@ class JobPosting(models.Model):
     description = models.TextField(default='')
     confidence_score = models.FloatField(default=0)
     posting_date = models.DateField(null=True, blank=True)
-    location = models.CharField(max_length=255, blank=True, null=True)
-    work_arrangement = models.CharField(
-        max_length=10,
-        choices=[('remote', 'Remote'), ('hybrid', 'Hybrid'), ('onsite', 'Onsite')],
-        default='onsite'
-    )
+    locations = models.JSONField(default=list)
     days_in_office = models.IntegerField(blank=True, null=True)
     embedding = models.JSONField(null=True, blank=True)
 
