@@ -67,7 +67,7 @@ huggingface-hub==0.34.4
     #   transformers
 idna==3.10
     # via requests
-numpy==2.3.2
+numpy==1.26.4
     # via transformers
 packaging==25.0
     # via
