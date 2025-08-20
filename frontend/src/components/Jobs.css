@@ -7,7 +7,7 @@
 
 .job-card {
     position: relative;
-    background-color: #fff;
+    background-color: white;
     border: 1px solid var(--neutral-gray);
     border-radius: 8px;
     padding: 20px;
@@ -65,7 +65,7 @@
 }
 
 .pin-icon svg {
-    fill: #333;
+    fill: var(--neutral-gray);
 }
 
 .action-menu {
@@ -77,7 +77,7 @@
     border: none;
     cursor: pointer;
     padding: 0;
-    color: #333;
+    color: var(--neutral-gray);
 }
 
 .dropdown-menu {
@@ -85,7 +85,7 @@
     top: 100%;
     right: 0;
     background-color: white;
-    border: 1px solid #ccc;
+    border: 1px solid var(--neutral-gray);
     border-radius: 4px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     z-index: 10;
@@ -98,12 +98,12 @@
     padding: 8px 12px;
     background: none;
     border: none;
-    color: #333;
+    color: var(--neutral-gray);
     cursor: pointer;
 }
 
 .dropdown-menu button:hover {
-    background-color: #f0f0f0;
+    background-color: var(--light-gray);
 }
 
 .job-location {
@@ -116,5 +116,5 @@
 
 .job-card .description {
     font-size: 0.9rem;
-    color: #666;
+    color: var(--neutral-gray);
 }

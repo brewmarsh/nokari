@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 class ScraperException(Exception):
     pass
 
-def scrape_jobs(query, domain):
+def scrape_jobs(query, domain, days=None):
     api_key = os.environ.get('GOOGLE_API_KEY')
     search_engine_id = os.environ.get('CUSTOM_SEARCH_ENGINE_ID')
 
@@ -14,13 +14,18 @@ def scrape_jobs(query, domain):
 
     service = build("customsearch", "v1", developerKey=api_key)
 
-    search_query = f'{query} site:{domain}'
+    search_query = f'{query} -intitle:"jobs at" -intitle:"careers" site:{domain}'
 
-    result = service.cse().list(
-        q=search_query,
-        cx=search_engine_id,
-        num=10,  # Number of results to return
-    ).execute()
+    search_args = {
+        'q': search_query,
+        'cx': search_engine_id,
+        'num': 10,
+    }
+
+    if days:
+        search_args['dateRestrict'] = f'd{days}'
+
+    result = service.cse().list(**search_args).execute()
 
     jobs = []
     if 'items' in result:

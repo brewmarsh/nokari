@@ -1,5 +1,6 @@
 from rest_framework import generics, status, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.decorators import action
 from .permissions import IsAdmin
 from .serializers import UserSerializer, JobPostingSerializer, ResumeSerializer, CoverLetterSerializer, ScrapableDomainSerializer, ScrapeHistorySerializer, UserJobInteractionSerializer, HiddenCompanySerializer, SearchableJobTitleSerializer
 from django.contrib.auth import get_user_model
@@ -168,6 +169,7 @@ class ScrapeView(APIView):
     permission_classes = [IsAdmin]
 
     def post(self, request, *args, **kwargs):
+        days = request.data.get('days')
         scraped_count = 0
         try:
             domains = ScrapableDomain.objects.all()
@@ -179,12 +181,16 @@ class ScrapeView(APIView):
             query = f'({" OR ".join(query_parts)}) AND "remote"'
 
             for domain in domains:
-                jobs = scrape_jobs(query, domain.domain)
+                jobs = scrape_jobs(query, domain.domain, days=days)
                 for job_data in jobs:
+                    title = job_data['title']
+                    if 'Job Application for' in title:
+                        title = title.replace('Job Application for', '').strip()
+
                     obj, created = JobPosting.objects.get_or_create(
                         link=job_data['link'],
                         defaults={
-                            'title': job_data['title'],
+                            'title': title,
                             'company': job_data['company'],
                             'description': job_data['description'],
                             'posting_date': job_data['posting_date']
@@ -244,6 +250,22 @@ class HideJobPostingView(APIView):
         interaction.save()
 
         return Response(status=status.HTTP_200_OK)
+
+
+class UserViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    API endpoint that allows users to be viewed.
+    """
+    queryset = User.objects.all().order_by('-date_joined')
+    serializer_class = UserSerializer
+    permission_classes = [IsAdmin]
+
+    @action(detail=True, methods=['post'])
+    def promote(self, request, pk=None):
+        user = self.get_object()
+        user.role = 'admin'
+        user.save()
+        return Response({'status': 'user promoted'})
 
 import numpy as np
 from numpy.linalg import norm

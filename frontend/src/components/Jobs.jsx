@@ -50,6 +50,7 @@ const Jobs = () => {
   const [openMenu, setOpenMenu] = useState(null);
   const [isLoadingSimilar, setIsLoadingSimilar] = useState(false);
   const [similarJobsTitle, setSimilarJobsTitle] = useState('');
+  const [filtersVisible, setFiltersVisible] = useState(true);
 
   const debouncedTitle = useDebounce(title, 500);
   const debouncedCompany = useDebounce(company, 500);
@@ -131,10 +132,14 @@ const Jobs = () => {
       ) : (
         <h1>Job Postings</h1>
       )}
-      <div>
-        <input
-          type="text"
-          placeholder="Filter by title"
+      <button onClick={() => setFiltersVisible(!filtersVisible)}>
+        {filtersVisible ? 'Hide Filters' : 'Show Filters'}
+      </button>
+      {filtersVisible && (
+        <div>
+          <input
+            type="text"
+            placeholder="Filter by title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
@@ -150,7 +155,8 @@ const Jobs = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-      </div>
+        </div>
+      )}
       {isLoadingSimilar ? (
         <div>Finding similar jobs...</div>
       ) : (
@@ -158,35 +164,30 @@ const Jobs = () => {
           {jobs.map((job) => (
             <div key={job.link} className={`job-card ${job.is_pinned ? 'pinned' : ''}`}>
               <div className="job-card-header">
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <h2 className="job-title"><a href={job.link} target="_blank" rel="noopener noreferrer">{job.title}</a></h2>
-                      <Badge workArrangement={job.work_arrangement} />
-                  </div>
-                  <p className="company-name">{job.company}</p>
-                </div>
-                <div className="card-actions">
-                  <button onClick={() => handlePin(job.link, job.is_pinned)} title={job.is_pinned ? 'Unpin Job' : 'Pin Job'} className="pin-icon">
-                      <PinIcon isPinned={job.is_pinned} />
+                <button onClick={() => handlePin(job.link, job.is_pinned)} title={job.is_pinned ? 'Unpin Job' : 'Pin Job'} className="pin-icon">
+                    <PinIcon isPinned={job.is_pinned} />
+                </button>
+                <div className="action-menu">
+                  <button onClick={() => setOpenMenu(openMenu === job.link ? null : job.link)} className="three-dots-icon">
+                    <ThreeDotsIcon />
                   </button>
-                  <div className="action-menu">
-                    <button onClick={() => setOpenMenu(openMenu === job.link ? null : job.link)} className="three-dots-icon">
-                      <ThreeDotsIcon />
-                    </button>
-                    {openMenu === job.link && (
-                      <div className="dropdown-menu">
-                        <button onClick={() => { handleHide(job.link); setOpenMenu(null); }}>Hide Job</button>
-                        <button onClick={() => handleFindSimilar(job)}>Find similar</button>
-                      </div>
-                    )}
-                  </div>
+                  {openMenu === job.link && (
+                    <div className="dropdown-menu">
+                      <button onClick={() => { handleHide(job.link); setOpenMenu(null); }}>Hide Job</button>
+                      <button onClick={() => { handleHideCompany(job.company); setOpenMenu(null); }}>Hide Company</button>
+                      <button onClick={() => handleFindSimilar(job)}>Find similar</button>
+                    </div>
+                  )}
                 </div>
               </div>
+
+              <h2 className="job-title"><a href={job.link} target="_blank" rel="noopener noreferrer">{job.title}</a></h2>
+              <p className="company-name">{job.company}</p>
 
               {job.location && (
                   <div className="job-location">
                       <span>{job.location}</span>
-                      {job.work_arrangement === 'remote' && <RemoteIcon style={{ color: 'var(--neutral-gray)' }} />}
+                      <Badge workArrangement={job.work_arrangement} />
                       {job.work_arrangement === 'hybrid' && job.days_in_office && (
                           <span style={{ marginLeft: '10px' }}>({job.days_in_office} days in office)</span>
                       )}

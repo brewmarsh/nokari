@@ -168,3 +168,28 @@ For the initial implementation (MVP), similarity will be determined based on the
 *   **Semantic Understanding:** Enhance the similarity model using advanced NLP techniques (e.g., document embeddings) to understand the meaning and context of the job description, not just keywords.
 *   **Company & Industry:** Factor in the company's industry, size, and reputation to improve similarity matching.
 *   **User Feedback:** Introduce a mechanism for users to provide feedback on the similarity results (e.g., "This job is not similar"), which can be used to fine-tune the model over time.
+
+## 9. New User Requirements
+
+### 9.1. Admin functionality
+*   Move the admin tools to an admin-only page, whose link is visible only for logged-in admins.
+*   Move the scrape function into a menu that is only visible for logged-in admins.
+*   Add a users view that is only visible for logged-in admins from the admin menu.
+*   Allow admins to promote regular users to admins.
+*   For the admin, add a configurable window of time for job scraping, e.g. 7 days, 30 days, etc.
+
+### 9.2. Job Card UI
+*   Update the detail information for each card. From top to bottom, these are the fields:
+    *   pin icon (upper left)
+    *   three dot menu (upper right)
+    *   job title (largest font)
+    *   company (smaller font) with hide company button
+    *   location (smaller font), including the onsite / hybrid / remote badges
+    *   job summary
+    *   job posting date (smallest font)
+*   Ensure that the full product color scheme is being used.
+
+### 9.3. Job filtering and search
+*   Make the job postings filter section collapsible.
+*   Improve the searching to filter out batch pages like "Jobs at Garner Health" or "Careers - Imbuit" and instead link to the job listings on those pages.
+*   Filter "Job Application for" out of the job title.

@@ -5,7 +5,7 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     background-color: var(--light-gray);
-    color: #333;
+    color: var(--neutral-gray);
     margin: 0;
 }
 
@@ -35,7 +35,7 @@ button:hover {
 }
 
 button:disabled {
-    background-color: #bdc3c7;
+    background-color: var(--neutral-gray);
     cursor: not-allowed;
 }
 
@@ -46,7 +46,7 @@ input[type="password"] {
     padding: 10px;
     margin-bottom: 10px;
     border-radius: 5px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--neutral-gray);
     box-sizing: border-box;
 }
 

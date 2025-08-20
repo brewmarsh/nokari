@@ -7,6 +7,7 @@ import Onboarding from './components/Onboarding.jsx';
 import Documents from './components/Documents.jsx';
 import Profile from './components/Profile.jsx';
 import Settings from './components/Settings.jsx';
+import Admin from './components/Admin.jsx';
 import UserProfileIcon from './components/UserProfileIcon.jsx';
 import api from './services/api';
 import './App.css';
@@ -32,16 +33,17 @@ const AppRoutes = memo(({ user, onOnboardingSuccess, onLoginSuccess, handleLogou
         {user ? (
           <>
             <Link to="/dashboard">Dashboard</Link>
+            {user.role === 'admin' && <Link to="/admin">Admin</Link>}
             <div style={{ position: 'relative', marginLeft: 'auto' }}>
               <button onClick={() => setDropdownOpen(!isDropdownOpen)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
                 <UserProfileIcon />
               </button>
               {isDropdownOpen && (
-                <div style={{ position: 'absolute', right: 0, backgroundColor: 'white', border: '1px solid #ccc', borderRadius: '5px', zIndex: 10 }}>
-                  <Link to="/profile" style={{ display: 'block', padding: '10px', textDecoration: 'none', color: 'black' }}>Profile</Link>
-                  <Link to="/settings" style={{ display: 'block', padding: '10px', textDecoration: 'none', color: 'black' }}>Settings</Link>
-                  <Link to="/documents" style={{ display: 'block', padding: '10px', textDecoration: 'none', color: 'black' }}>Documents</Link>
-                  <button onClick={() => { handleLogout(); setDropdownOpen(false); }} style={{ display: 'block', width: '100%', padding: '10px', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer' }}>Logout</button>
+                <div style={{ position: 'absolute', right: 0, backgroundColor: 'white', border: '1px solid var(--neutral-gray)', borderRadius: '5px', zIndex: 10 }}>
+                  <Link to="/profile" style={{ display: 'block', padding: '10px', textDecoration: 'none', color: 'var(--neutral-gray)' }}>Profile</Link>
+                  <Link to="/settings" style={{ display: 'block', padding: '10px', textDecoration: 'none', color: 'var(--neutral-gray)' }}>Settings</Link>
+                  <Link to="/documents" style={{ display: 'block', padding: '10px', textDecoration: 'none', color: 'var(--neutral-gray)' }}>Documents</Link>
+                  <button onClick={() => { handleLogout(); setDropdownOpen(false); }} style={{ display: 'block', width: '100%', padding: '10px', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', color: 'var(--neutral-gray)' }}>Logout</button>
                 </div>
               )}
             </div>
@@ -58,6 +60,7 @@ const AppRoutes = memo(({ user, onOnboardingSuccess, onLoginSuccess, handleLogou
           {user ? (
             <>
               <Route path="/dashboard" element={<Dashboard user={user} />} />
+              <Route path="/admin" element={<Admin />} />
               <Route path="/documents" element={<Documents />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/settings" element={<Settings />} />
