@@ -11,6 +11,7 @@ from django.shortcuts import render
 from .scraper import scrape_jobs
 import numpy as np
 from numpy.linalg import norm
+import threading
 from django.db.models import OuterRef, Subquery, BooleanField, Value
 from django.db.models.functions import Coalesce
 from transformers import AutoTokenizer, AutoModel
@@ -270,6 +271,29 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
 import numpy as np
 from numpy.linalg import norm
 
+def scrape_in_background(query):
+    domains = ScrapableDomain.objects.all()
+    for domain in domains:
+        try:
+            jobs = scrape_jobs(query, domain.domain)
+            for job_data in jobs:
+                obj, created = JobPosting.objects.get_or_create(
+                    link=job_data['link'],
+                    defaults={
+                        'title': job_data['title'],
+                        'company': job_data['company'],
+                        'description': job_data['description'],
+                        'posting_date': job_data['posting_date']
+                    }
+                )
+                if created:
+                    text = f"{obj.title} {obj.description}"
+                    obj.embedding = generate_embedding(text)
+                    obj.save()
+        except Exception as e:
+            # In a real app, you'd want to log this properly
+            print(f"Error scraping in background {domain.domain}: {e}")
+
 class FindSimilarJobsView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -280,18 +304,16 @@ class FindSimilarJobsView(APIView):
         except JobPosting.DoesNotExist:
             return Response({"error": "Job posting not found"}, status=status.HTTP_404_NOT_FOUND)
 
+        # --- Part 1: Find and return similar jobs immediately ---
         if not target_job.embedding:
-            return Response({"error": "Target job has no embedding, and it could not be generated."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Target job has no embedding."}, status=status.HTTP_400_BAD_REQUEST)
 
         all_jobs = JobPosting.objects.exclude(pk=target_job.pk).exclude(embedding__isnull=True)
-
         target_embedding = np.array(target_job.embedding)
-
         similar_jobs = []
         for job in all_jobs:
             if job.embedding and isinstance(job.embedding, (list, tuple)):
                 job_embedding = np.array(job.embedding)
-
                 target_norm = norm(target_embedding)
                 job_norm = norm(job_embedding)
 
@@ -301,8 +323,14 @@ class FindSimilarJobsView(APIView):
 
         similar_jobs.sort(key=lambda x: x[1], reverse=True)
         top_jobs = [job for job, score in similar_jobs[:5]]
-
         serializer = JobPostingSerializer(top_jobs, many=True)
+
+        # --- Part 2: Kick off background scraping ---
+        query = f'"{target_job.title}"'
+        thread = threading.Thread(target=scrape_in_background, args=(query,))
+        thread.daemon = True
+        thread.start()
+
         return Response(serializer.data)
 
 class SearchableJobTitleViewSet(viewsets.ModelViewSet):

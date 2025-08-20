@@ -160,10 +160,14 @@ const Jobs = () => {
       {isLoadingSimilar ? (
         <div>Finding similar jobs...</div>
       ) : (
-        <div className="jobs-container">
-          {jobs.map((job) => (
-            <div key={job.link} className={`job-card ${job.is_pinned ? 'pinned' : ''}`}>
-              <div className="job-card-header">
+        <>
+          {similarJobsTitle && jobs.length === 0 && !isLoadingSimilar && (
+            <div style={{ marginTop: '20px' }}>No similar jobs found.</div>
+          )}
+          <div className="jobs-container">
+            {jobs.map((job) => (
+              <div key={job.link} className={`job-card ${job.is_pinned ? 'pinned' : ''}`}>
+                <div className="job-card-header">
                 <button onClick={() => handlePin(job.link, job.is_pinned)} title={job.is_pinned ? 'Unpin Job' : 'Pin Job'} className="pin-icon">
                     <PinIcon isPinned={job.is_pinned} />
                 </button>
@@ -174,7 +178,6 @@ const Jobs = () => {
                   {openMenu === job.link && (
                     <div className="dropdown-menu">
                       <button onClick={() => { handleHide(job.link); setOpenMenu(null); }}>Hide Job</button>
-                      <button onClick={() => { handleHideCompany(job.company); setOpenMenu(null); }}>Hide Company</button>
                       <button onClick={() => handleFindSimilar(job)}>Find similar</button>
                     </div>
                   )}
@@ -182,7 +185,10 @@ const Jobs = () => {
               </div>
 
               <h2 className="job-title"><a href={job.link} target="_blank" rel="noopener noreferrer">{job.title}</a></h2>
-              <p className="company-name">{job.company}</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <p className="company-name">{job.company}</p>
+                <button onClick={() => handleHideCompany(job.company)} style={{ background: 'none', border: 'none', color: 'var(--neutral-gray)', cursor: 'pointer' }}>Hide</button>
+              </div>
 
               {job.location && (
                   <div className="job-location">
@@ -196,11 +202,12 @@ const Jobs = () => {
 
               <p className="description">{job.description}</p>
               <p className="posting-date">
-                {new Date(job.posting_date).toLocaleDateString()}
+                Posted on: {new Date(job.posting_date).toLocaleDateString()}
               </p>
             </div>
           ))}
-        </div>
+          </div>
+        </>
       )}
     </div>
   );
