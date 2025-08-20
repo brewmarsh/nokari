@@ -280,37 +280,6 @@ class FindSimilarJobsView(APIView):
         except JobPosting.DoesNotExist:
             return Response({"error": "Job posting not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        # Step 1: Asynchronously find new jobs based on the target job's title
-        query = f'"{target_job.title}"'
-        domains = ScrapableDomain.objects.all()
-
-        for domain in domains:
-            try:
-                jobs = scrape_jobs(query, domain.domain)
-                for job_data in jobs:
-                    # Ensure posting_date is not None and is a valid date string
-                    if not job_data.get('posting_date'):
-                        job_data['posting_date'] = None # Or a default date
-
-                    obj, created = JobPosting.objects.get_or_create(
-                        link=job_data['link'],
-                        defaults={
-                            'title': job_data['title'],
-                            'company': job_data['company'],
-                            'description': job_data['description'],
-                            'posting_date': job_data['posting_date']
-                        }
-                    )
-                    if created:
-                        text = f"{obj.title} {obj.description}"
-                        obj.embedding = generate_embedding(text)
-                        obj.save()
-            except Exception as e:
-                # Log the error, but don't let a single domain failure stop the process
-                print(f"Error scraping {domain.domain}: {e}")
-
-        # Step 2: Now, find similar jobs from the updated database
-        target_job.refresh_from_db()
         if not target_job.embedding:
             return Response({"error": "Target job has no embedding, and it could not be generated."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -328,12 +297,10 @@ class FindSimilarJobsView(APIView):
 
                 if target_norm > 0 and job_norm > 0:
                     cosine_similarity = np.dot(target_embedding, job_embedding) / (target_norm * job_norm)
-
-                    if cosine_similarity > 0.7:
-                        similar_jobs.append((job, cosine_similarity))
+                    similar_jobs.append((job, cosine_similarity))
 
         similar_jobs.sort(key=lambda x: x[1], reverse=True)
-        top_jobs = [job for job, score in similar_jobs[:10]]
+        top_jobs = [job for job, score in similar_jobs[:5]]
 
         serializer = JobPostingSerializer(top_jobs, many=True)
         return Response(serializer.data)
