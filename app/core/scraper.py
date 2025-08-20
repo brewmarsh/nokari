@@ -42,17 +42,19 @@ def scrape_jobs(query, domain, days=None):
 
             is_remote = 'remote' in full_text
             is_hybrid = 'hybrid' in full_text
-            is_onsite = 'onsite' in full_text or location_string
+            is_onsite = 'onsite' in full_text
 
             if is_remote:
                 locations.append({"type": "remote"})
             if is_hybrid:
                 locations.append({"type": "hybrid", "location_string": location_string or ''})
-            if is_onsite and not is_hybrid: # Avoid duplicating for hybrid jobs that mention onsite
+            if is_onsite:
                 locations.append({"type": "onsite", "location_string": location_string or ''})
 
-            if not locations and location_string: # Default to onsite if a location is present
-                locations.append({"type": "onsite", "location_string": location_string})
+            # If no specific work arrangement is mentioned, but there's a location, assume onsite.
+            # If no work arrangement and no location, still default to onsite.
+            if not locations:
+                locations.append({"type": "onsite", "location_string": location_string or ''})
 
             # Try to find a date in the metatags
             posting_date_str = metatags.get('pubdate') or metatags.get('date') or metatags.get('publishdate')

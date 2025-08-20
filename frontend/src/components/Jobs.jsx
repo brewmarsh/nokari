@@ -16,6 +16,13 @@ const RemoteIcon = (props) => (
   </svg>
 );
 
+const HideIcon = (props) => (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7.028 7.028 0 0 0-2.79.588l.77.771A5.94 5.94 0 0 1 8 4.5a5.94 5.94 0 0 1 4.5 2.066 6.872 6.872 0 0 1 1.482 1.943l.359.492zM10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/>
+        <path d="M12.454 14.394l-1.09-1.09a3.504 3.504 0 0 0-4.34-4.34L6.11 8.047a4.5 4.5 0 0 0-1.79 3.183l-1.65-1.65A9.24 9.24 0 0 0 0 8a12.17 12.17 0 0 0 3.546 4.359l.87.87L.707 15.293a1 1 0 0 0 1.414 1.414l12-12a1 1 0 0 0-1.414-1.414L12.454 14.394zM16 8c-.011.02-.022.04-.033.06L1.64 1.64C1.33 2.083 1 2.518 1 3.27a11.17 11.17 0 0 0 2.223 4.298l.64.639a5.5 5.5 0 0 0 7.583 1.25l.822.822A9.23 9.23 0 0 1 8 13.5a9.23 9.23 0 0 1-4.25-1.108l.63.628A11.17 11.17 0 0 0 8 15.5c5 0 8-5.5 8-5.5s-.288-.521-.641-1.06z"/>
+    </svg>
+);
+
 const Badge = ({ location }) => {
     const badgeStyle = {
       padding: '4px 8px',
@@ -187,7 +194,9 @@ const Jobs = () => {
               <h2 className="job-title"><a href={job.link} target="_blank" rel="noopener noreferrer">{job.title}</a></h2>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <p className="company-name">{job.company}</p>
-                <button onClick={() => handleHideCompany(job.company)} style={{ background: 'none', border: 'none', color: 'var(--neutral-gray)', cursor: 'pointer' }}>Hide</button>
+                <button onClick={() => handleHideCompany(job.company)} style={{ background: 'none', border: 'none', color: 'var(--neutral-gray)', cursor: 'pointer' }} title="Hide Company">
+                    <HideIcon />
+                </button>
               </div>
 
               {job.locations && job.locations.length > 0 && (

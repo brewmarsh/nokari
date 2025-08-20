@@ -279,24 +279,14 @@ class FindSimilarJobsViewTest(APITestCase):
         self.client.force_authenticate(user=self.user)
         ScrapableDomain.objects.create(domain='example.com')
 
-    @patch('app.core.views.scrape_jobs')
+    @patch('app.core.views.scrape_in_background')
     @patch('app.core.views.generate_embedding')
-    def test_find_similar_jobs_triggers_scraping(self, mock_generate_embedding, mock_scrape_jobs):
+    def test_find_similar_jobs_triggers_scraping(self, mock_generate_embedding, mock_scrape_in_background):
         """
         Ensure the find-similar-jobs endpoint triggers a new scrape and returns similar jobs.
         """
         # Mock the embedding generation for any new job
         mock_generate_embedding.return_value = [0.5, 0.5, 0.5]
-
-        # Mock the scraper to return a new, highly similar job
-        new_scraped_job_data = {
-            'title': 'Senior Python Developer',
-            'link': 'http://example.com/job/new',
-            'company': 'NewCo',
-            'description': 'Looking for a Senior Python Developer.',
-            'posting_date': '2023-10-27'
-        }
-        mock_scrape_jobs.return_value = [new_scraped_job_data]
 
         # Existing jobs in the database
         target_job = JobPosting.objects.create(
@@ -326,20 +316,12 @@ class FindSimilarJobsViewTest(APITestCase):
         url = reverse('find_similar_jobs', kwargs={'pk': target_job.link})
         response = self.client.post(url, format='json')
 
-        # 1. Assert that the scraper was called correctly
-        mock_scrape_jobs.assert_called_once()
+        # 1. Assert that the background scraper was called correctly
+        mock_scrape_in_background.assert_called_once()
         expected_query = f'"{target_job.title}"'
-        self.assertEqual(mock_scrape_jobs.call_args[0][0], expected_query)
+        self.assertEqual(mock_scrape_in_background.call_args[0][0], expected_query)
 
-        # 2. Assert that the new job from the scrape was created
-        self.assertTrue(JobPosting.objects.filter(link=new_scraped_job_data['link']).exists())
-
-        # 3. Assert that the new job had its embedding generated
-        new_job = JobPosting.objects.get(link=new_scraped_job_data['link'])
-        self.assertIsNotNone(new_job.embedding)
-        mock_generate_embedding.assert_called()
-
-        # 4. Assert that the response contains the correct jobs
+        # 2. Assert that the response contains the correct jobs
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_links = {job['link'] for job in response.data}
 
@@ -347,8 +329,3 @@ class FindSimilarJobsViewTest(APITestCase):
         self.assertIn(existing_similar_job.link, response_links)
         # It should NOT contain the dissimilar job
         self.assertNotIn(dissimilar_job.link, response_links)
-        # The test for the new job is tricky because the mock embedding might not pass the > 0.7 threshold.
-        # But we can at least confirm the other parts of the logic work.
-        # If we want to test its inclusion, we need to control the mock embedding value more carefully.
-        # For now, let's just confirm the API returns the definitely similar one.
-        self.assertIn(existing_similar_job.link, response_links)

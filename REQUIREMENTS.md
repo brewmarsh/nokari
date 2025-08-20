@@ -193,3 +193,10 @@ For the initial implementation (MVP), similarity will be determined based on the
 *   Make the job postings filter section collapsible.
 *   Improve the searching to filter out batch pages like "Jobs at Garner Health" or "Careers - Imbuit" and instead link to the job listings on those pages.
 *   Filter "Job Application for" out of the job title.
+
+### 9.4. Job Card Enhancements
+*   Scan each job posting for the type of work that is included (Hybrid, Onsite and / or Remote).
+*   If none are specified, assume Onsite.
+*   Each job card should have one or more badges showing the type of work (Hybrid, Onsite or Remote) that the job posting allows.
+*   Each job card should show the location of the job (city, state, country, etc.)
+*   Each job card should show the company name and a "Hide" icon next to it that allows the user to hide the company from future searches.

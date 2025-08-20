@@ -125,6 +125,7 @@ sqlparse==0.5.3
 tokenizers==0.21.4
     # via transformers
 tqdm==4.67.1
+torch==2.2.0
     # via
     #   huggingface-hub
     #   transformers

@@ -324,7 +324,7 @@ class FindSimilarJobsView(APIView):
                     similar_jobs.append((job, cosine_similarity))
 
         similar_jobs.sort(key=lambda x: x[1], reverse=True)
-        top_jobs = [job for job, score in similar_jobs[:5]]
+        top_jobs = [job for job, score in similar_jobs if score > 0.7][:5]
         serializer = JobPostingSerializer(top_jobs, many=True)
 
         # --- Part 2: Kick off background scraping ---
