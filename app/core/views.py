@@ -301,8 +301,10 @@ class FindSimilarJobsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        encoded_job_pk = kwargs.get('pk')
-        job_pk = unquote(encoded_job_pk)
+        job_pk = request.data.get('link')
+        if not job_pk:
+            return Response({"error": "Link not provided"}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
             target_job = JobPosting.objects.get(pk=job_pk)
         except JobPosting.DoesNotExist:

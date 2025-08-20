@@ -120,7 +120,7 @@ const Jobs = () => {
     setSimilarJobsTitle(job.title);
     setOpenMenu(null);
     try {
-      const res = await api.post(`/jobs/${encodeURIComponent(job.link)}/find-similar/`);
+      const res = await api.post('/jobs/find-similar/', { link: job.link });
       setJobs(res.data);
     } catch (err) {
       setError(err);

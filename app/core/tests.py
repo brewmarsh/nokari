@@ -313,8 +313,9 @@ class FindSimilarJobsViewTest(APITestCase):
             embedding=[0.0, 1.0, 0.0]
         )
 
-        url = reverse('find_similar_jobs', kwargs={'pk': target_job.link})
-        response = self.client.post(url, format='json')
+        url = reverse('find_similar_jobs')
+        data = {'link': target_job.link}
+        response = self.client.post(url, data, format='json')
 
         # 1. Assert that the background scraper was called correctly
         mock_scrape_in_background.assert_called_once()
