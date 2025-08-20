@@ -16,6 +16,7 @@ from django.db.models import OuterRef, Subquery, BooleanField, Value
 from django.db.models.functions import Coalesce
 from transformers import AutoTokenizer, AutoModel
 import torch
+from urllib.parse import unquote
 
 User = get_user_model()
 
@@ -300,7 +301,8 @@ class FindSimilarJobsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        job_pk = kwargs.get('pk')
+        encoded_job_pk = kwargs.get('pk')
+        job_pk = unquote(encoded_job_pk)
         try:
             target_job = JobPosting.objects.get(pk=job_pk)
         except JobPosting.DoesNotExist:
