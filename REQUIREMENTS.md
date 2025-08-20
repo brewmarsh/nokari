@@ -28,6 +28,7 @@ To provide a simple way of finding jobs and helping to tailor the resume and cov
 *   ...be able to generate an updated resume based on a job posting.
 *   ...be able to generate an updated cover letter based on a job posting.
 *   ...be able to change my password securely.
+*   ...be able to find jobs similar to one I'm interested in, so I can discover more relevant opportunities.
 
 ### 3.3 As a system administrator, I want to...
 *   ...be able to see administrative options that are not available to non-adminstrator users.
@@ -88,3 +89,114 @@ To provide a simple way of finding jobs and helping to tailor the resume and cov
 
 *   The version of `npm` should be updated to the latest version.
 *   The application should be containerized using Docker.
+
+## 8. New Requirements
+
+### 8.1. User Interface Requirements
+
+---
+
+#### **Brand Colors**
+
+* **Primary Blue:** `#2F4C82` (Trust, Professionalism)
+* **Secondary Green:** `#4CAF50` (Growth, Success)
+* **Accent Orange:** `#FF9800` (Energy, Motivation)
+* **Neutral Gray:** `#607D8B` (Balance, Seriousness)
+* **Light Gray/White:** `#EFEFEF` (Cleanliness, Readability)
+
+---
+
+#### **Job Posting Card**
+
+* Each Job Posting card must display a single **Pin/Unpin toggle icon** in the top left corner.
+    * The icon should be an outline when the job is not pinned and a solid fill when the job is pinned.
+    * Clicking the solid icon will unpin the job, returning it to its original position in the list.
+    * Clicking the outline icon will pin the job to the top of the list.
+* The card must include a **three-dot action menu** (`...`) in the top right corner.
+    * This menu will contain a "Hide Job" action.
+* The **Company Name** will be displayed below the Job Posting title.
+* The **Remote icon** will be displayed to the right of the job's location, using the Neutral Gray color (`#607D8B`).
+
+---
+
+#### **Top Navigation Menu**
+
+* When a user is logged in, the top menu will show a **Dashboard link** and a **user profile icon** that, when clicked, opens a dropdown menu containing **Profile, Settings, and Logout** links.
+* When a user is not logged in, the top menu will display a **Login link** and a visually distinct **Register button** using the Accent Orange color (`#FF9800`).
+
+---
+
+#### **Admin User Interface**
+
+* On the **Job Titles list** and the **Scrapable Domains list**, a **Delete icon** will appear to the right of each item.
+    * The Delete icon should be colored red to signify a destructive action.
+    * Clicking the Delete icon will trigger a **confirmation pop-up** that requires the user to confirm the action before the item is permanently deleted.
+
+---
+
+### 8.2. **Geolocation & Proximity Requirements**
+
+* The platform will include a **map-based search interface** that shows job postings as interactive pins.
+* Users can filter jobs by a **"commute time"** (e.g., 30-minute drive, transit, or bike ride) from a user-specified address.
+* Job postings must be clearly distinguished by their work arrangement. Each job card and search result will display a **visual badge** that indicates if the role is:
+    * **Remote:** A green badge.
+    * **Hybrid:** A blue badge.
+    * **Onsite:** A gray badge.
+* For hybrid roles, the job posting details must specify the number of required days in the office and the office location.
+* The platform will **remember a user's preferred work arrangement** and prioritize those job types in search results and email alerts.
+
+### 8.3. Find Similar Jobs Feature
+
+#### 8.3.1. User Experience
+
+*   **Trigger:** A "Find similar" button or link will be displayed on each job posting card.
+*   **Interaction:**
+    *   When a user clicks the "Find similar" button, the main job list will be updated to show only jobs that are similar to the selected one.
+    *   A clear heading, such as "Jobs similar to [Original Job Title]", will be displayed above the results.
+    *   A loading indicator will be shown while the search is in progress.
+*   **Display:** The similar jobs will be ranked by their similarity score, with the most similar jobs appearing first.
+
+#### 8.3.2. Similarity Engine (MVP)
+
+For the initial implementation (MVP), similarity will be determined based on the following factors:
+
+*   **Job Title:** Matching keywords and phrases in the job title.
+*   **Key Skills:** Automatically extracting key skills and technologies from the job description (e.g., "Python", "React", "Project Management") and finding other jobs that mention the same skills.
+
+#### 8.3.3. Future Enhancements (Post-MVP)
+
+*   **Semantic Understanding:** Enhance the similarity model using advanced NLP techniques (e.g., document embeddings) to understand the meaning and context of the job description, not just keywords.
+*   **Company & Industry:** Factor in the company's industry, size, and reputation to improve similarity matching.
+*   **User Feedback:** Introduce a mechanism for users to provide feedback on the similarity results (e.g., "This job is not similar"), which can be used to fine-tune the model over time.
+
+## 9. New User Requirements
+
+### 9.1. Admin functionality
+*   Move the admin tools to an admin-only page, whose link is visible only for logged-in admins.
+*   Move the scrape function into a menu that is only visible for logged-in admins.
+*   Add a users view that is only visible for logged-in admins from the admin menu.
+*   Allow admins to promote regular users to admins.
+*   For the admin, add a configurable window of time for job scraping, e.g. 7 days, 30 days, etc.
+
+### 9.2. Job Card UI
+*   Update the detail information for each card. From top to bottom, these are the fields:
+    *   pin icon (upper left)
+    *   three dot menu (upper right)
+    *   job title (largest font)
+    *   company (smaller font) with hide company button
+    *   location (smaller font), including the onsite / hybrid / remote badges
+    *   job summary
+    *   job posting date (smallest font)
+*   Ensure that the full product color scheme is being used.
+
+### 9.3. Job filtering and search
+*   Make the job postings filter section collapsible.
+*   Improve the searching to filter out batch pages like "Jobs at Garner Health" or "Careers - Imbuit" and instead link to the job listings on those pages.
+*   Filter "Job Application for" out of the job title.
+
+### 9.4. Job Card Enhancements
+*   Scan each job posting for the type of work that is included (Hybrid, Onsite and / or Remote).
+*   If none are specified, assume Onsite.
+*   Each job card should have one or more badges showing the type of work (Hybrid, Onsite or Remote) that the job posting allows.
+*   Each job card should show the location of the job (city, state, country, etc.)
+*   Each job card should show the company name and a "Hide" icon next to it that allows the user to hide the company from future searches.

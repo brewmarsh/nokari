@@ -4,8 +4,8 @@ body {
       sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: #f4f7f6;
-    color: #333;
+    background-color: var(--light-gray);
+    color: var(--neutral-gray);
     margin: 0;
 }
 
@@ -16,11 +16,11 @@ body {
 }
 
 h1 {
-    color: #2c3e50;
+    color: var(--primary-blue);
 }
 
 button {
-    background-color: #3498db;
+    background-color: var(--primary-blue);
     color: white;
     border: none;
     padding: 10px 15px;
@@ -31,11 +31,11 @@ button {
 }
 
 button:hover {
-    background-color: #2980b9;
+    opacity: 0.9;
 }
 
 button:disabled {
-    background-color: #bdc3c7;
+    background-color: var(--neutral-gray);
     cursor: not-allowed;
 }
 
@@ -46,12 +46,12 @@ input[type="password"] {
     padding: 10px;
     margin-bottom: 10px;
     border-radius: 5px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--neutral-gray);
     box-sizing: border-box;
 }
 
 nav {
-    background-color: #34495e;
+    background-color: var(--primary-blue);
     padding: 1rem;
     display: flex;
     justify-content: center;

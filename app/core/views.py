@@ -1,5 +1,6 @@
 from rest_framework import generics, status, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.decorators import action
 from .permissions import IsAdmin
 from .serializers import UserSerializer, JobPostingSerializer, ResumeSerializer, CoverLetterSerializer, ScrapableDomainSerializer, ScrapeHistorySerializer, UserJobInteractionSerializer, HiddenCompanySerializer, SearchableJobTitleSerializer
 from django.contrib.auth import get_user_model
@@ -8,12 +9,39 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import render
 from .scraper import scrape_jobs
+import numpy as np
+from numpy.linalg import norm
+import threading
 from django.db.models import OuterRef, Subquery, BooleanField, Value
 from django.db.models.functions import Coalesce
+from transformers import AutoTokenizer, AutoModel
+import torch
+from urllib.parse import unquote
 
 User = get_user_model()
 
-class MeView(generics.RetrieveAPIView):
+# Load model and tokenizer
+tokenizer = AutoTokenizer.from_pretrained('sentence-transformers/all-MiniLM-L6-v2')
+model = AutoModel.from_pretrained('sentence-transformers/all-MiniLM-L6-v2')
+
+def generate_embedding(text):
+    inputs = tokenizer(text, return_tensors='pt', truncation=True, max_length=512)
+    with torch.no_grad():
+        outputs = model(**inputs)
+
+    # Mean pooling
+    embeddings = outputs.last_hidden_state
+    mask = inputs['attention_mask'].unsqueeze(-1).expand(embeddings.size()).float()
+    masked_embeddings = embeddings * mask
+    summed = torch.sum(masked_embeddings, 1)
+    counted = torch.clamp(mask.sum(1), min=1e-9)
+    mean_pooled = summed / counted
+
+    # Normalize
+    mean_pooled = torch.nn.functional.normalize(mean_pooled, p=2, dim=1)
+    return mean_pooled.tolist()[0]
+
+class MeView(generics.RetrieveUpdateAPIView):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
 
@@ -143,6 +171,7 @@ class ScrapeView(APIView):
     permission_classes = [IsAdmin]
 
     def post(self, request, *args, **kwargs):
+        days = request.data.get('days')
         scraped_count = 0
         try:
             domains = ScrapableDomain.objects.all()
@@ -154,18 +183,26 @@ class ScrapeView(APIView):
             query = f'({" OR ".join(query_parts)}) AND "remote"'
 
             for domain in domains:
-                jobs = scrape_jobs(query, domain.domain)
+                jobs = scrape_jobs(query, domain.domain, days=days)
                 for job_data in jobs:
+                    title = job_data['title']
+                    if 'Job Application for' in title:
+                        title = title.replace('Job Application for', '').strip()
+
                     obj, created = JobPosting.objects.get_or_create(
                         link=job_data['link'],
                         defaults={
-                            'title': job_data['title'],
+                            'title': title,
                             'company': job_data['company'],
                             'description': job_data['description'],
-                            'posting_date': job_data['posting_date']
+                            'posting_date': job_data['posting_date'],
+                            'locations': job_data['locations'],
                         }
                     )
                     if created:
+                        text = f"{obj.title} {obj.description}"
+                        obj.embedding = generate_embedding(text)
+                        obj.save()
                         scraped_count += 1
             ScrapeHistory.objects.create(
                 user=request.user,
@@ -216,6 +253,91 @@ class HideJobPostingView(APIView):
         interaction.save()
 
         return Response(status=status.HTTP_200_OK)
+
+
+class UserViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    API endpoint that allows users to be viewed.
+    """
+    queryset = User.objects.all().order_by('-date_joined')
+    serializer_class = UserSerializer
+    permission_classes = [IsAdmin]
+
+    @action(detail=True, methods=['post'])
+    def promote(self, request, pk=None):
+        user = self.get_object()
+        user.role = 'admin'
+        user.save()
+        return Response({'status': 'user promoted'})
+
+import numpy as np
+from numpy.linalg import norm
+
+def scrape_in_background(query):
+    domains = ScrapableDomain.objects.all()
+    for domain in domains:
+        try:
+            jobs = scrape_jobs(query, domain.domain)
+            for job_data in jobs:
+                obj, created = JobPosting.objects.get_or_create(
+                    link=job_data['link'],
+                    defaults={
+                        'title': job_data['title'],
+                        'company': job_data['company'],
+                        'description': job_data['description'],
+                        'posting_date': job_data['posting_date'],
+                        'locations': job_data['locations'],
+                    }
+                )
+                if created:
+                    text = f"{obj.title} {obj.description}"
+                    obj.embedding = generate_embedding(text)
+                    obj.save()
+        except Exception as e:
+            # In a real app, you'd want to log this properly
+            print(f"Error scraping in background {domain.domain}: {e}")
+
+class FindSimilarJobsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        job_pk = request.data.get('link')
+        if not job_pk:
+            return Response({"error": "Link not provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            target_job = JobPosting.objects.get(pk=job_pk)
+        except JobPosting.DoesNotExist:
+            return Response({"error": "Job posting not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # --- Part 1: Find and return similar jobs immediately ---
+        if not target_job.embedding:
+            return Response({"error": "Target job has no embedding."}, status=status.HTTP_400_BAD_REQUEST)
+
+        all_jobs = JobPosting.objects.exclude(pk=target_job.pk).exclude(embedding__isnull=True)
+        target_embedding = np.array(target_job.embedding)
+        similar_jobs = []
+        for job in all_jobs:
+            if job.embedding and isinstance(job.embedding, (list, tuple)):
+                job_embedding = np.array(job.embedding)
+                target_norm = norm(target_embedding)
+                job_norm = norm(job_embedding)
+
+                if target_norm > 0 and job_norm > 0:
+                    cosine_similarity = np.dot(target_embedding, job_embedding) / (target_norm * job_norm)
+                    similar_jobs.append((job, cosine_similarity))
+
+        similar_jobs.sort(key=lambda x: x[1], reverse=True)
+        top_jobs = [job for job, score in similar_jobs if score > 0.7][:5]
+        serializer = JobPostingSerializer(top_jobs, many=True)
+
+        # --- Part 2: Kick off background scraping ---
+        query = f'"{target_job.title}"'
+        thread = threading.Thread(target=scrape_in_background, args=(query,))
+        thread.daemon = True
+        thread.start()
+
+        return Response(serializer.data)
 
 class SearchableJobTitleViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdmin]

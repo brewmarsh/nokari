@@ -1,12 +1,39 @@
-from django.urls import path
-from .views import MeView, RegisterView, JobPostingView, ResumeView, CoverLetterView, GenerateResumeView, GenerateCoverLetterView, ScrapableDomainView, ResumeDetailView, CoverLetterDetailView, test_page, ScrapeView, UserCountView, ScrapeHistoryView, HideJobPostingView, HideCompanyView, PinJobPostingView
+from django.urls import path, include
+from .views import (
+    MeView,
+    RegisterView,
+    JobPostingView,
+    ResumeView,
+    CoverLetterView,
+    GenerateResumeView,
+    GenerateCoverLetterView,
+    ScrapableDomainView,
+    ResumeDetailView,
+    CoverLetterDetailView,
+    test_page,
+    ScrapeView,
+    UserCountView,
+    ScrapeHistoryView,
+    HideJobPostingView,
+    HideCompanyView,
+    PinJobPostingView,
+    FindSimilarJobsView,
+    UserViewSet,
+    SearchableJobTitleViewSet
+)
 from .admin_views import AdminMenuView
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+router.register(r'users', UserViewSet, basename='user')
+router.register(r'job-titles', SearchableJobTitleViewSet, basename='job-title')
 
 urlpatterns = [
+    path('', include(router.urls)),
     path('me/', MeView.as_view(), name='me'),
     path('register/', RegisterView.as_view(), name='register'),
     path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
@@ -15,6 +42,7 @@ urlpatterns = [
     path('jobs/', JobPostingView.as_view(), name='job_postings'),
     path('jobs/hide/', HideJobPostingView.as_view(), name='hide_job_posting'),
     path('jobs/pin/', PinJobPostingView.as_view(), name='pin_job_posting'),
+    path('jobs/find-similar/', FindSimilarJobsView.as_view(), name='find_similar_jobs'),
     path('companies/hide/', HideCompanyView.as_view(), name='hide_company'),
     path('resumes/', ResumeView.as_view(), name='resumes'),
     path('resumes/<int:pk>/', ResumeDetailView.as_view(), name='resume_detail'),

@@ -11,6 +11,8 @@ This document tracks the ongoing refactoring and performance improvement tasks f
   - [ ] Debounce the search/filter inputs in the `Jobs` component to avoid excessive API calls.
 - [ ] **Optimistic UI Updates:**
   - [ ] Implement optimistic UI updates for pinning jobs to provide a faster user experience.
+- [ ] **"Find Similar" Button:**
+  - [ ] The "find similar" button is not working correctly. This needs to be investigated and fixed.
 
 ## Backend
 
