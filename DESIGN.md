@@ -53,5 +53,35 @@ For the initial implementation (MVP), the similarity logic will be based on a co
 
 ### Asynchronous Processing
 
-*   To avoid blocking the UI, the similarity calculation will be performed asynchronously.
-*   For the MVP, this can be achieved by running the calculation in a separate thread or using a simple background task runner integrated with Django (e.g., `threading` module for simplicity, or a more robust solution like Celery for a production environment).
+*   To avoid blocking the UI, a Celery task will be used to perform the similarity calculation asynchronously.
+
+## UI Components
+
+### Job Card
+
+The job card is the primary UI element for displaying a job posting to the user.
+
+**Version 2.0 Design:**
+
+```
++-----------------------------------------------+
+| <job title>                       <pin> <...> |
+| <company>                              <hide> |
+| <location>                           <badges> |
+| Posted: <posting date>                        |
+|                                               |
+| <job description goes here and is multiline>  |
++-----------------------------------------------+
+```
+
+**Component Breakdown:**
+
+*   `<pin>`: A toggle button with a pushpin icon. When selected, the icon changes to a "filled" state, and the card is visually highlighted.
+*   `<...>`: A dropdown menu containing actions: "Hide Job", "Find Similar", and "Hide Company".
+*   `<hide>`: A button with an eye icon to hide the job posting directly from the card view.
+*   `<job title>`: The title of the job posting.
+*   `<company>`: The name of the company.
+*   `<location>`: The primary location of the job.
+*   `<badges>`: A collection of badges indicating the work arrangement (e.g., "Onsite", "Hybrid", "Remote").
+*   `<posting date>`: The date the job was posted.
+*   `<job description>`: A snippet of the job description.
