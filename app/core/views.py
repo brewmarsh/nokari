@@ -8,38 +8,16 @@ from .models import JobPosting, Resume, CoverLetter, ScrapableDomain, ScrapeHist
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import render
-from .scraper import scrape_jobs
 import numpy as np
 from numpy.linalg import norm
 import threading
 from django.db.models import OuterRef, Subquery, BooleanField, Value
 from django.db.models.functions import Coalesce
-from transformers import AutoTokenizer, AutoModel
-import torch
 from urllib.parse import unquote
+from .ml_utils import generate_embedding
+from .scraping_logic import scrape_and_save_jobs
 
 User = get_user_model()
-
-# Load model and tokenizer
-tokenizer = AutoTokenizer.from_pretrained('sentence-transformers/all-MiniLM-L6-v2')
-model = AutoModel.from_pretrained('sentence-transformers/all-MiniLM-L6-v2')
-
-def generate_embedding(text):
-    inputs = tokenizer(text, return_tensors='pt', truncation=True, max_length=512)
-    with torch.no_grad():
-        outputs = model(**inputs)
-
-    # Mean pooling
-    embeddings = outputs.last_hidden_state
-    mask = inputs['attention_mask'].unsqueeze(-1).expand(embeddings.size()).float()
-    masked_embeddings = embeddings * mask
-    summed = torch.sum(masked_embeddings, 1)
-    counted = torch.clamp(mask.sum(1), min=1e-9)
-    mean_pooled = summed / counted
-
-    # Normalize
-    mean_pooled = torch.nn.functional.normalize(mean_pooled, p=2, dim=1)
-    return mean_pooled.tolist()[0]
 
 class MeView(generics.RetrieveUpdateAPIView):
     serializer_class = UserSerializer
@@ -175,7 +153,6 @@ class ScrapeView(APIView):
 
     def post(self, request, *args, **kwargs):
         days = request.data.get('days')
-        scraped_count = 0
         try:
             domains = ScrapableDomain.objects.all()
             job_titles = SearchableJobTitle.objects.all()
@@ -185,28 +162,8 @@ class ScrapeView(APIView):
             query_parts = [f'"{title.title}"' for title in job_titles]
             query = f'({" OR ".join(query_parts)}) AND "remote"'
 
-            for domain in domains:
-                jobs = scrape_jobs(query, domain.domain, days=days)
-                for job_data in jobs:
-                    title = job_data['title']
-                    if 'Job Application for' in title:
-                        title = title.replace('Job Application for', '').strip()
+            scraped_count = scrape_and_save_jobs(query, domains, days=days)
 
-                    obj, created = JobPosting.objects.get_or_create(
-                        link=job_data['link'],
-                        defaults={
-                            'title': title,
-                            'company': job_data['company'],
-                            'description': job_data['description'],
-                            'posting_date': job_data['posting_date'],
-                            'locations': job_data['locations'],
-                        }
-                    )
-                    if created:
-                        text = f"{obj.title} {obj.description}"
-                        obj.embedding = generate_embedding(text)
-                        obj.save()
-                        scraped_count += 1
             ScrapeHistory.objects.create(
                 user=request.user,
                 status='success',
@@ -277,28 +234,13 @@ import numpy as np
 from numpy.linalg import norm
 
 def scrape_in_background(query):
+    """
+    This function is a target for a background thread. It scrapes jobs based on a query.
+    Note: Using threading for background tasks in a web application can be problematic.
+    A more robust solution like Celery is recommended for production environments.
+    """
     domains = ScrapableDomain.objects.all()
-    for domain in domains:
-        try:
-            jobs = scrape_jobs(query, domain.domain)
-            for job_data in jobs:
-                obj, created = JobPosting.objects.get_or_create(
-                    link=job_data['link'],
-                    defaults={
-                        'title': job_data['title'],
-                        'company': job_data['company'],
-                        'description': job_data['description'],
-                        'posting_date': job_data['posting_date'],
-                        'locations': job_data['locations'],
-                    }
-                )
-                if created:
-                    text = f"{obj.title} {obj.description}"
-                    obj.embedding = generate_embedding(text)
-                    obj.save()
-        except Exception as e:
-            # In a real app, you'd want to log this properly
-            print(f"Error scraping in background {domain.domain}: {e}")
+    scrape_and_save_jobs(query, domains)
 
 class FindSimilarJobsView(APIView):
     permission_classes = [IsAuthenticated]
