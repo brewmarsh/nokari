@@ -26,24 +26,26 @@ The refactoring will be done in the following order:
 
 ---
 
-## Current Refactoring Task: Improve Backend Modularity
+## Current Refactoring Task: Integrate Celery for Background Tasks
 
-The goal of this task is to improve the structure and maintainability of the backend code by separating concerns into dedicated modules. Currently, `app/core/views.py` contains a mix of API logic, machine learning utilities, and background task definitions.
+The goal of this task is to replace the current `threading`-based background tasks with a robust and scalable task queue using Celery and Redis. This will improve the reliability and performance of the application and enhance modularity by separating background work from the web request-response cycle.
 
 ### Detailed Plan:
 
-1.  **Create a dedicated file for ML utilities.**
-    *   Create a new file: `app/core/ml_utils.py`.
-    *   Move the `generate_embedding` function and the `sentence-transformers` model loading code from `views.py` into this new file.
-2.  **Consolidate scraping logic.**
-    *   Create a new file: `app/core/scraping_logic.py`.
-    *   Move the `scrape_jobs` function (from `scraper.py`) and the `scrape_in_background` function (from `views.py`) into this new file.
-    *   Refactor the two scraping functions to remove duplicated code.
-3.  **Update imports.**
-    *   Update `views.py` to import the `generate_embedding` function from `app/core/ml_utils.py`.
-    *   Update `views.py` to import the refactored scraping functions from `app/core/scraping_logic.py`.
+1.  **Integrate Celery and Redis**:
+    *   Add `celery` and `redis` packages to `requirements.txt`.
+    *   Create a `celery.py` module to define the Celery application instance.
+    *   Configure Celery within the Django settings (`nokari/settings.py`).
+    *   Update `docker-compose.yml` to include a `redis` service for the message broker and a `celery-worker` service to run the tasks.
+2.  **Create a Celery Task for Scraping**:
+    *   Create a new `app/core/tasks.py` module.
+    *   Define a Celery task in this file that encapsulates the background scraping logic, currently in `scrape_in_background` in `views.py`.
+3.  **Refactor `FindSimilarJobsView` to Use the Celery Task**:
+    *   Modify the `FindSimilarJobsView` in `app/core/views.py`.
+    *   Replace the `threading.Thread` implementation with a call to the new Celery task using `.delay()`.
+    *   Remove the old `scrape_in_background` function.
 4.  **Submit the refactoring.**
-    *   Once the code is reorganized and verified, commit the changes.
+    *   Once the integration is complete and verified, commit the changes.
 
 ---
 
