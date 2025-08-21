@@ -3,9 +3,41 @@ from googleapiclient.discovery import build
 from datetime import datetime
 from .models import JobPosting, ScrapableDomain
 from .ml_utils import generate_embedding
+import requests
+from bs4 import BeautifulSoup
+import logging
+
+logger = logging.getLogger(__name__)
 
 class ScraperException(Exception):
     pass
+
+def scrape_job_details(url):
+    """
+    Scrapes the details of a single job posting from its URL.
+    Returns a dictionary with the scraped data.
+    """
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.content, 'html.parser')
+
+        details = {}
+        # Title
+        details['title'] = soup.title.string if soup.title else ''
+        # Description
+        # This is a generic attempt to get the main content.
+        # A more robust solution would have parsers for specific site structures.
+        main_content = soup.find('main') or soup.find('article') or soup.find('body')
+        if main_content:
+            details['description'] = ' '.join(main_content.get_text().split())
+        else:
+            details['description'] = ''
+
+        return details
+    except requests.RequestException as e:
+        logger.warning(f"Could not fetch URL {url}: {e}")
+        return None
 
 def scrape_jobs(query, domain, days=None):
     """
@@ -76,14 +108,24 @@ def scrape_jobs(query, domain, days=None):
                 except (ValueError, TypeError):
                     pass  # Keep as None if parsing fails
 
-            jobs.append({
+            job_data = {
                 'title': title,
                 'link': item.get('link'),
                 'company': pagemap.get('cse_thumbnail', [{}])[0].get('src', '') or metatags.get('og:site_name', ''),
                 'description': description,
                 'locations': locations,
                 'posting_date': posting_date,
-            })
+            }
+
+            # Scrape the actual job page for more details
+            if job_data['link']:
+                scraped_details = scrape_job_details(job_data['link'])
+                if scraped_details:
+                    # Override the initial data with more accurate scraped data
+                    job_data['title'] = scraped_details.get('title') or job_data['title']
+                    job_data['description'] = scraped_details.get('description') or job_data['description']
+
+            jobs.append(job_data)
     return jobs
 
 
