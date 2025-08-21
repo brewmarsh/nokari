@@ -10,12 +10,11 @@ from rest_framework.response import Response
 from django.shortcuts import render
 import numpy as np
 from numpy.linalg import norm
-import threading
 from django.db.models import OuterRef, Subquery, BooleanField, Value
 from django.db.models.functions import Coalesce
 from urllib.parse import unquote
 from .ml_utils import generate_embedding
-from .scraping_logic import scrape_and_save_jobs
+from .tasks import scrape_jobs_task
 
 User = get_user_model()
 
@@ -233,15 +232,6 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
 import numpy as np
 from numpy.linalg import norm
 
-def scrape_in_background(query):
-    """
-    This function is a target for a background thread. It scrapes jobs based on a query.
-    Note: Using threading for background tasks in a web application can be problematic.
-    A more robust solution like Celery is recommended for production environments.
-    """
-    domains = ScrapableDomain.objects.all()
-    scrape_and_save_jobs(query, domains)
-
 class FindSimilarJobsView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -278,9 +268,7 @@ class FindSimilarJobsView(APIView):
 
         # --- Part 2: Kick off background scraping ---
         query = f'"{target_job.title}"'
-        thread = threading.Thread(target=scrape_in_background, args=(query,))
-        thread.daemon = True
-        thread.start()
+        scrape_jobs_task.delay(query)
 
         return Response(serializer.data)
 

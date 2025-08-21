@@ -10,3 +10,5 @@ django-cors-headers
 google-api-python-client
 pip-tools
 python-json-logger
+celery
+redis
