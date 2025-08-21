@@ -82,13 +82,16 @@ class JobPostingView(generics.ListAPIView):
         if search is not None:
             queryset = queryset.filter(description__icontains=search)
 
-        resume = Resume.objects.filter(user=self.request.user).first()
-        if resume:
-            with open(resume.file.path, 'r') as f:
-                resume_text = f.read()
-            for job_posting in queryset:
-                job_posting.confidence_score = match_resume(resume_text, job_posting.description)['scores'][0]
-                job_posting.save()
+        # TODO: The resume matching feature is incomplete and causes a crash.
+        # The `match_resume` function is not defined. This code should be
+        # completed and the feature re-enabled.
+        # resume = Resume.objects.filter(user=self.request.user).first()
+        # if resume:
+        #     with open(resume.file.path, 'r') as f:
+        #         resume_text = f.read()
+        #     for job_posting in queryset:
+        #         job_posting.confidence_score = match_resume(resume_text, job_posting.description)['scores'][0]
+        #         job_posting.save()
 
         return queryset
 
