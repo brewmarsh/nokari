@@ -177,11 +177,6 @@ class ScrapeView(APIView):
             return Response({'detail': f'An error occurred: {e}'}, status=500)
 
 
-def test_page(request):
-    User = get_user_model()
-    user = User.objects.first()
-    return render(request, 'test_page.html', {'user': user})
-
 class UserCountView(APIView):
     permission_classes = [AllowAny]
 
@@ -228,7 +223,6 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
         user.save()
         return Response({'status': 'user promoted'})
 
-import numpy as np
 from numpy.linalg import norm
 
 class FindSimilarJobsView(APIView):
