@@ -67,9 +67,6 @@ const JobCard = ({ job, openMenu, setOpenMenu, handlePin, handleHide, handleHide
               </div>
             )}
           </div>
-          <button onClick={() => handleHide(job.link)} title="Hide Job" className="hide-icon">
-            <HideIcon />
-          </button>
         </div>
         <div className="job-card-badges">
           {job.locations && job.locations.map((loc, index) => (
