@@ -14,7 +14,7 @@ from django.db.models import OuterRef, Subquery, BooleanField, Value
 from django.db.models.functions import Coalesce
 from urllib.parse import unquote
 from .ml_utils import generate_embedding
-from .tasks import scrape_jobs_task
+from .tasks import scrape_jobs_task, analyze_resume_against_jobs
 
 User = get_user_model()
 
@@ -81,6 +81,7 @@ class ResumeView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+        analyze_resume_against_jobs.delay(self.request.user.id)
 
 class ResumeDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ResumeSerializer
@@ -88,6 +89,10 @@ class ResumeDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         return Resume.objects.filter(user=self.request.user)
+
+    def perform_update(self, serializer):
+        serializer.save()
+        analyze_resume_against_jobs.delay(self.request.user.id)
 
 class CoverLetterView(generics.ListCreateAPIView):
     serializer_class = CoverLetterSerializer
