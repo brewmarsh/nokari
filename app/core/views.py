@@ -15,6 +15,7 @@ from django.db.models.functions import Coalesce
 from urllib.parse import unquote
 from .ml_utils import generate_embedding
 from .tasks import scrape_jobs_task, analyze_resume_against_jobs
+from .scraping_logic import scrape_and_save_jobs
 
 User = get_user_model()
 
