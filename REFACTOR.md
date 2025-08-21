@@ -26,42 +26,61 @@ The refactoring will be done in the following order:
 
 ---
 
-## Current Refactoring Task: Frontend Component Refactoring
+## Current Refactoring Task: Frontend Cleanup and Advanced Scraping
 
-**Objective:** Improve the modularity, maintainability, and reusability of the frontend code by breaking down the monolithic `Jobs.jsx` component.
+This phase of the refactoring has two main goals:
+1.  Finish cleaning up the frontend components and code.
+2.  Implement a more advanced and reliable scraping mechanism.
 
-**Design:**
+### Phase 1: Frontend Cleanup
 
-The `Jobs.jsx` component will be refactored into a container component that manages state and data fetching, and several smaller, presentational components that handle specific parts of the UI.
+**Objective:** To finish the process of breaking down monolithic components and cleaning up the frontend codebase.
 
-1.  **`Jobs.jsx` (Container):** Will continue to manage the state for jobs, filters, and loading states. It will fetch data from the API and pass down the necessary data and callbacks to its children.
-2.  **`JobFilters.jsx` (Presentational):** Will receive the filter values and `onChange` handlers as props. It will be responsible for rendering the input fields for title, company, and keyword search.
-3.  **`JobCard.jsx` (Presentational):** Will receive a single `job` object as a prop and be responsible for rendering the entire job card, including the header, description, and footer. This will make the main job list easier to read and manage.
-4.  **`ActionMenu.jsx` (Presentational):** Will receive the `job` object and the various action handlers (`onHide`, `onHideCompany`, `onFindSimilar`) as props. It will render the three-dots menu and its dropdown.
-5.  **Icon Components:** All inline SVG icons (`ThreeDotsIcon`, `RemoteIcon`, `HideIcon`) will be moved to a new directory `frontend/src/components/icons/`. Each icon will be in its own file (e.g., `ThreeDotsIcon.jsx`). This will remove duplicated code and make the icons reusable throughout the application.
+**Detailed Implementation Plan (in small chunks):**
 
-### Detailed Implementation Plan for Coding Agent:
-
-This refactoring will be done in small, incremental steps.
-
-1.  **Create Icon Components:**
-    *   Create a new directory: `frontend/src/components/icons`.
-    *   For each icon in `Jobs.jsx` (`ThreeDotsIcon`, `RemoteIcon`, `HideIcon`), create a new component file in the `icons` directory (e.g., `frontend/src/components/icons/ThreeDotsIcon.jsx`).
-    *   Move the SVG code into the new component files.
-    *   Update `Jobs.jsx` to import these new icon components.
+1.  **Extract `JobFilters.jsx` Component:**
+    *   Create a new file: `frontend/src/components/JobFilters.jsx`.
+    *   Move the filter input fields (`title`, `company`, `search`) and the "Show/Hide Filters" button from `Jobs.jsx` into this new component.
+    *   The state for the filter values will remain in `Jobs.jsx` for now, and the values and `onChange` handlers will be passed down as props.
     *   Commit this change.
 
-2.  **Create `JobCard.jsx` Component:**
-    *   Create a new file: `frontend/src/components/JobCard.jsx`.
-    *   Move the JSX for rendering a single job card from `Jobs.jsx` into `JobCard.jsx`.
-    *   The new component will accept a `job` object and action handlers (e.g., `onPin`, `onHide`, etc.) as props.
-    *   Update `Jobs.jsx` to import and use the new `JobCard` component within its `.map()` loop.
+2.  **Refactor `api.js` Service:**
+    *   In `frontend/src/services/api.js`, the `axios` configuration for `baseURL` and `headers` is duplicated.
+    *   Refactor this to define a common configuration object and reuse it for both the authenticated (`api`) and unauthenticated (`api_unauthenticated`) instances.
     *   Commit this change.
 
-3.  **Refactor `Jobs.jsx` and Submit:**
-    *   At this point, the `Jobs.jsx` file will be significantly smaller. The remaining logic for filtering, data fetching, and state management will remain in `Jobs.jsx`.
-    *   (Optional, can be a separate step) The `JobFilters` and `ActionMenu` can also be extracted as described in the design, but the biggest improvement will come from extracting the `JobCard`.
-    *   Submit the final, refactored code for review.
+3.  **Remove `console.log` Statements:**
+    *   Perform a codebase-wide search for `console.log()` statements in the `frontend/` directory.
+    *   Remove all of them to clean up the code for a production environment.
+    *   Commit this change.
+
+### Phase 2: Advanced Scraping Refactor
+
+**Objective:** To improve the quality and reliability of the scraped job data by fetching and parsing content directly from the job posting URLs.
+
+**Detailed Implementation Plan (in small chunks):**
+
+4.  **Enhance Scraping with Direct, Detailed Fetching:**
+    *   Modify the `scrape_jobs` function in `app/core/scraping_logic.py`.
+    *   After getting the initial list of jobs from the Google API, loop through each job.
+    *   For each job, use the `requests` library to fetch the HTML from the `job['link']`.
+    *   Use the `BeautifulSoup` library to parse the HTML.
+    *   Implement a generic parsing strategy to find and extract the following details from the parsed HTML:
+        *   **Job Title:** Look for `<h1>`, `<h2>`, or the `<title>` tag.
+        *   **Company Name:** Often found near the title or in the page's metadata.
+        *   **Location:** Search for text near keywords like "Location", "Located", etc.
+        *   **Work Arrangement:** Scan the text for "remote", "hybrid", "onsite".
+        *   **Posting Date:** Search for text near "Posted", or look for `<time>` elements.
+        *   **Full Description:** Attempt to find the main content block of the page (e.g., `<div id="job-description">`, `<main>`, `article`).
+    *   The data extracted from the page will overwrite the initial, less reliable data from the Google API.
+    *   Wrap this entire process in a `try...except` block to gracefully handle network errors, timeouts, or parsing failures for any given URL.
+    *   Commit this enhanced scraping logic.
+
+5.  **Verify Database Model:**
+    *   Review the `JobPosting` model in `app/core/models.py`.
+    *   Confirm that the `description` field is a `TextField` and that other fields are appropriate for the detailed data we will be scraping.
+    *   If any model changes are necessary, create a new migration file. (Based on current knowledge, no changes are expected, but this is a verification step).
+    *   Commit any necessary model or migration changes.
 
 ---
 
