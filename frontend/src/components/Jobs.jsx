@@ -8,6 +8,7 @@ import RemoteIcon from './icons/RemoteIcon.jsx';
 import HideIcon from './icons/HideIcon.jsx';
 
 import JobCard from './JobCard.jsx';
+import JobFilters from './JobFilters.jsx';
 
 const Jobs = () => {
   const [jobs, setJobs] = useState([]);
@@ -107,31 +108,16 @@ const Jobs = () => {
       ) : (
         <h1>Job Postings</h1>
       )}
-      <button onClick={() => setFiltersVisible(!filtersVisible)}>
-        {filtersVisible ? 'Hide Filters' : 'Show Filters'}
-      </button>
-      {filtersVisible && (
-        <div>
-          <input
-            type="text"
-            placeholder="Filter by title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        <input
-          type="text"
-          placeholder="Filter by company"
-          value={company}
-          onChange={(e) => setCompany(e.target.value)}
-        />
-        <input
-          type="text"
-          placeholder="Search by keyword"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        </div>
-      )}
+      <JobFilters
+        filtersVisible={filtersVisible}
+        setFiltersVisible={setFiltersVisible}
+        title={title}
+        setTitle={setTitle}
+        company={company}
+        setCompany={setCompany}
+        search={search}
+        setSearch={setSearch}
+      />
       {isLoadingSimilar ? (
         <div>Finding similar jobs...</div>
       ) : (
