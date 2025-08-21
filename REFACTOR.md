@@ -26,45 +26,42 @@ The refactoring will be done in the following order:
 
 ---
 
-## Current Refactoring Task: Asynchronous Resume Analysis
+## Current Refactoring Task: Frontend Component Refactoring
 
-**Objective:** Fix the performance bottleneck in the `JobPostingView` by moving the confidence score calculation to an asynchronous background task.
+**Objective:** Improve the modularity, maintainability, and reusability of the frontend code by breaking down the monolithic `Jobs.jsx` component.
 
 **Design:**
 
-The current implementation calculates job-resume matching scores on-the-fly every time the `/api/jobs/` endpoint is called. This is inefficient. The new design will calculate these scores only when a user's resume changes.
+The `Jobs.jsx` component will be refactored into a container component that manages state and data fetching, and several smaller, presentational components that handle specific parts of the UI.
 
-1.  A new Celery task, `analyze_resume_against_jobs`, will be created. This task will take a user ID as an argument.
-2.  Inside the task, it will retrieve the user's latest resume and all `JobPosting` objects.
-3.  It will then iterate through all jobs, calculate the confidence score for each, and update the `confidence_score` field on the `JobPosting` model. *Note: This is still not perfectly optimal, as it recalculates for all jobs for one user. A more advanced implementation might use a join table to store user-specific scores, but for now, updating the job posting directly is a significant improvement and simpler to implement.*
-4.  The `ResumeView` (for resume creation/update) will be modified to trigger this Celery task whenever a user uploads or changes their resume.
-5.  The `JobPostingView` will be simplified to remove the on-the-fly calculation entirely. It will just serialize the `JobPosting` objects with their already-calculated scores.
+1.  **`Jobs.jsx` (Container):** Will continue to manage the state for jobs, filters, and loading states. It will fetch data from the API and pass down the necessary data and callbacks to its children.
+2.  **`JobFilters.jsx` (Presentational):** Will receive the filter values and `onChange` handlers as props. It will be responsible for rendering the input fields for title, company, and keyword search.
+3.  **`JobCard.jsx` (Presentational):** Will receive a single `job` object as a prop and be responsible for rendering the entire job card, including the header, description, and footer. This will make the main job list easier to read and manage.
+4.  **`ActionMenu.jsx` (Presentational):** Will receive the `job` object and the various action handlers (`onHide`, `onHideCompany`, `onFindSimilar`) as props. It will render the three-dots menu and its dropdown.
+5.  **Icon Components:** All inline SVG icons (`ThreeDotsIcon`, `RemoteIcon`, `HideIcon`) will be moved to a new directory `frontend/src/components/icons/`. Each icon will be in its own file (e.g., `ThreeDotsIcon.jsx`). This will remove duplicated code and make the icons reusable throughout the application.
 
 ### Detailed Implementation Plan for Coding Agent:
 
-1.  **Create New Celery Task:**
-    *   In `app/core/tasks.py`, define a new shared task: `@shared_task def analyze_resume_against_jobs(user_id):`.
-    *   Inside this task:
-        *   Import `get_user_model`, `JobPosting`, and `Resume`.
-        *   Fetch the `User` object using the `user_id`.
-        *   Fetch the user's most recent `Resume`. If none exists, log a message and exit the task.
-        *   Fetch all `JobPosting` objects.
-        *   Read the content of the resume file.
-        *   *Crucially, the `match_resume` function is still missing from the codebase*. For this step, we will **mock the matching logic**. You will need to define a placeholder function, e.g., `def placeholder_match_resume(resume_text, job_description): return {'scores': [0.5]}` and use that. This allows us to build the pipeline without having the real ML logic.
-        *   Loop through each `JobPosting`, call the placeholder matching function, and update `job_posting.confidence_score`.
-        *   Use `JobPosting.objects.bulk_update()` to save all the changes in an efficient query.
+This refactoring will be done in small, incremental steps.
 
-2.  **Modify `ResumeView`:**
-    *   In `app/core/views.py`, locate the `ResumeView`.
-    *   In the `perform_create` method (which is called on new resume uploads), after `serializer.save(user=self.request.user)`, add a call to the new Celery task: `analyze_resume_against_jobs.delay(self.request.user.id)`.
-    *   Similarly, for the `ResumeDetailView`, in the `perform_update` method, add the same Celery task call.
+1.  **Create Icon Components:**
+    *   Create a new directory: `frontend/src/components/icons`.
+    *   For each icon in `Jobs.jsx` (`ThreeDotsIcon`, `RemoteIcon`, `HideIcon`), create a new component file in the `icons` directory (e.g., `frontend/src/components/icons/ThreeDotsIcon.jsx`).
+    *   Move the SVG code into the new component files.
+    *   Update `Jobs.jsx` to import these new icon components.
+    *   Commit this change.
 
-3.  **Clean up `JobPostingView`:**
-    *   In `app/core/views.py`, find the `JobPostingView`.
-    *   Remove the entire block of code that starts with `resume = Resume.objects.filter(user=self.request.user).first()`. This is the code that performs the slow, on-the-fly calculation.
+2.  **Create `JobCard.jsx` Component:**
+    *   Create a new file: `frontend/src/components/JobCard.jsx`.
+    *   Move the JSX for rendering a single job card from `Jobs.jsx` into `JobCard.jsx`.
+    *   The new component will accept a `job` object and action handlers (e.g., `onPin`, `onHide`, etc.) as props.
+    *   Update `Jobs.jsx` to import and use the new `JobCard` component within its `.map()` loop.
+    *   Commit this change.
 
-4.  **Submit for Review:**
-    *   Commit the changes to a new branch.
+3.  **Refactor `Jobs.jsx` and Submit:**
+    *   At this point, the `Jobs.jsx` file will be significantly smaller. The remaining logic for filtering, data fetching, and state management will remain in `Jobs.jsx`.
+    *   (Optional, can be a separate step) The `JobFilters` and `ActionMenu` can also be extracted as described in the design, but the biggest improvement will come from extracting the `JobCard`.
+    *   Submit the final, refactored code for review.
 
 ---
 
