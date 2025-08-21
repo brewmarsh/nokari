@@ -2,7 +2,52 @@
 
 This document outlines a plan for refactoring and improving the codebase. The following sections detail identified issues and suggest improvements for the backend and frontend, as well as cross-cutting concerns.
 
-## Backend Refactoring
+## Proposed Refactoring Plan
+
+The refactoring will be done in the following order:
+
+1.  **Stabilize the Backend:**
+    *   Address the critical `match_resume` bug.
+    *   Fix the `JobPostingView` performance issue.
+2.  **Improve Backend Modularity:**
+    *   Refactor the scraping and ML utility code.
+    *   Replace `threading` with a proper task queue.
+3.  **Clean Up the Backend:**
+    *   Remove the security vulnerability in `UserSerializer`.
+    *   Remove dead code and clean up imports.
+4.  **Refactor the Frontend:**
+    *   Break down the `Jobs.jsx` monolith.
+    *   Improve code style by moving icons and styles to separate files.
+5.  **Improve Frontend Performance and UX:**
+    *   Implement optimistic UI updates.
+    *   Clean up `api.js` and logging.
+6.  **Enhance Scraper Reliability:**
+    *   Investigate and implement more robust scraping methods.
+
+---
+
+## Current Refactoring Task: Improve Backend Modularity
+
+The goal of this task is to improve the structure and maintainability of the backend code by separating concerns into dedicated modules. Currently, `app/core/views.py` contains a mix of API logic, machine learning utilities, and background task definitions.
+
+### Detailed Plan:
+
+1.  **Create a dedicated file for ML utilities.**
+    *   Create a new file: `app/core/ml_utils.py`.
+    *   Move the `generate_embedding` function and the `sentence-transformers` model loading code from `views.py` into this new file.
+2.  **Consolidate scraping logic.**
+    *   Create a new file: `app/core/scraping_logic.py`.
+    *   Move the `scrape_jobs` function (from `scraper.py`) and the `scrape_in_background` function (from `views.py`) into this new file.
+    *   Refactor the two scraping functions to remove duplicated code.
+3.  **Update imports.**
+    *   Update `views.py` to import the `generate_embedding` function from `app/core/ml_utils.py`.
+    *   Update `views.py` to import the refactored scraping functions from `app/core/scraping_logic.py`.
+4.  **Submit the refactoring.**
+    *   Once the code is reorganized and verified, commit the changes.
+
+---
+
+## Backend Refactoring Details
 
 ### 1. Critical Bug: Missing `match_resume` Function
 
@@ -91,25 +136,3 @@ This document outlines a plan for refactoring and improving the codebase. The fo
 *   **Recommendation:**
     *   For each `ScrapableDomain`, investigate if they provide a more direct API for job postings.
     *   Implement more robust parsing logic with better error handling and logging to identify when a scraper for a specific domain breaks.
-
-## Proposed Refactoring Plan
-
-The refactoring will be done in the following order:
-
-1.  **Stabilize the Backend:**
-    *   Address the critical `match_resume` bug.
-    *   Fix the `JobPostingView` performance issue.
-2.  **Improve Backend Modularity:**
-    *   Refactor the scraping and ML utility code.
-    *   Replace `threading` with a proper task queue.
-3.  **Clean Up the Backend:**
-    *   Remove the security vulnerability in `UserSerializer`.
-    *   Remove dead code and clean up imports.
-4.  **Refactor the Frontend:**
-    *   Break down the `Jobs.jsx` monolith.
-    *   Improve code style by moving icons and styles to separate files.
-5.  **Improve Frontend Performance and UX:**
-    *   Implement optimistic UI updates.
-    *   Clean up `api.js` and logging.
-6.  **Enhance Scraper Reliability:**
-    *   Investigate and implement more robust scraping methods.
