@@ -83,12 +83,18 @@ def scrape_job_details(url):
     Returns the full description text.
     Raises ScraperException on failure.
     """
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
     try:
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status() # Raises HTTPError for bad responses (4xx or 5xx)
     except requests.exceptions.RequestException as e:
-        if e.response and e.response.status_code == 404:
-            raise ScraperException(f"URL not found (404): {url}")
+        if hasattr(e, 'response') and e.response is not None:
+            if e.response.status_code == 404:
+                raise ScraperException(f"URL not found (404): {url}")
+            if e.response.status_code == 403:
+                raise ScraperException(f"Forbidden (403): {url}")
         raise ScraperException(f"Failed to download URL: {url}. Error: {e}")
 
     soup = BeautifulSoup(response.content, 'html.parser')
