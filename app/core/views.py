@@ -244,6 +244,8 @@ class AdminJobPostingViewSet(viewsets.ModelViewSet):
     queryset = JobPosting.objects.all().order_by('-details_updated_at', '-posting_date')
     serializer_class = AdminJobPostingSerializer
     permission_classes = [IsAdmin]
+    lookup_field = 'link'
+    lookup_value_regex = '.+'
     http_method_names = ['get', 'post', 'delete'] # Limit methods
 
     @action(detail=True, methods=['post'])
