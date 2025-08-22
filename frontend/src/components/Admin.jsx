@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import JobTitles from './JobTitles.jsx';
 import ScrapableDomains from './ScrapableDomains.jsx';
 import ScrapeHistory from './ScrapeHistory.jsx';
@@ -53,6 +54,10 @@ const Admin = () => {
   return (
     <div className="admin-section">
       <h2>Admin Tools</h2>
+      <div className="admin-section">
+        <h3>Job Management</h3>
+        <Link to="/admin/jobs">Jobs Table</Link>
+      </div>
       <div>
         <h3>Scrape Jobs</h3>
         <label>

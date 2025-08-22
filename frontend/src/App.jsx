@@ -8,6 +8,7 @@ import Documents from './components/Documents.jsx';
 import Profile from './components/Profile.jsx';
 import Settings from './components/Settings.jsx';
 import Admin from './components/Admin.jsx';
+import AdminJobs from './components/AdminJobs.jsx';
 import UserProfileIcon from './components/UserProfileIcon.jsx';
 import api from './services/api';
 import './App.css';
@@ -75,6 +76,7 @@ const AppRoutes = memo(({ user, onOnboardingSuccess, onLoginSuccess, handleLogou
             <>
               <Route path="/dashboard" element={<Dashboard user={user} />} />
               <Route path="/admin" element={<Admin />} />
+              <Route path="/admin/jobs" element={<AdminJobs />} />
               <Route path="/documents" element={<Documents />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/settings" element={<Settings />} />

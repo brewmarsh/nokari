@@ -83,3 +83,38 @@ class SearchableJobTitleSerializer(serializers.ModelSerializer):
     class Meta:
         model = SearchableJobTitle
         fields = '__all__'
+
+class AdminJobPostingSerializer(serializers.ModelSerializer):
+    remote = serializers.SerializerMethodField()
+    hybrid = serializers.SerializerMethodField()
+    onsite = serializers.SerializerMethodField()
+    location_string = serializers.SerializerMethodField()
+
+    class Meta:
+        model = JobPosting
+        fields = [
+            'link',
+            'title',
+            'company',
+            'location_string',
+            'remote',
+            'hybrid',
+            'onsite',
+            'details_updated_at',
+        ]
+
+    def get_location_string(self, obj):
+        # Find the first location with a non-empty location_string
+        for loc in obj.locations:
+            if loc.get('location_string'):
+                return loc['location_string']
+        return None
+
+    def get_remote(self, obj):
+        return any(loc.get('type') == 'remote' for loc in obj.locations)
+
+    def get_hybrid(self, obj):
+        return any(loc.get('type') == 'hybrid' for loc in obj.locations)
+
+    def get_onsite(self, obj):
+        return any(loc.get('type') == 'onsite' for loc in obj.locations)

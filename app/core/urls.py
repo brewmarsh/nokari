@@ -20,7 +20,8 @@ from .views import (
     FindSimilarJobsView,
     UserViewSet,
     SearchableJobTitleViewSet,
-    TaskStatusView
+    TaskStatusView,
+    AdminJobPostingViewSet
 )
 from .admin_views import AdminMenuView
 from rest_framework_simplejwt.views import (
@@ -32,6 +33,7 @@ from rest_framework.routers import DefaultRouter
 router = DefaultRouter()
 router.register(r'users', UserViewSet, basename='user')
 router.register(r'job-titles', SearchableJobTitleViewSet, basename='job-title')
+router.register(r'admin/jobs', AdminJobPostingViewSet, basename='admin-job')
 
 urlpatterns = [
     path('', include(router.urls)),

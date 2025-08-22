@@ -2,14 +2,14 @@ from rest_framework import generics, status, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import action
 from .permissions import IsAdmin
-from .serializers import UserSerializer, JobPostingSerializer, ResumeSerializer, CoverLetterSerializer, ScrapableDomainSerializer, ScrapeHistorySerializer, UserJobInteractionSerializer, HiddenCompanySerializer, SearchableJobTitleSerializer
+from .serializers import UserSerializer, JobPostingSerializer, ResumeSerializer, CoverLetterSerializer, ScrapableDomainSerializer, ScrapeHistorySerializer, UserJobInteractionSerializer, HiddenCompanySerializer, SearchableJobTitleSerializer, AdminJobPostingSerializer
 from django.contrib.auth import get_user_model
 from .models import JobPosting, Resume, CoverLetter, ScrapableDomain, ScrapeHistory, UserJobInteraction, HiddenCompany, SearchableJobTitle
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import render
 from .scraper import scrape_jobs
-from .tasks import scrape_and_save_jobs
+from .tasks import scrape_and_save_jobs, rescrape_job_details_task
 from celery.result import AsyncResult
 import numpy as np
 from numpy.linalg import norm
@@ -236,6 +236,24 @@ class HideJobPostingView(APIView):
         interaction.save()
 
         return Response(status=status.HTTP_200_OK)
+
+class AdminJobPostingViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint for admins to view and manage job postings.
+    """
+    queryset = JobPosting.objects.all().order_by('-details_updated_at', '-posting_date')
+    serializer_class = AdminJobPostingSerializer
+    permission_classes = [IsAdmin]
+    http_method_names = ['get', 'post', 'delete'] # Limit methods
+
+    @action(detail=True, methods=['post'])
+    def rescrape(self, request, pk=None):
+        """
+        Triggers a Celery task to rescrape the details of a single job posting.
+        """
+        job = self.get_object()
+        task = rescrape_job_details_task.delay(job.pk)
+        return Response({'status': 'rescrape_task_started', 'task_id': task.id})
 
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):

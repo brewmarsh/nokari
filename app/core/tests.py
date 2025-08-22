@@ -188,15 +188,14 @@ class SearchableJobTitleViewSetTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(SearchableJobTitle.objects.count(), 1)
 
-    @patch('app.core.views.scrape_jobs')
-    def test_scrape_view_uses_job_titles(self, mock_scrape_jobs):
+    @patch('app.core.tasks.scrape_and_save_jobs.delay')
+    def test_scrape_view_starts_celery_task(self, mock_delay):
         self.client.force_authenticate(user=self.admin_user)
+        ScrapableDomain.objects.create(domain='example.com')
         url = reverse('scrape')
         response = self.client.post(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        mock_scrape_jobs.assert_called()
-        expected_query = '("Software Engineer" OR "Product Manager") AND "remote"'
-        self.assertEqual(mock_scrape_jobs.call_args[0][0], expected_query)
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        self.assertTrue(mock_delay.called)
 
 
 

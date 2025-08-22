@@ -1,0 +1,28 @@
+.admin-jobs-container {
+    padding: 20px;
+}
+
+.admin-jobs-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.admin-jobs-table th,
+.admin-jobs-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.admin-jobs-table th {
+    background-color: #f2f2f2;
+}
+
+.admin-jobs-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.admin-jobs-table button {
+    margin-right: 5px;
+}
