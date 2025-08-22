@@ -9,6 +9,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import render
 from .scraper import scrape_jobs
+from .tasks import scrape_and_save_jobs
+from celery.result import AsyncResult
 import numpy as np
 from numpy.linalg import norm
 import threading
@@ -171,52 +173,33 @@ class ScrapeView(APIView):
     permission_classes = [IsAdmin]
 
     def post(self, request, *args, **kwargs):
-        days = request.data.get('days')
-        scraped_count = 0
-        try:
-            domains = ScrapableDomain.objects.all()
-            job_titles = SearchableJobTitle.objects.all()
-            if not job_titles:
-                return Response({'detail': 'No job titles to search for.'}, status=status.HTTP_400_BAD_REQUEST)
+        domains = ScrapableDomain.objects.all()
+        if not domains.exists():
+            return Response({'detail': 'No scrapable domains configured.'}, status=status.HTTP_400_BAD_REQUEST)
 
-            query_parts = [f'"{title.title}"' for title in job_titles]
-            query = f'({" OR ".join(query_parts)}) AND "remote"'
+        task_ids = []
+        for domain in domains:
+            task = scrape_and_save_jobs.delay(domain.id)
+            task_ids.append(task.id)
 
-            for domain in domains:
-                jobs = scrape_jobs(query, domain.domain, days=days)
-                for job_data in jobs:
-                    title = job_data['title']
-                    if 'Job Application for' in title:
-                        title = title.replace('Job Application for', '').strip()
+        return Response({'detail': 'Scraping tasks initiated.', 'task_ids': task_ids}, status=status.HTTP_202_ACCEPTED)
 
-                    obj, created = JobPosting.objects.get_or_create(
-                        link=job_data['link'],
-                        defaults={
-                            'title': title,
-                            'company': job_data['company'],
-                            'description': job_data['description'],
-                            'posting_date': job_data['posting_date'],
-                            'locations': job_data['locations'],
-                        }
-                    )
-                    if created:
-                        text = f"{obj.title} {obj.description}"
-                        obj.embedding = generate_embedding(text)
-                        obj.save()
-                        scraped_count += 1
-            ScrapeHistory.objects.create(
-                user=request.user,
-                status='success',
-                jobs_found=scraped_count
-            )
-            return Response({'detail': f'Scraped {scraped_count} new jobs.'})
-        except Exception as e:
-            ScrapeHistory.objects.create(
-                user=request.user,
-                status='failure',
-                details=str(e)
-            )
-            return Response({'detail': f'An error occurred: {e}'}, status=500)
+class TaskStatusView(APIView):
+    permission_classes = [IsAdmin]
+
+    def get(self, request, *args, **kwargs):
+        task_id = kwargs.get('task_id')
+        if not task_id:
+            return Response({'error': 'Task ID not provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+        task_result = AsyncResult(task_id)
+
+        result = {
+            'task_id': task_id,
+            'status': task_result.status,
+            'result': task_result.result
+        }
+        return Response(result, status=status.HTTP_200_OK)
 
 
 def test_page(request):

@@ -1,4 +1,6 @@
 import os
+import requests
+from bs4 import BeautifulSoup
 from googleapiclient.discovery import build
 from datetime import datetime, timezone
 
@@ -74,3 +76,45 @@ def scrape_jobs(query, domain, days=None):
                 'posting_date': posting_date,
             })
     return jobs
+
+def scrape_job_details(url):
+    """
+    Scrapes the job description from a given URL.
+    Returns the full description text.
+    Raises ScraperException on failure.
+    """
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status() # Raises HTTPError for bad responses (4xx or 5xx)
+    except requests.exceptions.RequestException as e:
+        if e.response and e.response.status_code == 404:
+            raise ScraperException(f"URL not found (404): {url}")
+        raise ScraperException(f"Failed to download URL: {url}. Error: {e}")
+
+    soup = BeautifulSoup(response.content, 'html.parser')
+
+    # A list of common selectors for job descriptions. This is a starting point.
+    selectors = [
+        {'id': 'job-description'},
+        {'class': 'job-description'},
+        {'id': 'job_description'},
+        {'class': 'job_description'},
+        {'class': 'job-details'},
+        {'class': 'job-details-content'},
+    ]
+
+    description_element = None
+    for selector in selectors:
+        description_element = soup.find(None, attrs=selector)
+        if description_element:
+            break
+
+    if description_element:
+        return description_element.get_text(separator='\n', strip=True)
+    else:
+        # As a fallback, return the body text. This is not ideal.
+        body_text = soup.body.get_text(separator='\n', strip=True) if soup.body else ""
+        if len(body_text) > 50: # Arbitrary length to check if we got something useful
+            return body_text
+        else:
+            raise ScraperException(f"Could not find job description at URL: {url}")

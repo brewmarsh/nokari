@@ -19,7 +19,8 @@ from .views import (
     PinJobPostingView,
     FindSimilarJobsView,
     UserViewSet,
-    SearchableJobTitleViewSet
+    SearchableJobTitleViewSet,
+    TaskStatusView
 )
 from .admin_views import AdminMenuView
 from rest_framework_simplejwt.views import (
@@ -52,6 +53,7 @@ urlpatterns = [
     path('generate-cover-letter/', GenerateCoverLetterView.as_view(), name='generate_cover_letter'),
     path('scrapable-domains/', ScrapableDomainView.as_view(), name='scrapable_domains'),
     path('scrape/', ScrapeView.as_view(), name='scrape'),
+    path('task-status/<str:task_id>/', TaskStatusView.as_view(), name='task_status'),
     path('scrape-history/', ScrapeHistoryView.as_view(), name='scrape_history'),
     path('test/', test_page, name='test_page'),
     path('user-count/', UserCountView.as_view(), name='user_count'),

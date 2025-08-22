@@ -48,6 +48,31 @@ const Badge = ({ location }) => {
     return <span style={style}>{location.type}</span>;
   };
 
+const TruncatedDescription = ({ description, isExpanded, onToggle }) => {
+  const lineClampStyle = {
+    display: '-webkit-box',
+    WebkitLineClamp: 6,
+    WebkitBoxOrient: 'vertical',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  };
+
+  const needsTruncation = description.split('\n').length > 6 || description.length > 500; // Heuristic
+
+  return (
+    <div>
+      <p className="description" style={!isExpanded && needsTruncation ? lineClampStyle : {}}>
+        {description}
+      </p>
+      {needsTruncation && (
+        <button onClick={onToggle} className="show-more-less">
+          {isExpanded ? 'Show less' : 'Show more'}
+        </button>
+      )}
+    </div>
+  );
+};
+
 const Jobs = () => {
   const [jobs, setJobs] = useState([]);
   const [error, setError] = useState(null);
@@ -57,6 +82,7 @@ const Jobs = () => {
   const [openMenu, setOpenMenu] = useState(null);
   const [isLoadingSimilar, setIsLoadingSimilar] = useState(false);
   const [similarJobsTitle, setSimilarJobsTitle] = useState('');
+  const [expandedDescriptions, setExpandedDescriptions] = useState({});
   const [filtersVisible, setFiltersVisible] = useState(() => {
     const saved = localStorage.getItem('filtersVisible');
     return saved !== null ? JSON.parse(saved) : true;
@@ -121,6 +147,13 @@ const Jobs = () => {
       setError(err);
     }
   }, [fetchJobs]);
+
+  const toggleDescription = (jobLink) => {
+    setExpandedDescriptions(prev => ({
+      ...prev,
+      [jobLink]: !prev[jobLink]
+    }));
+  };
 
   const handleFindSimilar = useCallback(async (job) => {
     setIsLoadingSimilar(true);
@@ -203,6 +236,7 @@ const Jobs = () => {
                     </div>
                   </div>
                   <p className="company-name">{job.company}</p>
+                  {/* This block displays the location badges (remote, hybrid, onsite) and the location string. */}
                   {job.locations && job.locations.length > 0 && (
                     <div className="job-location">
                       {job.locations.map((loc, index) => (
@@ -216,7 +250,7 @@ const Jobs = () => {
                       )}
                     </div>
                   )}
-                  <p className="description">{job.description}</p>
+                  <TruncatedDescription description={job.description} isExpanded={expandedDescriptions[job.link]} onToggle={() => toggleDescription(job.link)} />
                 </div>
                 <div className="job-card-footer">
                   <p className="posting-date">

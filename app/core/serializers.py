@@ -28,7 +28,19 @@ class JobPostingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = JobPosting
-        fields = '__all__'
+        fields = [
+            'link',
+            'company',
+            'title',
+            'description',
+            'confidence_score',
+            'posting_date',
+            'locations',
+            'days_in_office',
+            'embedding',
+            'details_updated_at',
+            'is_pinned'
+        ]
 
 class ResumeSerializer(serializers.ModelSerializer):
     class Meta:
