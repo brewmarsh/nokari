@@ -28,15 +28,17 @@ def scrape_and_save_jobs(domain_id):
             total_jobs_found += len(scraped_jobs)
 
             for job_data in scraped_jobs:
-                if not JobPosting.objects.filter(link=job_data['link']).exists():
-                    JobPosting.objects.create(
-                        title=job_data['title'],
-                        link=job_data['link'],
-                        company=job_data['company'],
-                        description=job_data['description'],
-                        posting_date=job_data.get('posting_date'),
-                        locations=job_data.get('locations', [])
-                    )
+                obj, created = JobPosting.objects.get_or_create(
+                    link=job_data['link'],
+                    defaults={
+                        'title': job_data['title'],
+                        'company': job_data['company'],
+                        'description': job_data['description'],
+                        'posting_date': job_data.get('posting_date'),
+                        'locations': job_data.get('locations', [])
+                    }
+                )
+                if created:
                     total_jobs_added += 1
         except ScraperException as e:
             errors.append(str(e))

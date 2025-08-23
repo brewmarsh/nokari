@@ -191,7 +191,6 @@ class SearchableJobTitleViewSetTest(APITestCase):
     @patch('app.core.tasks.scrape_and_save_jobs.delay')
     def test_scrape_view_starts_celery_task(self, mock_delay):
         self.client.force_authenticate(user=self.admin_user)
-        ScrapableDomain.objects.create(domain='example.com')
         url = reverse('scrape')
         response = self.client.post(url)
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
