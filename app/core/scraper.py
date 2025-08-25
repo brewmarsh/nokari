@@ -19,6 +19,11 @@ def parse_job_title(title):
     Returns a dictionary with cleaned_title, company, and work_types.
     """
     original_title = title
+
+    # Remove "Job Application for " prefix
+    if title.lower().startswith("job application for "):
+        title = title[len("job application for "):]
+
     extracted_company = None
     extracted_work_types = []
 

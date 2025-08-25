@@ -32,6 +32,11 @@ class ScraperTestCase(unittest.TestCase):
                 "company": None,
                 "work_types": []
             },
+            "Job Application for Software Engineer": {
+                "cleaned_title": "Software Engineer",
+                "company": None,
+                "work_types": []
+            },
             "Senior Analyst at ACME Corp": {
                 "cleaned_title": "Senior Analyst",
                 "company": "ACME Corp",
