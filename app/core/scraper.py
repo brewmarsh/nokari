@@ -70,7 +70,7 @@ def scrape_jobs(query, domain, days=None):
             jobs.append({
                 'title': title,
                 'link': item.get('link'),
-                'company': pagemap.get('cse_thumbnail', [{}])[0].get('src', '') or metatags.get('og:site_name', ''),
+                'company': metatags.get('og:site_name', '') or pagemap.get('cse_thumbnail', [{}])[0].get('src', ''),
                 'description': description,
                 'locations': locations,
                 'posting_date': posting_date,
