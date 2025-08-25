@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("core", "0014_jobposting_details_updated_at"),
+        ("core", "0015_convert_work_arrangement_to_json"),
     ]
 
     operations = [
