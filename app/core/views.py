@@ -14,7 +14,7 @@ from celery.result import AsyncResult
 import numpy as np
 from numpy.linalg import norm
 import threading
-from django.db.models import OuterRef, Subquery, BooleanField, Value
+from django.db.models import OuterRef, Subquery, BooleanField, Value, Q, Case, When
 from django.db.models.functions import Coalesce
 from transformers import AutoTokenizer, AutoModel
 import torch
@@ -247,6 +247,20 @@ class AdminJobPostingViewSet(viewsets.ModelViewSet):
     lookup_field = 'link'
     lookup_value_regex = '.+'
     http_method_names = ['get', 'post', 'delete'] # Limit methods
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        remote_q = Q(locations__contains=[{'type': 'remote'}])
+        hybrid_q = Q(locations__contains=[{'type': 'hybrid'}])
+        onsite_q = Q(locations__contains=[{'type': 'onsite'}])
+
+        queryset = queryset.annotate(
+            remote=Case(When(remote_q, then=Value(True)), default=Value(False), output_field=BooleanField()),
+            hybrid=Case(When(hybrid_q, then=Value(True)), default=Value(False), output_field=BooleanField()),
+            onsite=Case(When(onsite_q, then=Value(True)), default=Value(False), output_field=BooleanField()),
+        )
+        return queryset
 
     @action(detail=True, methods=['post'])
     def rescrape(self, request, pk=None):

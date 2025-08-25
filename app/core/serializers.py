@@ -85,9 +85,9 @@ class SearchableJobTitleSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class AdminJobPostingSerializer(serializers.ModelSerializer):
-    remote = serializers.SerializerMethodField()
-    hybrid = serializers.SerializerMethodField()
-    onsite = serializers.SerializerMethodField()
+    remote = serializers.BooleanField(read_only=True)
+    hybrid = serializers.BooleanField(read_only=True)
+    onsite = serializers.BooleanField(read_only=True)
     location_string = serializers.SerializerMethodField()
 
     class Meta:
@@ -109,12 +109,3 @@ class AdminJobPostingSerializer(serializers.ModelSerializer):
             if loc.get('location_string'):
                 return loc['location_string']
         return None
-
-    def get_remote(self, obj):
-        return any(loc.get('type') == 'remote' for loc in obj.locations)
-
-    def get_hybrid(self, obj):
-        return any(loc.get('type') == 'hybrid' for loc in obj.locations)
-
-    def get_onsite(self, obj):
-        return any(loc.get('type') == 'onsite' for loc in obj.locations)
