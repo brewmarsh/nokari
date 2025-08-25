@@ -84,6 +84,27 @@ class JobPostingView(generics.ListAPIView):
         if search is not None:
             queryset = queryset.filter(description__icontains=search)
 
+        preferences = user.preferred_work_arrangement
+        if preferences:
+            q_objects = Q()
+            # Handle specific preferences
+            if 'remote' in preferences:
+                q_objects |= Q(locations__contains=[{'type': 'remote'}])
+            if 'hybrid' in preferences:
+                q_objects |= Q(locations__contains=[{'type': 'hybrid'}])
+            if 'onsite' in preferences:
+                q_objects |= Q(locations__contains=[{'type': 'onsite'}])
+
+            # Handle 'unspecified'
+            if 'unspecified' in preferences:
+                # This logic finds jobs that are not explicitly remote, hybrid, or onsite
+                q_objects |= ~Q(locations__contains=[{'type': 'remote'}]) & \
+                             ~Q(locations__contains=[{'type': 'hybrid'}]) & \
+                             ~Q(locations__contains=[{'type': 'onsite'}])
+
+            if q_objects:
+                queryset = queryset.filter(q_objects)
+
         resume = Resume.objects.filter(user=self.request.user).first()
         if resume:
             with open(resume.file.path, 'r') as f:

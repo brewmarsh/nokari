@@ -32,11 +32,7 @@ class User(AbstractUser):
     username = models.CharField(max_length=150, unique=True, null=True, blank=True)
     email = models.EmailField(unique=True)
     role = models.CharField(max_length=10, choices=[('admin', 'Admin'), ('user', 'User')])
-    preferred_work_arrangement = models.CharField(
-        max_length=10,
-        choices=[('remote', 'Remote'), ('hybrid', 'Hybrid'), ('onsite', 'Onsite'), ('any', 'Any')],
-        default='any'
-    )
+    preferred_work_arrangement = models.JSONField(default=list)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []

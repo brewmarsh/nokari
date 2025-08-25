@@ -73,7 +73,7 @@ const TruncatedDescription = ({ description, isExpanded, onToggle }) => {
   );
 };
 
-const Jobs = () => {
+const Jobs = ({ preferences }) => {
   const [jobs, setJobs] = useState([]);
   const [error, setError] = useState(null);
   const [title, setTitle] = useState('');
@@ -115,7 +115,7 @@ const Jobs = () => {
 
   useEffect(() => {
     fetchJobs();
-  }, [debouncedTitle, debouncedCompany, debouncedSearch, fetchJobs]);
+  }, [debouncedTitle, debouncedCompany, debouncedSearch, fetchJobs, preferences]);
 
   if (error) {
     return <div>Error: {error.message}</div>;
