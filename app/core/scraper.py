@@ -1,8 +1,73 @@
 import os
+import re
 import requests
 from bs4 import BeautifulSoup
 from googleapiclient.discovery import build
 from datetime import datetime, timezone
+
+JOB_TITLE_KEYWORDS = [
+    "engineer", "director", "manager", "analyst", "developer", "specialist",
+    "consultant", "architect", "designer", "lead", "president", "officer",
+    "recruiter", "coordinator"
+]
+WORK_TYPE_KEYWORDS = ["remote", "hybrid", "onsite", "on-site"]
+SEPARATORS = [' at ', ' | ', ' - ', ',']
+
+def parse_job_title(title):
+    """
+    Parses a job title to extract the company name and work type.
+    Returns a dictionary with cleaned_title, company, and work_types.
+    """
+    original_title = title
+    extracted_company = None
+    extracted_work_types = []
+
+    # First, extract work types and clean the title
+    for work_type in WORK_TYPE_KEYWORDS:
+        if re.search(r'\b' + work_type + r'\b', title, re.IGNORECASE):
+            extracted_work_types.append(work_type.replace("-", ""))
+            title = re.sub(r'\b' + work_type + r'\b', '', title, flags=re.IGNORECASE).strip()
+
+    # Then, try to extract company
+    for sep in SEPARATORS:
+        if sep in title:
+            # Special handling for ' at '
+            if sep == ' at ':
+                parts = title.rsplit(sep, 1)
+                if len(parts) == 2:
+                    title, extracted_company = parts[0].strip(), parts[1].strip()
+                    break
+            else:
+                parts = title.split(sep, 1)
+                if len(parts) == 2:
+                    part1, part2 = parts[0].strip(), parts[1].strip()
+
+                    p1_is_title = any(keyword in part1.lower() for keyword in JOB_TITLE_KEYWORDS)
+                    p2_is_title = any(keyword in part2.lower() for keyword in JOB_TITLE_KEYWORDS)
+
+                    if p1_is_title and not p2_is_title:
+                        title, extracted_company = part1, part2
+                        break
+                    elif p2_is_title and not p1_is_title:
+                        title, extracted_company = part2, part1
+                        break
+                    # If ambiguous, could fall back to length, but for now we'll be conservative
+                    # and not extract a company.
+
+    if extracted_company is not None:
+        extracted_company = extracted_company.strip(" ,-|")
+        if not extracted_company:
+            extracted_company = None
+
+    # Final cleanup of title
+    title = title.strip(" ,-|")
+
+    return {
+        'cleaned_title': title or original_title,
+        'company': extracted_company,
+        'work_types': extracted_work_types
+    }
+
 
 class ScraperException(Exception):
     pass
@@ -67,10 +132,28 @@ def scrape_jobs(query, domain, days=None):
                 except (ValueError, TypeError):
                     pass  # Keep as None if parsing fails
 
+            # Parse the title to extract company and work types
+            parsed_title_data = parse_job_title(title)
+            cleaned_title = parsed_title_data['cleaned_title']
+            extracted_company = parsed_title_data['company']
+            extracted_work_types = parsed_title_data['work_types']
+
+            # Get company from metatags
+            company = metatags.get('og:site_name', '') or pagemap.get('cse_thumbnail', [{}])[0].get('src', '')
+            # If company from metatags is a URL or empty, try to use the one from the title
+            if (not company or company.startswith('http')) and extracted_company:
+                company = extracted_company
+
+            # Add extracted work types to locations list
+            existing_work_types = {loc['type'] for loc in locations}
+            for work_type in extracted_work_types:
+                if work_type not in existing_work_types:
+                    locations.append({'type': work_type})
+
             jobs.append({
-                'title': title,
+                'title': cleaned_title,
                 'link': item.get('link'),
-                'company': metatags.get('og:site_name', '') or pagemap.get('cse_thumbnail', [{}])[0].get('src', ''),
+                'company': company,
                 'description': description,
                 'locations': locations,
                 'posting_date': posting_date,

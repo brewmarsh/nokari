@@ -2,7 +2,62 @@ import unittest
 from unittest.mock import patch, MagicMock
 from app.core.scraper import scrape_jobs, ScraperException
 
+from app.core.scraper import parse_job_title
+
 class ScraperTestCase(unittest.TestCase):
+    def test_parse_job_title(self):
+        test_cases = {
+            "Marketing Director, Rosetta Stone": {
+                "cleaned_title": "Marketing Director",
+                "company": "Rosetta Stone",
+                "work_types": []
+            },
+            "OpenX - Product Marketing Director": {
+                "cleaned_title": "Product Marketing Director",
+                "company": "OpenX",
+                "work_types": []
+            },
+            "Software Engineer - Remote": {
+                "cleaned_title": "Software Engineer",
+                "company": None,
+                "work_types": ["remote"]
+            },
+            "Marketing Director, Rosetta Stone - Remote": {
+                "cleaned_title": "Marketing Director",
+                "company": "Rosetta Stone",
+                "work_types": ["remote"]
+            },
+            "Manager, ": {
+                "cleaned_title": "Manager",
+                "company": None,
+                "work_types": []
+            },
+            "Senior Analyst at ACME Corp": {
+                "cleaned_title": "Senior Analyst",
+                "company": "ACME Corp",
+                "work_types": []
+            },
+            "Lead Designer | Cool Startup": {
+                "cleaned_title": "Lead Designer",
+                "company": "Cool Startup",
+                "work_types": []
+            },
+            "Software Engineer": {
+                "cleaned_title": "Software Engineer",
+                "company": None,
+                "work_types": []
+            },
+            "Software Engineer, onsite": {
+                "cleaned_title": "Software Engineer",
+                "company": None,
+                "work_types": ["onsite"]
+            },
+        }
+
+        for title, expected in test_cases.items():
+            with self.subTest(title=title):
+                self.assertEqual(parse_job_title(title), expected)
+
     @patch('app.core.scraper.build')
     def test_scrape_jobs_company_name(self, mock_build):
         # Mock the Google Custom Search API response
