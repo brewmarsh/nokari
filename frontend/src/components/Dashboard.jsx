@@ -31,33 +31,33 @@ const WorkArrangementFilter = ({ preferences, onPreferenceChange }) => {
 };
 
 const Dashboard = ({ user }) => {
-  const [preferences, setPreferences] = useState(user.preferred_work_arrangement || []);
+    const [preferences, setPreferences] = useState(user.preferred_work_arrangement || []);
 
-  useEffect(() => {
-      setPreferences(user.preferred_work_arrangement || []);
-  }, [user.preferred_work_arrangement]);
+    useEffect(() => {
+        setPreferences(user.preferred_work_arrangement || []);
+    }, [user.preferred_work_arrangement]);
 
-  const handlePreferenceChange = async (newPreferences) => {
-    setPreferences(newPreferences);
-    try {
-      await api.patch('/me/', { preferred_work_arrangement: newPreferences });
-    } catch (err) {
-      console.error("Failed to save preferences:", err);
-    }
-  };
+    const handlePreferenceChange = async (newPreferences) => {
+        setPreferences(newPreferences);
+        try {
+            await api.patch('/me/', { preferred_work_arrangement: newPreferences });
+        } catch (err) {
+            console.error("Failed to save preferences:", err);
+        }
+    };
 
-  return (
-    <div className="dashboard">
-      <div className="dashboard-header">
-        <h1>Dashboard</h1>
-      </div>
-      <WorkArrangementFilter
-        preferences={preferences}
-        onPreferenceChange={handlePreferenceChange}
-      />
-      <Jobs preferences={preferences} />
-    </div>
-  );
+    return (
+        <div className="dashboard">
+            <div className="dashboard-header">
+                <h1>Dashboard</h1>
+            </div>
+            <WorkArrangementFilter
+                preferences={preferences}
+                onPreferenceChange={handlePreferenceChange}
+            />
+            <Jobs preferences={preferences} />
+        </div>
+    );
 };
 
 export default Dashboard;

@@ -6,7 +6,8 @@
 }
 
 .job-card {
-    position: relative;
+    display: flex;
+    justify-content: space-between;
     background-color: white;
     border: 1px solid var(--neutral-gray);
     border-radius: 8px;
@@ -15,10 +16,19 @@
     transition: box-shadow 0.3s ease;
 }
 
-.job-card-header {
+.job-card-left {
+    flex-grow: 1;
+}
+
+.job-card-right {
     display: flex;
+    flex-direction: column;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-end;
+    margin-left: 20px;
+}
+
+.job-card-header {
     margin-bottom: 10px;
 }
 
@@ -49,12 +59,22 @@
     margin-bottom: 15px;
 }
 
+.job-card-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.job-card-badges {
+    display: flex;
+    gap: 5px;
+    margin-top: 10px;
+}
+
 .posting-date {
     font-size: 0.8rem;
     color: var(--neutral-gray);
-    position: absolute;
-    bottom: 10px;
-    right: 10px;
+    margin-top: 10px;
 }
 
 .pin-icon {
