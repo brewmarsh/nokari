@@ -1,7 +1,49 @@
 from celery import shared_task
-from .scraper import scrape_jobs, ScraperException, scrape_job_details
+from .scraper import scrape_jobs, ScraperException, scrape_job_details, parse_job_title
 from .models import JobPosting, ScrapableDomain, ScrapeHistory, SearchableJobTitle
 from django.utils import timezone
+
+@shared_task
+def backfill_job_titles_task():
+    """
+    Goes through all existing job postings and applies the new title parsing logic
+    to backfill company and work type information.
+    """
+    total_jobs = JobPosting.objects.count()
+    updated_count = 0
+
+    for job in JobPosting.objects.all():
+        parsed_data = parse_job_title(job.title)
+
+        cleaned_title = parsed_data['cleaned_title']
+        extracted_company = parsed_data['company']
+        extracted_work_types = parsed_data['work_types']
+
+        updated = False
+
+        if job.title != cleaned_title:
+            job.title = cleaned_title
+            updated = True
+
+        if (not job.company or job.company.startswith('http')) and extracted_company:
+            job.company = extracted_company
+            updated = True
+
+        if job.locations is None:
+            job.locations = []
+
+        existing_work_types = {loc.get('type') for loc in job.locations if isinstance(loc, dict)}
+        for work_type in extracted_work_types:
+            if work_type not in existing_work_types:
+                job.locations.append({'type': work_type})
+                updated = True
+
+        if updated:
+            job.save()
+            updated_count += 1
+
+    return f"Backfill complete. Processed {total_jobs} jobs. Updated {updated_count} jobs."
+
 
 @shared_task
 def scrape_and_save_jobs(domain_id):
