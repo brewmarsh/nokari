@@ -16,11 +16,7 @@ class UserSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
-        is_superuser = self.initial_data.get('is_superuser', False)
-        if is_superuser:
-            user = User.objects.create_superuser(**validated_data)
-        else:
-            user = User.objects.create_user(**validated_data)
+        user = User.objects.create_user(**validated_data)
         return user
 
 class JobPostingSerializer(serializers.ModelSerializer):

@@ -12,6 +12,22 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+  celery-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    command: ["celery", "-A", "nokari", "worker", "-l", "info"]
+    volumes:
+      - .:/app
+    depends_on:
+      - backend
+      - redis
   frontend:
     build:
       context: ./frontend

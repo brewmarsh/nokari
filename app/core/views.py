@@ -8,38 +8,16 @@ from .models import JobPosting, Resume, CoverLetter, ScrapableDomain, ScrapeHist
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import render
-from .scraper import scrape_jobs
 import numpy as np
 from numpy.linalg import norm
-import threading
 from django.db.models import OuterRef, Subquery, BooleanField, Value
 from django.db.models.functions import Coalesce
-from transformers import AutoTokenizer, AutoModel
-import torch
 from urllib.parse import unquote
+from .ml_utils import generate_embedding
+from .tasks import scrape_jobs_task, analyze_resume_against_jobs
+from .scraping_logic import scrape_and_save_jobs
 
 User = get_user_model()
-
-# Load model and tokenizer
-tokenizer = AutoTokenizer.from_pretrained('sentence-transformers/all-MiniLM-L6-v2')
-model = AutoModel.from_pretrained('sentence-transformers/all-MiniLM-L6-v2')
-
-def generate_embedding(text):
-    inputs = tokenizer(text, return_tensors='pt', truncation=True, max_length=512)
-    with torch.no_grad():
-        outputs = model(**inputs)
-
-    # Mean pooling
-    embeddings = outputs.last_hidden_state
-    mask = inputs['attention_mask'].unsqueeze(-1).expand(embeddings.size()).float()
-    masked_embeddings = embeddings * mask
-    summed = torch.sum(masked_embeddings, 1)
-    counted = torch.clamp(mask.sum(1), min=1e-9)
-    mean_pooled = summed / counted
-
-    # Normalize
-    mean_pooled = torch.nn.functional.normalize(mean_pooled, p=2, dim=1)
-    return mean_pooled.tolist()[0]
 
 class MeView(generics.RetrieveUpdateAPIView):
     serializer_class = UserSerializer
@@ -82,13 +60,9 @@ class JobPostingView(generics.ListAPIView):
         if search is not None:
             queryset = queryset.filter(description__icontains=search)
 
-        resume = Resume.objects.filter(user=self.request.user).first()
-        if resume:
-            with open(resume.file.path, 'r') as f:
-                resume_text = f.read()
-            for job_posting in queryset:
-                job_posting.confidence_score = match_resume(resume_text, job_posting.description)['scores'][0]
-                job_posting.save()
+        # The confidence score is now calculated asynchronously by a Celery task
+        # triggered on resume upload. This view no longer needs to perform
+        # this calculation.
 
         return queryset
 
@@ -101,6 +75,7 @@ class ResumeView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+        analyze_resume_against_jobs.delay(self.request.user.id)
 
 class ResumeDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ResumeSerializer
@@ -108,6 +83,10 @@ class ResumeDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         return Resume.objects.filter(user=self.request.user)
+
+    def perform_update(self, serializer):
+        serializer.save()
+        analyze_resume_against_jobs.delay(self.request.user.id)
 
 class CoverLetterView(generics.ListCreateAPIView):
     serializer_class = CoverLetterSerializer
@@ -172,7 +151,6 @@ class ScrapeView(APIView):
 
     def post(self, request, *args, **kwargs):
         days = request.data.get('days')
-        scraped_count = 0
         try:
             domains = ScrapableDomain.objects.all()
             job_titles = SearchableJobTitle.objects.all()
@@ -182,28 +160,8 @@ class ScrapeView(APIView):
             query_parts = [f'"{title.title}"' for title in job_titles]
             query = f'({" OR ".join(query_parts)}) AND "remote"'
 
-            for domain in domains:
-                jobs = scrape_jobs(query, domain.domain, days=days)
-                for job_data in jobs:
-                    title = job_data['title']
-                    if 'Job Application for' in title:
-                        title = title.replace('Job Application for', '').strip()
+            scraped_count = scrape_and_save_jobs(query, domains, days=days)
 
-                    obj, created = JobPosting.objects.get_or_create(
-                        link=job_data['link'],
-                        defaults={
-                            'title': title,
-                            'company': job_data['company'],
-                            'description': job_data['description'],
-                            'posting_date': job_data['posting_date'],
-                            'locations': job_data['locations'],
-                        }
-                    )
-                    if created:
-                        text = f"{obj.title} {obj.description}"
-                        obj.embedding = generate_embedding(text)
-                        obj.save()
-                        scraped_count += 1
             ScrapeHistory.objects.create(
                 user=request.user,
                 status='success',
@@ -218,11 +176,6 @@ class ScrapeView(APIView):
             )
             return Response({'detail': f'An error occurred: {e}'}, status=500)
 
-
-def test_page(request):
-    User = get_user_model()
-    user = User.objects.first()
-    return render(request, 'test_page.html', {'user': user})
 
 class UserCountView(APIView):
     permission_classes = [AllowAny]
@@ -270,32 +223,7 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
         user.save()
         return Response({'status': 'user promoted'})
 
-import numpy as np
 from numpy.linalg import norm
-
-def scrape_in_background(query):
-    domains = ScrapableDomain.objects.all()
-    for domain in domains:
-        try:
-            jobs = scrape_jobs(query, domain.domain)
-            for job_data in jobs:
-                obj, created = JobPosting.objects.get_or_create(
-                    link=job_data['link'],
-                    defaults={
-                        'title': job_data['title'],
-                        'company': job_data['company'],
-                        'description': job_data['description'],
-                        'posting_date': job_data['posting_date'],
-                        'locations': job_data['locations'],
-                    }
-                )
-                if created:
-                    text = f"{obj.title} {obj.description}"
-                    obj.embedding = generate_embedding(text)
-                    obj.save()
-        except Exception as e:
-            # In a real app, you'd want to log this properly
-            print(f"Error scraping in background {domain.domain}: {e}")
 
 class FindSimilarJobsView(APIView):
     permission_classes = [IsAuthenticated]
@@ -333,9 +261,7 @@ class FindSimilarJobsView(APIView):
 
         # --- Part 2: Kick off background scraping ---
         query = f'"{target_job.title}"'
-        thread = threading.Thread(target=scrape_in_background, args=(query,))
-        thread.daemon = True
-        thread.start()
+        scrape_jobs_task.delay(query)
 
         return Response(serializer.data)
 

@@ -10,7 +10,6 @@ from .views import (
     ScrapableDomainView,
     ResumeDetailView,
     CoverLetterDetailView,
-    test_page,
     ScrapeView,
     UserCountView,
     ScrapeHistoryView,
@@ -53,6 +52,5 @@ urlpatterns = [
     path('scrapable-domains/', ScrapableDomainView.as_view(), name='scrapable_domains'),
     path('scrape/', ScrapeView.as_view(), name='scrape'),
     path('scrape-history/', ScrapeHistoryView.as_view(), name='scrape_history'),
-    path('test/', test_page, name='test_page'),
     path('user-count/', UserCountView.as_view(), name='user_count'),
 ]

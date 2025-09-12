@@ -1,226 +1,175 @@
-# Nokari Refactoring and Improvement Plan
+# Code Refactoring and Improvement Report
 
-This document outlines a prioritized plan for refactoring and improving the Nokari application. The tasks are ordered by priority, addressing security, reliability, and maintainability.
+This document outlines a plan for refactoring and improving the codebase. The following sections detail identified issues and suggest improvements for the backend and frontend, as well as cross-cutting concerns.
 
----
+## Proposed Refactoring Plan
 
-## Priority 1: Critical Security Vulnerabilities
-This document outlines potential future improvements for the project, broken down into actionable plans that can be executed by an AI agent. The tasks are prioritized based on their impact on the project's security, reliability, and maintainability.
+The refactoring will be done in the following order:
 
----
-
-## Prioritization
-
-The refactoring tasks are prioritized as follows:
-1.  **Security:** Addressing security vulnerabilities and hardening the application is the highest priority.
-2.  **Reliability:** Ensuring the application is stable, resilient, and performs as expected.
-3.  **Maintainability:** Improving the codebase, documentation, and development processes to make the project easier to manage and extend.
-
-**Goal:** Address all known security vulnerabilities to protect the application and its users.
-
-### 1.1. Remediate Python Dependency Vulnerabilities
-
-*   **Issue:** The `safety` scan identified a vulnerability in `djangorestframework-simplejwt` (CVE-2024-22513).
-*   **Plan:**
-    1.  **Investigate:** Review the CVE details to determine the patched version.
-    2.  **Update:** Modify `requirements.in` to specify the patched version of `djangorestframework-simplejwt`.
-    3.  **Recompile:** Run `pip-compile requirements.in` to update `requirements.txt`.
-    4.  **Verify:** Run `safety check -r requirements.txt` to confirm the vulnerability is resolved.
-
-### 1.2. Remediate Frontend Dependency Vulnerabilities
-
-*   **Issue:** `npm audit` reported 9 vulnerabilities (3 moderate, 6 high) in `nth-check`, `postcss`, and `webpack-dev-server`.
-*   **Plan:**
-    1.  **Attempt Automatic Fix:** In the `frontend/` directory, run `npm audit fix`.
-    2.  **Manual Intervention:** If the automatic fix fails or causes breaking changes, manually update the vulnerable packages by editing `frontend/package.json` and `frontend/package-lock.json`. The `resolutions` field might need to be adjusted.
-    3.  **Verify:** Run `npm audit` again to ensure all vulnerabilities have been addressed.
-
-### 1.3. Harden the Backend Docker Image
-
-*   **Issue:** The `Dockerfile.backend` has two critical security flaws:
-    1.  It uses `apt-get update --allow-insecure-repositories`, which exposes the build process to man-in-the-middle attacks.
-    2.  The application is run as the `root` user inside the container.
-*   **Plan:**
-    1.  **Remove Insecure Flag:** Delete the `--allow-insecure-repositories` flag from the `RUN` command in `Dockerfile.backend`.
-    2.  **Create a Non-Root User:** Add commands to `Dockerfile.backend` to create a non-root user and group.
-    3.  **Switch User:** Use the `USER` instruction in the Dockerfile to switch to the non-root user before running the application.
+1.  **Stabilize the Backend:**
+    *   Address the critical `match_resume` bug.
+    *   Fix the `JobPostingView` performance issue.
+2.  **Improve Backend Modularity:**
+    *   Refactor the scraping and ML utility code.
+    *   Replace `threading` with a proper task queue.
+3.  **Clean Up the Backend:**
+    *   Remove the security vulnerability in `UserSerializer`.
+    *   Remove dead code and clean up imports.
+4.  **Refactor the Frontend:**
+    *   Break down the `Jobs.jsx` monolith.
+    *   Improve code style by moving icons and styles to separate files.
+5.  **Improve Frontend Performance and UX:**
+    *   Implement optimistic UI updates.
+    *   Clean up `api.js` and logging.
+6.  **Enhance Scraper Reliability:**
+    *   Investigate and implement more robust scraping methods.
 
 ---
 
-## Priority 2: Reliability and Best Practices
+## Current Refactoring Task: Frontend Cleanup and Advanced Scraping
 
-**Goal:** Improve the stability and consistency of the application and its development environment.
+This phase of the refactoring has two main goals:
+1.  Finish cleaning up the frontend components and code.
+2.  Implement a more advanced and reliable scraping mechanism.
 
-### 2.1. Pin Python Dependencies
+### Phase 1: Frontend Cleanup
 
-*   **Issue:** The original `requirements.txt` did not have pinned versions, leading to unreproducible builds.
-*   **Status:** **Done.** A `requirements.in` file has been created, and `pip-tools` has been used to generate a fully pinned `requirements.txt`. This should be maintained as standard practice.
+**Objective:** To finish the process of breaking down monolithic components and cleaning up the frontend codebase.
 
-### 2.2. Enhance Docker Workflow
+**Detailed Implementation Plan (in small chunks):**
 
-*   **Issue:** The Docker setup can be optimized for better performance and maintainability.
-*   **Plan:**
-    1.  **Optimize with Multi-Stage Builds:** Refactor `Dockerfile.backend` and `frontend/Dockerfile` to use multi-stage builds. This will create smaller, more secure final images by separating the build environment from the runtime environment.
-    2.  **Create an Entrypoint Script:** Instead of a long `CMD` string in the Dockerfile and `docker-compose.yml`, create a `docker-entrypoint.sh` script to handle database migrations, data loading, and starting the gunicorn server. This improves readability and maintainability.
-    3.  **Optimize Docker Cache:** Refine the `COPY` instructions in the Dockerfiles to copy only necessary files at each step, improving layer caching and build times.
+1.  **Extract `JobFilters.jsx` Component:**
+    *   Create a new file: `frontend/src/components/JobFilters.jsx`.
+    *   Move the filter input fields (`title`, `company`, `search`) and the "Show/Hide Filters" button from `Jobs.jsx` into this new component.
+    *   The state for the filter values will remain in `Jobs.jsx` for now, and the values and `onChange` handlers will be passed down as props.
+    *   Commit this change.
 
-### 2.3. Expand Test Coverage
+2.  **Refactor `api.js` Service:**
+    *   In `frontend/src/services/api.js`, the `axios` configuration for `baseURL` and `headers` is duplicated.
+    *   Refactor this to define a common configuration object and reuse it for both the authenticated (`api`) and unauthenticated (`api_unauthenticated`) instances.
+    *   Commit this change.
 
-*   **Issue:** The project lacks sufficient test coverage, increasing the risk of regressions.
-*   **Plan:** Implement the detailed testing plan from the original `REFACTOR.md`, which includes:
-    1.  **Backend:** Configure `pytest-django` and `coverage`, write model and API tests, and integrate coverage checks into the CI pipeline.
-    2.  **Frontend:** Configure Jest for coverage reporting, write component tests using `@testing-library/react`, and create a frontend CI workflow.
+3.  **Remove `console.log` Statements:**
+    *   Perform a codebase-wide search for `console.log()` statements in the `frontend/` directory.
+    *   Remove all of them to clean up the code for a production environment.
+    *   Commit this change.
 
----
+### Phase 2: Advanced Scraping Refactor
 
-## Priority 3: Maintainability and Documentation
+**Objective:** To improve the quality and reliability of the scraped job data by fetching and parsing content directly from the job posting URLs.
 
-**Goal:** Make the project easier for new and existing developers to understand and contribute to.
+**Detailed Implementation Plan (in small chunks):**
 
-### 3.1. Add Project Documentation
+4.  **Enhance Scraping with Direct, Detailed Fetching:**
+    *   Modify the `scrape_jobs` function in `app/core/scraping_logic.py`.
+    *   After getting the initial list of jobs from the Google API, loop through each job.
+    *   For each job, use the `requests` library to fetch the HTML from the `job['link']`.
+    *   Use the `BeautifulSoup` library to parse the HTML.
+    *   Implement a generic parsing strategy to find and extract the following details from the parsed HTML:
+        *   **Job Title:** Look for `<h1>`, `<h2>`, or the `<title>` tag.
+        *   **Company Name:** Often found near the title or in the page's metadata.
+        *   **Location:** Search for text near keywords like "Location", "Located", etc.
+        *   **Work Arrangement:** Scan the text for "remote", "hybrid", "onsite".
+        *   **Posting Date:** Search for text near "Posted", or look for `<time>` elements.
+        *   **Full Description:** Attempt to find the main content block of the page (e.g., `<div id="job-description">`, `<main>`, `article`).
+    *   The data extracted from the page will overwrite the initial, less reliable data from the Google API.
+    *   Wrap this entire process in a `try...except` block to gracefully handle network errors, timeouts, or parsing failures for any given URL.
+    *   Commit this enhanced scraping logic.
 
-*   **Issue:** The project lacks centralized documentation.
-*   **Plan:** Implement the documentation plan from the original `REFACTOR.md`:
-    1.  **Setup:** Add `mkdocs` and `mkdocs-material` to `requirements_dev.txt`.
-    2.  **Create Content:** Create a `docs/` directory with initial documentation for project overview, development setup, and architecture.
-    3.  **Deploy:** Set up a GitHub Actions workflow to automatically build and deploy the documentation to GitHub Pages.
-
-### 3.2. Automate Dependency Updates
-
-*   **Issue:** Dependencies can become outdated, posing security risks.
-*   **Plan:** Implement the `Dependabot` configuration from the original `REFACTOR.md`:
-    1.  **Create Config:** Create a `.github/dependabot.yml` file to schedule weekly checks for both `pip` and `npm` dependencies.
-    2.  **Activate:** Commit the file to the `main` branch to enable Dependabot.
-## Phase 1: Security Hardening (High Priority)
-
-### 1.1. Pin Dependencies
-
-**Goal:** Prevent security vulnerabilities and ensure reproducible builds by pinning all dependencies to specific versions.
-
-**Plan:**
-1.  **Backend (pip):**
-    *   Create a `requirements.in` file listing the top-level dependencies.
-    *   Use `pip-tools` to compile `requirements.in` into a fully-pinned `requirements.txt` file.
-    *   Update the Dockerfile to use the new `requirements.txt`.
-2.  **Frontend (npm):**
-    *   Run `npm audit` to identify and fix any known vulnerabilities.
-    *   Ensure that `package-lock.json` is committed to the repository and used for installations (`npm ci`).
-
-### 1.2. Automate Vulnerability Scanning
-
-**Goal:** Proactively identify and address security vulnerabilities in dependencies.
-
-**Plan:**
-1.  **Backend:**
-    *   Add a step to the `.github/workflows/python-lint.yaml` workflow to run `safety` against `requirements.txt`.
-2.  **Frontend:**
-    *   Add a step to a new frontend CI workflow to run `npm audit --audit-level=high`.
-
-### 1.3. Secure Django Settings
-
-**Goal:** Harden the Django application by configuring security settings appropriately.
-
-**Plan:**
-1.  **Review `nokari/settings.py`:**
-    *   Ensure `SECRET_KEY` is loaded from environment variables and not hardcoded.
-    *   Ensure `DEBUG` is set to `False` in production.
-    *   Configure `ALLOWED_HOSTS` properly.
-    *   Review middleware for security best practices.
-
-### 1.4. Harden Docker Images
-
-**Goal:** Improve the security of the Docker images.
-
-**Plan:**
-1.  **Run as Non-Root User:**
-    *   Update `Dockerfile.backend` and `frontend/Dockerfile` to create and use a non-root user.
-2.  **Multi-Stage Builds:**
-    *   Refactor the Dockerfiles to use multi-stage builds to reduce the size and attack surface of the final images.
-
-### 1.5. Fix Frontend Directory Structure
-
-**Goal:** Rebuild the frontend directory to follow a standard React project structure, enabling proper dependency management and vulnerability scanning.
-
-**Problem:** The `frontend` directory has a deeply nested and corrupted structure (e.g., `frontend/frontend/frontend/...`), which prevents `npm` commands from running correctly.
-
-**Plan:**
-1.  **Create a new React application:**
-    *   `npx create-react-app temp-frontend`
-2.  **Copy existing source code:**
-    *   `cp -R frontend/src/* temp-frontend/src/`
-    *   `cp -R frontend/public/* temp-frontend/public/`
-3.  **Copy other essential files:**
-    *   Copy any other necessary files, such as `.gitignore`, `nginx.conf`, and `Dockerfile`, into the `temp-frontend` directory.
-4.  **Replace the old `frontend` directory:**
-    *   `rm -rf frontend`
-    *   `mv temp-frontend frontend`
-5.  **Re-run security checks:**
-    *   `cd frontend && npm audit`
+5.  **Verify Database Model:**
+    *   Review the `JobPosting` model in `app/core/models.py`.
+    *   Confirm that the `description` field is a `TextField` and that other fields are appropriate for the detailed data we will be scraping.
+    *   If any model changes are necessary, create a new migration file. (Based on current knowledge, no changes are expected, but this is a verification step).
+    *   Commit any necessary model or migration changes.
 
 ---
 
-## Phase 2: Reliability Enhancements (Medium Priority)
+## Backend Refactoring Details
 
-### 2.1. Expand Test Coverage
+### 1. Critical Bug: Missing `match_resume` Function
 
-**Goal:** Increase confidence in code quality and prevent regressions by adding comprehensive tests.
+*   **Issue:** The `JobPostingView` in `app/core/views.py` calls a function `match_resume` that is not defined or imported, which will cause the application to crash.
+*   **Recommendation:**
+    *   Locate the intended `match_resume` function or implement it if it was never written. Given its name, it's likely a text-matching or ML function.
+    *   If the feature is not ready, comment out the code that calls it to prevent crashes.
 
-**Plan:**
-*   Follow the detailed plan in the original `REFACTOR.md` to add unit and integration tests for the backend and frontend, aiming for at least 80% coverage.
+### 2. Performance: Inefficient `JobPostingView`
 
-### 2.2. Implement Health Checks
+*   **Issue:** The `JobPostingView` calculates a `confidence_score` for every job on every request. This is highly inefficient and will lead to slow response times and high database load.
+*   **Recommendation:**
+    *   Move the `confidence_score` calculation to an asynchronous background task.
+    *   The calculation should be triggered when a user's resume is uploaded or updated, or when a new job is scraped, not during a `GET` request.
 
-**Goal:** Improve the resilience of the application by adding health checks to the services.
+### 3. Modularity and Duplication
 
-**Plan:**
-1.  **Add a health check endpoint to the Django application.**
-2.  **Add a `healthcheck` to the `backend` service in `docker-compose.yml`.**
+*   **Issue:**
+    *   Scraping logic is duplicated in `ScrapeView` and the `scrape_in_background` function in `app/core/views.py`.
+    *   The `generate_embedding` function is located in `views.py`, but it's a utility function.
+    *   The `sentence-transformers` model is loaded at the module level in `views.py`, impacting startup time and modularity.
+*   **Recommendation:**
+    *   Create a new module `app/core/scraping_logic.py` and move all scraping-related functions into it.
+    *   Create a new module `app/core/ml_utils.py` and move `generate_embedding` and the model loading logic into it. The model should be loaded on demand if possible.
 
-### 2.3. Improve Logging
+### 4. Reliability
 
-**Goal:** Implement a more robust logging solution to facilitate debugging and monitoring.
+*   **Issue:**
+    *   Background tasks are run using Python's `threading` module, which is not ideal for a production Django application.
+    *   Exception handling in the scraper is too broad (`except Exception as e:`).
+*   **Recommendation:**
+    *   Replace `threading` with a proper task queue like Celery with Redis or RabbitMQ.
+    *   Use more specific exception handling in the scraper to provide better error logging and debugging.
 
-**Plan:**
-1.  **Configure Django's logging framework in `nokari/settings.py` to output structured logs.**
-2.  **Consider sending logs to a centralized logging service in a production environment.**
+### 5. Security
 
----
+*   **Issue:** The `UserSerializer` allows creating superusers via an API endpoint.
+*   **Recommendation:** Remove this functionality. Superuser creation should be handled exclusively through the `createsuperuser` management command.
 
-## Phase 3: Maintainability Improvements (Low Priority)
+### 6. Code Cleanliness
 
-### 3.1. Enhance CI/CD Pipeline
+*   **Issue:**
+    *   The `test_page` view in `app/core/views.py` appears to be unused.
+    *   There is a duplicate `numpy` import in `app/core/views.py`.
+*   **Recommendation:**
+    *   Remove the `test_page` view and its corresponding URL pattern.
+    *   Remove the duplicate import.
 
-**Goal:** Automate quality checks and streamline the development process.
+## Frontend Refactoring
 
-**Plan:**
-1.  **Add linting and testing stages to the CI/CD workflows for both backend and frontend.**
-2.  **Consolidate Docker build and push steps into a single workflow.**
+### 1. Component Architecture
 
-### 3.2. Add Project Documentation
+*   **Issue:** The `Jobs.jsx` component is a large, monolithic component that handles too much state and logic.
+*   **Recommendation:**
+    *   Break down `Jobs.jsx` into smaller, more manageable components. For example, create a `JobCard.jsx`, `JobFilters.jsx`, and `ActionMenu.jsx`.
+    *   Consider using a state management library like Zustand or Redux Toolkit to manage shared state, especially if the application is expected to grow.
 
-**Goal:** Improve project maintainability by creating comprehensive documentation.
+### 2. Code Duplication and Style
 
-**Plan:**
-*   Follow the detailed plan in the original `REFACTOR.md` to set up `mkdocs` and create initial documentation.
+*   **Issue:**
+    *   SVG icons are defined as components directly within `Jobs.jsx`, and the `HideIcon` is duplicated.
+    *   There is a heavy reliance on inline styles.
+*   **Recommendation:**
+    *   Move SVG icon components to their own files in a `components/icons` directory.
+    *   Move all inline styles to their corresponding CSS files (`Jobs.css`, etc.) to improve maintainability and reusability.
 
-### 3.3. Automate Dependency Updates
+### 3. API and State Management
 
-**Goal:** Keep dependencies up-to-date automatically.
+*   **Issue:**
+    *   The `axios` configuration in `services/api.js` has some duplication.
+    *   Some UI updates (like pinning a job) trigger a full refetch of all jobs, which is inefficient.
+*   **Recommendation:**
+    *   Refactor the `axios` configuration to avoid duplication.
+    *   Implement optimistic UI updates for actions like pinning, hiding, etc. The UI should update immediately, and then be reverted if the API call fails.
 
-**Plan:**
-*   Follow the detailed plan in the original `REFACTOR.md` to set up Dependabot.
+### 4. Code Cleanliness
 
----
+*   **Issue:** There are numerous `console.log` statements throughout the code.
+*   **Recommendation:** Remove `console.log` statements or replace them with a proper logging framework for production builds.
 
-## Known Linting Issues
+## Cross-cutting Concerns
 
-The following `flake8` errors could not be automatically fixed and should be addressed manually:
+### 1. Scraper Reliability
 
-- `app/core/urls.py:35:80: E501 line too long (80 > 79 characters)`
-
-The following `mypy` errors could not be automatically fixed and should be addressed manually:
-
-- `app/core/models.py:44: error: Cannot override class variable (previously declared on base class "AbstractUser") with instance variable`
-- `app/core/models.py:44: error: Incompatible types in assignment (expression has type "app.core.models.UserManager[Any]", base class "AbstractUser" defined the type as "django.contrib.auth.models.UserManager[User]")`
-
-The project is missing a large number of docstrings. Running `pydocstyle .` will show all the missing docstrings. These should be added to improve code quality and maintainability, following the Google Python Style Guide format as specified in `AGENTS.md`.
+*   **Issue:** The scraper relies on heuristics to parse information from Google search results, which is fragile and can break if the structure of the search results changes.
+*   **Recommendation:**
+    *   For each `ScrapableDomain`, investigate if they provide a more direct API for job postings.
+    *   Implement more robust parsing logic with better error handling and logging to identify when a scraper for a specific domain breaks.
