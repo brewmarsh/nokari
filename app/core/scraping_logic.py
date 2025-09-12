@@ -171,3 +171,38 @@ def scrape_and_save_jobs(query, domains, days=None):
             print(f"Error scraping {domain_name}: {e}")
 
     return scraped_count
+
+def parse_job_title(title):
+    """
+    Parses a job title to extract the company and work types.
+    This is a simplified implementation.
+    """
+    cleaned_title = title
+    company = None
+    work_types = []
+
+    # Example: "Software Engineer at Google (Remote)"
+    if ' at ' in title:
+        parts = title.split(' at ')
+        cleaned_title = parts[0]
+        if '(' in parts[1]:
+            company_part = parts[1].split('(')[0].strip()
+            company = company_part
+        else:
+            company = parts[1].strip()
+
+    if '(' in title and ')' in title:
+        work_type_part = title.split('(')[-1].split(')')[0]
+        # common work types
+        if 'remote' in work_type_part.lower():
+            work_types.append('remote')
+        if 'hybrid' in work_type_part.lower():
+            work_types.append('hybrid')
+        if 'on-site' in work_type_part.lower() or 'onsite' in work_type_part.lower():
+            work_types.append('onsite')
+
+    return {
+        'cleaned_title': cleaned_title,
+        'company': company,
+        'work_types': work_types,
+    }

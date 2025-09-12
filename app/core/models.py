@@ -117,8 +117,34 @@ class HiddenCompany(models.Model):
     class Meta:
         unique_together = ('user', 'name')
 
+import datetime
+
 class SearchableJobTitle(models.Model):
     title = models.CharField(max_length=255, unique=True)
 
     def __str__(self):
         return self.title
+
+class ScrapeSchedule(models.Model):
+    """
+    Singleton model to store the schedule for daily scraping.
+    """
+    time = models.TimeField(default=datetime.time(3, 0)) # Default to 3:00 AM
+
+    def __str__(self):
+        return f"Daily scrape scheduled at {self.time.strftime('%H:%M')}"
+
+    def save(self, *args, **kwargs):
+        """
+        Ensure that there is only ever one instance of this model.
+        """
+        self.pk = 1
+        super(ScrapeSchedule, self).save(*args, **kwargs)
+
+    @classmethod
+    def load(cls):
+        """
+        Load the singleton instance.
+        """
+        obj, created = cls.objects.get_or_create(pk=1)
+        return obj

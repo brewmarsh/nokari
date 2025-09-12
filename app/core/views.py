@@ -2,9 +2,9 @@ from rest_framework import generics, status, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import action
 from .permissions import IsAdmin
-from .serializers import UserSerializer, JobPostingSerializer, ResumeSerializer, CoverLetterSerializer, ScrapableDomainSerializer, ScrapeHistorySerializer, UserJobInteractionSerializer, HiddenCompanySerializer, SearchableJobTitleSerializer, AdminJobPostingSerializer
+from .serializers import UserSerializer, JobPostingSerializer, ResumeSerializer, CoverLetterSerializer, ScrapableDomainSerializer, ScrapeHistorySerializer, UserJobInteractionSerializer, HiddenCompanySerializer, SearchableJobTitleSerializer, AdminJobPostingSerializer, ScrapeScheduleSerializer
 from django.contrib.auth import get_user_model
-from .models import JobPosting, Resume, CoverLetter, ScrapableDomain, ScrapeHistory, UserJobInteraction, HiddenCompany, SearchableJobTitle
+from .models import JobPosting, Resume, CoverLetter, ScrapableDomain, ScrapeHistory, UserJobInteraction, HiddenCompany, SearchableJobTitle, ScrapeSchedule
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import render
@@ -276,6 +276,16 @@ class HideJobPostingView(APIView):
         interaction.save()
 
         return Response(status=status.HTTP_200_OK)
+
+class ScrapeScheduleView(generics.RetrieveUpdateAPIView):
+    """
+    API endpoint for managing the daily scrape schedule.
+    """
+    permission_classes = [IsAdmin]
+    serializer_class = ScrapeScheduleSerializer
+
+    def get_object(self):
+        return ScrapeSchedule.load()
 
 class AdminJobPostingViewSet(viewsets.ModelViewSet):
     """

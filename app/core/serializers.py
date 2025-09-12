@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.exceptions import InvalidToken
-from .models import JobPosting, Resume, CoverLetter, ScrapableDomain, ScrapeHistory, UserJobInteraction, HiddenCompany, SearchableJobTitle
+from .models import JobPosting, Resume, CoverLetter, ScrapableDomain, ScrapeHistory, UserJobInteraction, HiddenCompany, SearchableJobTitle, ScrapeSchedule
 
 User = get_user_model()
 
@@ -105,3 +105,8 @@ class AdminJobPostingSerializer(serializers.ModelSerializer):
             if loc.get('location_string'):
                 return loc['location_string']
         return None
+
+class ScrapeScheduleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ScrapeSchedule
+        fields = ['time']
