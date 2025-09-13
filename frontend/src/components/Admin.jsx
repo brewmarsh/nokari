@@ -98,7 +98,7 @@ const Admin = () => {
       <JobTitles />
       <ScrapableDomains />
       <ScrapeHistory />
-      <div className="admin-section">
+      <div>
         <h3>Users</h3>
         <table>
           <thead>
