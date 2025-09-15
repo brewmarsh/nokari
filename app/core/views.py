@@ -327,8 +327,7 @@ class FindSimilarJobsView(APIView):
 
         # --- Part 2: Kick off background scraping ---
         query = f'"{target_job.title}"'
-        # I am not sure about this task, so I will comment it out for now.
-        # scrape_jobs_task.delay(query)
+        scrape_and_save_jobs_task.delay(query)
 
         return Response(serializer.data)
 

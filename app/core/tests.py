@@ -1,6 +1,6 @@
 from django.test import TestCase
 from unittest.mock import patch, MagicMock
-from app.core.scraper import scrape_jobs, ScraperException
+from app.core.scraping_logic import scrape_jobs, ScraperException
 import os
 from django.urls import reverse
 from rest_framework import status
@@ -188,9 +188,16 @@ class SearchableJobTitleViewSetTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(SearchableJobTitle.objects.count(), 1)
 
-    @patch('app.core.tasks.scrape_and_save_jobs.delay')
-    def test_scrape_view_starts_celery_task(self, mock_delay):
+
+class ScrapeViewTest(APITestCase):
+    def setUp(self):
+        self.admin_user = User.objects.create_superuser(email='admin@example.com', password='password')
         self.client.force_authenticate(user=self.admin_user)
+
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=False)
+    @patch('app.core.views.scrape_and_save_jobs_task.delay')
+    def test_scrape_view_starts_celery_task(self, mock_delay):
+        ScrapableDomain.objects.create(domain='example.com')
         url = reverse('scrape')
         response = self.client.post(url)
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
@@ -200,8 +207,9 @@ class SearchableJobTitleViewSetTest(APITestCase):
 
 class ScraperTests(TestCase):
 
-    @patch("app.core.scraper.build")
-    def test_scrape_jobs_success(self, mock_build):
+    @patch("app.core.scraping_logic.requests.get")
+    @patch("app.core.scraping_logic.build")
+    def test_scrape_jobs_success(self, mock_build, mock_get):
         # Setup mock for Google API
         mock_service = MagicMock()
         mock_cse = MagicMock()
@@ -228,6 +236,8 @@ class ScraperTests(TestCase):
             ]
         }
         mock_execute.return_value = mock_build
+        mock_get.return_value.content = "<html><head><title>Test Job Page</title></head><body><p>Job description.</p></body></html>"
+        mock_get.return_value.status_code = 200
 
         with patch.dict(
             os.environ,
@@ -239,7 +249,7 @@ class ScraperTests(TestCase):
             jobs = scrape_jobs("test query", "test.com")
 
         self.assertEqual(len(jobs), 2)
-        self.assertEqual(jobs[0]["title"], "Test Job 1")
+        self.assertEqual(jobs[0]["title"], "Test Job Page")
         self.assertEqual(jobs[1]["company"], "Test Company 2")
 
     def test_scrape_jobs_missing_credentials(self):
@@ -248,8 +258,9 @@ class ScraperTests(TestCase):
             with self.assertRaises(ScraperException):
                 scrape_jobs("test query", "test.com")
 
-    @patch("app.core.scraper.build")
-    def test_scrape_jobs_api_error(self, mock_build):
+    @patch('app.core.scraping_logic.requests.get')
+    @patch("app.core.scraping_logic.build")
+    def test_scrape_jobs_api_error(self, mock_build, mock_get):
         mock_service = MagicMock()
         mock_cse = MagicMock()
         mock_list = MagicMock()
@@ -277,14 +288,18 @@ class FindSimilarJobsViewTest(APITestCase):
         self.client.force_authenticate(user=self.user)
         ScrapableDomain.objects.create(domain='example.com')
 
-    @patch('app.core.views.scrape_in_background')
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=False)
+    @patch('app.core.scraping_logic.requests.get')
+    @patch('app.core.views.scrape_and_save_jobs_task.delay')
     @patch('app.core.views.generate_embedding')
-    def test_find_similar_jobs_triggers_scraping(self, mock_generate_embedding, mock_scrape_in_background):
+    def test_find_similar_jobs_triggers_scraping(self, mock_generate_embedding, mock_delay, mock_get):
         """
         Ensure the find-similar-jobs endpoint triggers a new scrape and returns similar jobs.
         """
         # Mock the embedding generation for any new job
         mock_generate_embedding.return_value = [0.5, 0.5, 0.5]
+        mock_get.return_value.content = "<html><head><title>Test Job Page</title></head><body><p>Job description.</p></body></html>"
+        mock_get.return_value.status_code = 200
 
         # Existing jobs in the database
         target_job = JobPosting.objects.create(
@@ -316,9 +331,9 @@ class FindSimilarJobsViewTest(APITestCase):
         response = self.client.post(url, data, format='json')
 
         # 1. Assert that the background scraper was called correctly
-        mock_scrape_in_background.assert_called_once()
+        mock_delay.assert_called_once()
         expected_query = f'"{target_job.title}"'
-        self.assertEqual(mock_scrape_in_background.call_args[0][0], expected_query)
+        self.assertEqual(mock_delay.call_args[0][0], expected_query)
 
         # 2. Assert that the response contains the correct jobs
         self.assertEqual(response.status_code, status.HTTP_200_OK)
