@@ -18,3 +18,5 @@ djangorestframework-stubs
 sqlalchemy-stubs
 testtools==2.5.0
 pip-tools
+playwright
+celery-stubs
