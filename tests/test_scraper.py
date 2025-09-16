@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import patch, MagicMock
-from app.core.scraper import scrape_jobs, ScraperException
+from app.core.scraper import scrape_jobs
 
 from app.core.scraper import parse_job_title
 

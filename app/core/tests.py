@@ -1,4 +1,4 @@
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from unittest.mock import patch, MagicMock
 from app.core.scraping_logic import scrape_jobs, ScraperException
 import os

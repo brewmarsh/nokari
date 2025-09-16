@@ -1,3 +1,4 @@
+import datetime
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.conf import settings
@@ -46,7 +47,6 @@ class User(AbstractUser):
     def __str__(self):
         return self.email
 
-from django.utils import timezone
 
 class JobPosting(models.Model):
     link = models.URLField(primary_key=True)
@@ -116,8 +116,6 @@ class HiddenCompany(models.Model):
 
     class Meta:
         unique_together = ('user', 'name')
-
-import datetime
 
 class SearchableJobTitle(models.Model):
     title = models.CharField(max_length=255, unique=True)
