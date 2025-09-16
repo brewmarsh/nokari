@@ -3,19 +3,23 @@
 from django.db import migrations
 import json
 
+
 def convert_work_arrangement_to_json(apps, schema_editor):
-    User = apps.get_model('core', 'User')
+    User = apps.get_model("core", "User")
     for user in User.objects.all():
         if user.preferred_work_arrangement:
             # This is a bit of a hack. The field is a CharField, but we are going
             # to store a JSON string in it. The next migration will then
             # convert the field to a JSONField.
             if user.preferred_work_arrangement in ["remote", "hybrid", "onsite", "any"]:
-                user.preferred_work_arrangement = json.dumps([user.preferred_work_arrangement])
+                user.preferred_work_arrangement = json.dumps(
+                    [user.preferred_work_arrangement]
+                )
                 user.save()
 
+
 def convert_json_to_work_arrangement(apps, schema_editor):
-    User = apps.get_model('core', 'User')
+    User = apps.get_model("core", "User")
     for user in User.objects.all():
         if user.preferred_work_arrangement:
             try:
@@ -30,12 +34,15 @@ def convert_json_to_work_arrangement(apps, schema_editor):
                 # we'll just leave it as is.
                 pass
 
-class Migration(migrations.Migration):
 
+class Migration(migrations.Migration):
     dependencies = [
         ("core", "0014_jobposting_details_updated_at"),
     ]
 
     operations = [
-        migrations.RunPython(convert_work_arrangement_to_json, reverse_code=convert_json_to_work_arrangement),
+        migrations.RunPython(
+            convert_work_arrangement_to_json,
+            reverse_code=convert_json_to_work_arrangement,
+        ),
     ]

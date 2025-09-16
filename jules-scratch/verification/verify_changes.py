@@ -1,6 +1,7 @@
 import re
 from playwright.sync_api import sync_playwright, expect
 
+
 def run(playwright):
     browser = playwright.chromium.launch(headless=True)
     context = browser.new_context()
@@ -32,10 +33,10 @@ def run(playwright):
         # Verify dashboard and navigation
         expect(page).to_have_url(re.compile(".*dashboard"))
         expect(page.get_by_role("link", name="Dashboard")).to_be_visible()
-        expect(page.get_by_role("button")).to_be_visible() # Profile icon button
+        expect(page.get_by_role("button")).to_be_visible()  # Profile icon button
 
         # Go to jobs page and verify changes
-        page.goto("http://localhost:5173/dashboard") # jobs are on the dashboard
+        page.goto("http://localhost:5173/dashboard")  # jobs are on the dashboard
 
         # Wait for job cards to load
         expect(page.locator(".job-card").first).to_be_visible()
@@ -44,14 +45,17 @@ def run(playwright):
         first_job_card = page.locator(".job-card").first
         expect(first_job_card.locator(".pin-icon")).to_be_visible()
         expect(first_job_card.locator(".action-menu")).to_be_visible()
-        expect(first_job_card.locator("span").filter(has_text=re.compile(r'remote|hybrid|onsite', re.IGNORECASE))).to_be_visible()
-
+        expect(
+            first_job_card.locator("span").filter(
+                has_text=re.compile(r"remote|hybrid|onsite", re.IGNORECASE)
+            )
+        ).to_be_visible()
 
         # Take a screenshot of the jobs page
         page.screenshot(path="jules-scratch/verification/jobs_page.png")
 
         # Go to settings page and verify
-        page.get_by_role("button").click() # Open profile dropdown
+        page.get_by_role("button").click()  # Open profile dropdown
         page.get_by_role("link", name="Settings").click()
         expect(page).to_have_url(re.compile(".*settings"))
 
@@ -64,6 +68,7 @@ def run(playwright):
 
     finally:
         browser.close()
+
 
 with sync_playwright() as playwright:
     run(playwright)

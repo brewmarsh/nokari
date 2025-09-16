@@ -2,6 +2,7 @@ from django.test import TestCase
 from app.core.models import JobPosting
 from app.core.tasks import backfill_job_titles_task
 
+
 class TaskTestCase(TestCase):
     def test_backfill_job_titles_task(self):
         # Case 1: Title with company, no company set on object
@@ -50,8 +51,8 @@ class TaskTestCase(TestCase):
         # Verify Case 2
         job2 = JobPosting.objects.get(link="http://example.com/2")
         self.assertEqual(job2.title, "Manager")
-        self.assertEqual(job2.company, "Some Company") # Should not change
-        self.assertIn({'type': 'remote'}, job2.locations)
+        self.assertEqual(job2.company, "Some Company")  # Should not change
+        self.assertIn({"type": "remote"}, job2.locations)
 
         # Verify Case 3
         job3 = JobPosting.objects.get(link="http://example.com/3")

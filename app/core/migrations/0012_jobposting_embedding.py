@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0011_user_preferred_work_arrangement'),
+        ("core", "0011_user_preferred_work_arrangement"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='jobposting',
-            name='embedding',
+            model_name="jobposting",
+            name="embedding",
             field=models.JSONField(blank=True, null=True),
         ),
     ]
