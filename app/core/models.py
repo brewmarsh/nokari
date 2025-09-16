@@ -1,10 +1,11 @@
+from __future__ import annotations
 import datetime
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.conf import settings
 
 
-class UserManager(BaseUserManager):
+class UserManager(BaseUserManager["User"]):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
             raise ValueError("The Email field must be set")
@@ -32,7 +33,7 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractUser):
-    username = models.CharField(max_length=150, unique=True, null=True, blank=True)
+    username = models.CharField(max_length=150, unique=True, blank=True)
     email = models.EmailField(unique=True)
     role = models.CharField(
         max_length=10, choices=[("admin", "Admin"), ("user", "User")]
@@ -42,7 +43,7 @@ class User(AbstractUser):
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
-    objects = UserManager()
+    objects: UserManager = UserManager()  # type: ignore
 
     class Meta:
         verbose_name = "User"

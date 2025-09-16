@@ -19,6 +19,6 @@ app.autodiscover_tasks()
 app.conf.beat_schedule = {
     "trigger-daily-scrape": {
         "task": "app.core.tasks.trigger_daily_scrape",
-        "schedule": crontab(minute=0, hour=0),  # Daily at midnight
+        "schedule": crontab(minute="0", hour="0"),  # Daily at midnight
     },
 }
