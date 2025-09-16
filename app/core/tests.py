@@ -19,7 +19,7 @@ User = get_user_model()
 
 class HideJobPostingViewTest(APITestCase):
     def setUp(self):
-        self.user = User.objects.create_user(
+        self.user = User.objects.create_user(  # nosec B106
             email="test@example.com", password="password"
         )
         self.job_posting = JobPosting.objects.create(
@@ -59,7 +59,7 @@ class HideJobPostingViewTest(APITestCase):
 
 class HideCompanyViewTest(APITestCase):
     def setUp(self):
-        self.user = User.objects.create_user(
+        self.user = User.objects.create_user(  # nosec B106
             email="test@example.com", password="password"
         )
         self.client.force_authenticate(user=self.user)
@@ -98,7 +98,7 @@ class HideCompanyViewTest(APITestCase):
 
 class PinJobPostingViewTest(APITestCase):
     def setUp(self):
-        self.user = User.objects.create_user(
+        self.user = User.objects.create_user(  # nosec B106
             email="test@example.com", password="password"
         )
         self.client.force_authenticate(user=self.user)
@@ -162,10 +162,10 @@ class PinJobPostingViewTest(APITestCase):
 
 class SearchableJobTitleViewSetTest(APITestCase):
     def setUp(self):
-        self.admin_user = User.objects.create_superuser(
+        self.admin_user = User.objects.create_superuser(  # nosec B106
             email="admin@example.com", password="password"
         )
-        self.user = User.objects.create_user(
+        self.user = User.objects.create_user(  # nosec B106
             email="user@example.com", password="password"
         )
         self.job_title1 = SearchableJobTitle.objects.create(title="Software Engineer")
@@ -203,7 +203,7 @@ class SearchableJobTitleViewSetTest(APITestCase):
 
 class ScrapeViewTest(APITestCase):
     def setUp(self):
-        self.admin_user = User.objects.create_superuser(
+        self.admin_user = User.objects.create_superuser(  # nosec B106
             email="admin@example.com", password="password"
         )
         self.client.force_authenticate(user=self.admin_user)
@@ -296,7 +296,7 @@ class ScraperTests(TestCase):
 
 class FindSimilarJobsViewTest(APITestCase):
     def setUp(self):
-        self.user = User.objects.create_user(
+        self.user = User.objects.create_user(  # nosec B106
             email="test@example.com", password="password"
         )
         self.client.force_authenticate(user=self.user)

@@ -10,9 +10,11 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write("Loading model...")
         tokenizer = AutoTokenizer.from_pretrained(
-            "sentence-transformers/all-MiniLM-L6-v2"
+            "sentence-transformers/all-MiniLM-L6-v2", revision="c9745ed"
         )
-        model = AutoModel.from_pretrained("sentence-transformers/all-MiniLM-L6-v2")
+        model = AutoModel.from_pretrained(
+            "sentence-transformers/all-MiniLM-L6-v2", revision="c9745ed"
+        )
         self.stdout.write("Model loaded.")
 
         job_postings = JobPosting.objects.all()

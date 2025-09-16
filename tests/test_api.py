@@ -11,7 +11,7 @@ User = get_user_model()
 class APITestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
-        self.admin_user = User.objects.create_user(
+        self.admin_user = User.objects.create_user(  # nosec B106
             username="admin",
             email="admin@example.com",
             password="password",
