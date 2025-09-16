@@ -1,0 +1,48 @@
+name: CI Pipeline
+
+on: [push, pull_request]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Run linter
+        run: ruff check .
+
+      - name: Run formatter check
+        run: ruff format --check .
+
+      - name: Run security scan
+        run: bandit -r .
+
+      - name: Run type checking
+        run: mypy .
+
+      - name: Run tests with coverage
+        run: coverage run -m unittest discover tests
+
+      - name: Generate coverage report
+        run: coverage xml # Generate XML for Codecov
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage.xml
+          token: ${{ secrets.CODECOV_TOKEN }} # Required for private repos

@@ -1,5 +1,13 @@
 # Nokari Job Scraper
 
+<!-- Add your project badges here -->
+<!-- Please replace YOUR_USERNAME/YOUR_REPO with your actual GitHub username and repository name to enable the badges -->
+[![CI Status](https://github.com/YOUR_USERNAME/YOUR_REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/YOUR_REPO/actions)
+[![codecov](https://codecov.io/gh/YOUR_USERNAME/YOUR_REPO/branch/main/graph/badge.svg?token=YOUR_CODECOV_TOKEN)](https://codecov.io/gh/YOUR_USERNAME/YOUR_REPO)
+[![version](https://img.shields.io/github/v/release/YOUR_USERNAME/YOUR_REPO)](https://github.com/YOUR_USERNAME/YOUR_REPO/releases)
+[![Code style: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Nokari is a web application designed to scrape job postings from various sources, helping users to find relevant job opportunities efficiently. It features a Django backend and a React frontend.
 
 ## Getting Started
@@ -14,8 +22,8 @@ You will need to have [Docker](https://www.docker.com/get-started) installed on 
 
 1.  **Clone the repository:**
     ```sh
-    git clone https://github.com/your-username/nokari.git
-    cd nokari
+    git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git
+    cd YOUR_REPO
     ```
 
 2.  **Create an environment file:**
@@ -25,11 +33,18 @@ You will need to have [Docker](https://www.docker.com/get-started) installed on 
     ```
     You will need to fill in the required environment variables in this file. See the Configuration section below for more details.
 
-3.  **Build and run the application using Docker Compose:**
+3.  **Install dependencies and start the application:**
     ```sh
-    docker-compose up --build
+    make up
     ```
     The application will be available at `http://localhost:3000`.
+
+## Running Tests
+
+To run the full suite of tests and code quality checks:
+```sh
+make all-checks
+```
 
 ## Configuration
 

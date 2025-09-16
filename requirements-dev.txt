@@ -1,19 +1,20 @@
+-r requirements.txt
 black
-ruff
+ruff==0.13.0
 codespell
 flake8
-mypy
+mypy==1.18.1
 pydocstyle
-bandit
+bandit==1.8.6
 pytest
 pytest-django
-coverage
+coverage==7.3.2
 bump2version
 safety
 mkdocs
 mkdocs-material
-
-# Added for mypy support
 django-stubs
 djangorestframework-stubs
 sqlalchemy-stubs
+testtools==2.5.0
+pip-tools

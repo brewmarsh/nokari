@@ -1,23 +1,22 @@
-This file provides instructions for AI agents working with this codebase.
+# Agent Instructions
 
-## Project Overview
+## 1. High-Level Architectural Overview
+This project consists of a Django backend and a React frontend. The backend is in the `app` directory and the frontend is in the `frontend` directory. It uses Celery for asynchronous tasks and Redis as a message broker. The application is containerized using Docker.
 
-This project consists of a Django backend and a React frontend.
+## 2. Key Files and Directories
+- `README.md`: Project overview, setup, and usage.
+- `app/`: Main application source code.
+- `tests/`: All application tests.
+- `Makefile`: All common commands for development and CI.
+- `docker-compose.yml`: Defines the development environment.
+- `Dockerfile`: Instructions to build a production-ready container.
+- `entrypoint.sh`: Runs database migrations and starts the application.
 
-*   `app/`: Contains the Django backend application.
-*   `frontend/`: Contains the React frontend application.
-*   `docs/`: Contains project documentation.
-*   `docker/`: Contains Dockerfiles and Docker Compose configurations.
-
-## Development Setup
-
-### Dependencies
-*   **Backend:** `pip install -r requirements.txt`
-*   **Frontend:** `npm install`
-
-### Building and Running
-*   **Build:** `docker compose build`
-*   **Run:** `docker compose up --build -d`
+## 3. Build, Test, and Deployment
+- **To set up the local environment:** `make install`
+- **To build and start the application:** `make up`
+- **To run all tests and quality checks:** `make all-checks`
+- **To clean the environment:** `make clean`
 
 ## Coding Standards
 

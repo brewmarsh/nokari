@@ -3,16 +3,15 @@ services:
     image: "redis:7-alpine"
     ports:
       - "6379:6379"
-  backend:
+  web:
     build:
       context: .
-      dockerfile: Dockerfile.backend
+      dockerfile: Dockerfile
     volumes:
       - .:/app
       - logs:/var/log/
     env_file:
       - ./.env
-    command: ["./wait-for-it.sh", "db", "sh", "-c", "python manage.py migrate && python manage.py load_initial_data && gunicorn nokari.wsgi:application --bind 0.0.0.0:8000"]
     depends_on:
       db:
         condition: service_healthy
@@ -21,7 +20,7 @@ services:
   celery:
     build:
       context: .
-      dockerfile: Dockerfile.backend
+      dockerfile: Dockerfile
     command: celery -A nokari worker -l info
     volumes:
       - .:/app
@@ -33,7 +32,7 @@ services:
   celery-beat:
     build:
       context: .
-      dockerfile: Dockerfile.backend
+      dockerfile: Dockerfile
     command: celery -A nokari beat -l info
     volumes:
       - .:/app
@@ -51,7 +50,7 @@ services:
     ports:
       - "${WEB_APP_PORT:-3000}:80"
     depends_on:
-      - backend
+      - web
   db:
     image: postgres:14
     volumes:
