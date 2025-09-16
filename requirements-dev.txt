@@ -20,3 +20,4 @@ testtools==2.5.0
 pip-tools
 playwright
 celery-stubs
+torch-stubs
