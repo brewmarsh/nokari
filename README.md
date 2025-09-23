@@ -66,3 +66,54 @@ To enable the job scraping functionality, you need to obtain a Google API Key an
     CUSTOM_SEARCH_ENGINE_ID=your_search_engine_id_here
     ```
 9.  **Important**: Make sure "Search the entire web" is turned **ON** in your search engine's setup tab. This is required for the `site:` search operator to work correctly.
+
+## Deployment
+
+This project is configured for continuous deployment to a Hostinger VPS using GitHub Actions.
+
+### How it Works
+
+When code is pushed to the `main` branch, a GitHub Actions workflow is triggered. This workflow performs the following steps:
+
+1.  **Builds Docker Images**: It builds the backend and frontend Docker images.
+2.  **Pushes to Docker Hub**: The newly built images are pushed to Docker Hub.
+3.  **Deploys to VPS**: The workflow then connects to the Hostinger VPS via SSH and runs a deployment script. This script pulls the latest images from Docker Hub and restarts the application services using `docker-compose`.
+
+### Server Setup
+
+Before the first deployment, you need to set up the `.env` file on your production server.
+
+1.  SSH into your VPS:
+    ```sh
+    ssh your_vps_user@your_vps_ip
+    ```
+2.  Create the application directory (replace `your_vps_user` with your actual username):
+    ```sh
+    mkdir -p /home/your_vps_user/nokari-app
+    ```
+3.  Create a `.env` file in the application directory:
+    ```sh
+    nano /home/your_vps_user/nokari-app/.env
+    ```
+4.  Add the necessary environment variables to this file. You can use the `.env.example` file as a reference. Make sure to set the production values for your database, API keys, and other secrets.
+
+### Triggering a Deployment
+
+To deploy a new version of the application, simply push your changes to the `main` branch. The GitHub Actions workflow will handle the rest.
+
+### Manual Deployment
+
+While deployment is automated, you can manually trigger the deployment script on the server if needed.
+
+1.  SSH into your VPS:
+    ```sh
+    ssh your_user@your_vps_ip
+    ```
+2.  Navigate to the application directory:
+    ```sh
+    cd /home/user/nokari-app
+    ```
+3.  Run the deployment script:
+    ```sh
+    ./deploy.sh
+    ```
