@@ -7,9 +7,16 @@ WORKDIR /app
 # Copy the current directory contents into the container at /app
 COPY . /app
 
+# Copy the wait-for-it.sh script and make it executable
+COPY wait-for-it.sh /app/wait-for-it.sh
+RUN chmod +x /app/wait-for-it.sh
+
 # Install any needed packages specified in requirements.txt
-RUN pip install torch --index-url https://download.pytorch.org/whl/cpu
-    RUN apt-get update --allow-insecure-repositories && apt-get install -y postgresql-client && pip install --no-cache-dir -r requirements.txt && apt-get clean
+RUN pip install torch --index-url https://download.pytorch.org/whl/cpu && \
+    apt-get update --allow-insecure-repositories && \
+    apt-get install -y postgresql-client && \
+    pip install --no-cache-dir -r requirements.txt && \
+    apt-get clean
 
 # Make port 8000 available to the world outside this container
 EXPOSE 8000
