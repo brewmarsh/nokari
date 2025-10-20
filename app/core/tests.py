@@ -1,4 +1,4 @@
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from unittest.mock import patch, MagicMock
 from app.core.scraping_logic import scrape_jobs, ScraperException
 import os
@@ -162,20 +162,20 @@ class SearchableJobTitleViewSetTest(APITestCase):
 
     def test_list_job_titles_as_admin(self):
         self.client.force_authenticate(user=self.admin_user)
-        url = reverse('job_title-list')
+        url = reverse('job-title-list')
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
 
     def test_list_job_titles_as_user(self):
         self.client.force_authenticate(user=self.user)
-        url = reverse('job_title-list')
+        url = reverse('job-title-list')
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_create_job_title_as_admin(self):
         self.client.force_authenticate(user=self.admin_user)
-        url = reverse('job_title-list')
+        url = reverse('job-title-list')
         data = {'title': 'Data Scientist'}
         response = self.client.post(url, data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -183,7 +183,7 @@ class SearchableJobTitleViewSetTest(APITestCase):
 
     def test_delete_job_title_as_admin(self):
         self.client.force_authenticate(user=self.admin_user)
-        url = reverse('job_title-detail', kwargs={'pk': self.job_title1.pk})
+        url = reverse('job-title-detail', kwargs={'pk': self.job_title1.pk})
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(SearchableJobTitle.objects.count(), 1)

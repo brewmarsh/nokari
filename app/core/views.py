@@ -17,7 +17,6 @@ from django.db.models import OuterRef, Subquery, BooleanField, Value, Q, Case, W
 from django.db.models.functions import Coalesce
 from urllib.parse import unquote
 from .ml_utils import generate_embedding
-
 User = get_user_model()
 
 class MeView(generics.RetrieveUpdateAPIView):
