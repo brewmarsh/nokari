@@ -175,24 +175,35 @@ def scrape_and_save_jobs(query, domains, days=None):
 def parse_job_title(title):
     """
     Parses a job title to extract the company and work types.
-    This is a simplified implementation.
     """
     cleaned_title = title
     company = None
     work_types = []
 
-    # Example: "Software Engineer at Google (Remote)"
-    if ' at ' in title:
-        parts = title.split(' at ')
-        cleaned_title = parts[0]
-        if '(' in parts[1]:
-            company_part = parts[1].split('(')[0].strip()
-            company = company_part
-        else:
+    # Handle work types first
+    if ' - ' in cleaned_title:
+        parts = cleaned_title.split(' - ')
+        for i, part in enumerate(parts):
+            if part.lower() in ['remote', 'hybrid', 'onsite']:
+                work_types.append(part.lower())
+                parts.pop(i)
+                break
+        cleaned_title = ' - '.join(parts)
+
+    if ',' in cleaned_title:
+        parts = cleaned_title.split(',')
+        if len(parts) > 1:
+            cleaned_title = parts[0].strip()
             company = parts[1].strip()
 
-    if '(' in title and ')' in title:
-        work_type_part = title.split('(')[-1].split(')')[0]
+    # Example: "Software Engineer at Google (Remote)"
+    if ' at ' in cleaned_title:
+        parts = cleaned_title.split(' at ')
+        cleaned_title = parts[0].strip()
+        company = parts[1].strip()
+
+    if '(' in cleaned_title and ')' in cleaned_title:
+        work_type_part = cleaned_title.split('(')[-1].split(')')[0]
         # common work types
         if 'remote' in work_type_part.lower():
             work_types.append('remote')
@@ -201,8 +212,10 @@ def parse_job_title(title):
         if 'on-site' in work_type_part.lower() or 'onsite' in work_type_part.lower():
             work_types.append('onsite')
 
+        cleaned_title = cleaned_title.split('(')[0].strip()
+
     return {
-        'cleaned_title': cleaned_title,
+        'cleaned_title': cleaned_title.strip(),
         'company': company,
-        'work_types': work_types,
+        'work_types': list(set(work_types)),
     }
