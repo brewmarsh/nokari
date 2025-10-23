@@ -20,7 +20,8 @@ from .views import (
     UserViewSet,
     SearchableJobTitleViewSet,
     TaskStatusView,
-    AdminJobPostingViewSet
+    AdminJobPostingViewSet,
+    ScrapeScheduleView
 )
 from .admin_views import AdminMenuView
 from rest_framework_simplejwt.views import (
@@ -35,7 +36,7 @@ router.register(r'job-titles', SearchableJobTitleViewSet, basename='job-title')
 router.register(r'admin/jobs', AdminJobPostingViewSet, basename='admin-job')
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path('api/', include(router.urls)),
     path('me/', MeView.as_view(), name='me'),
     path('register/', RegisterView.as_view(), name='register'),
     path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
@@ -56,5 +57,6 @@ urlpatterns = [
     path('scrape/', ScrapeView.as_view(), name='scrape'),
     path('task-status/<str:task_id>/', TaskStatusView.as_view(), name='task_status'),
     path('scrape-history/', ScrapeHistoryView.as_view(), name='scrape_history'),
+    path('scrape-schedule/', ScrapeScheduleView.as_view(), name='scrape-schedule'),
     path('user-count/', UserCountView.as_view(), name='user_count'),
 ]

@@ -44,3 +44,5 @@ Authentication is handled via JWT (JSON Web Tokens). To access protected endpoin
 
 *   **POST /api/scrape/**: Trigger the job scraping process. (Admin only)
 *   **GET /api/scrape-history/**: Get the history of scraping events. (Admin only)
+*   **GET /api/scrape-schedule/**: Get the current daily scrape schedule. (Admin only)
+*   **PUT /api/scrape-schedule/**: Update the daily scrape schedule. (Admin only)

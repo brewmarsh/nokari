@@ -1,9 +1,10 @@
 from celery import shared_task
-from .models import JobPosting, ScrapableDomain, ScrapeHistory, SearchableJobTitle, Resume
+from .models import JobPosting, ScrapableDomain, ScrapeHistory, SearchableJobTitle, Resume, ScrapeSchedule
 from .scraping_logic import scrape_jobs
 from .scraping_logic import scrape_job_details
 from .scraping_logic import parse_job_title
 from django.utils import timezone
+import datetime
 from django.contrib.auth import get_user_model
 import logging
 
@@ -171,3 +172,17 @@ def analyze_resume_against_jobs(user_id):
     if updated_postings:
         JobPosting.objects.bulk_update(updated_postings, ['confidence_score'])
         logger.info(f"Updated confidence scores for {len(updated_postings)} jobs against resume of user {user_id}.")
+
+@shared_task
+def trigger_daily_scrape():
+    """
+    Triggers the daily scrape of all scrapable domains.
+    """
+    schedule = ScrapeSchedule.load()
+    now = datetime.datetime.now().time()
+
+    # Check if the current time is within a minute of the scheduled time
+    if now.hour == schedule.time.hour and now.minute == schedule.time.minute:
+        domains = ScrapableDomain.objects.all()
+        for domain in domains:
+            scrape_and_save_jobs_task.delay(domain.id)

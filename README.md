@@ -67,6 +67,13 @@ To enable the job scraping functionality, you need to obtain a Google API Key an
     ```
 9.  **Important**: Make sure "Search the entire web" is turned **ON** in your search engine's setup tab. This is required for the `site:` search operator to work correctly.
 
+## Automatic Scraping
+
+The application is configured to automatically scrape for new jobs every day. The time of the daily scrape can be configured from the admin panel.
+
+To access the admin panel, you need to be logged in as an admin user. The first user created in the application is automatically an admin.
+
+Once logged in, navigate to the "Admin" page from the user menu. Here you will find the "Scheduled Scrape" section where you can set the time for the daily scrape.
 ## Deployment
 
 This project is configured for continuous deployment to a Hostinger VPS using GitHub Actions.

@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.exceptions import InvalidToken
-from .models import JobPosting, Resume, CoverLetter, ScrapableDomain, ScrapeHistory, UserJobInteraction, HiddenCompany, SearchableJobTitle
+from .models import JobPosting, Resume, CoverLetter, ScrapableDomain, ScrapeHistory, UserJobInteraction, HiddenCompany, SearchableJobTitle, ScrapeSchedule
 
 User = get_user_model()
 
@@ -81,9 +81,9 @@ class SearchableJobTitleSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class AdminJobPostingSerializer(serializers.ModelSerializer):
-    remote = serializers.BooleanField(read_only=True)
-    hybrid = serializers.BooleanField(read_only=True)
-    onsite = serializers.BooleanField(read_only=True)
+    remote = serializers.SerializerMethodField()
+    hybrid = serializers.SerializerMethodField()
+    onsite = serializers.SerializerMethodField()
     location_string = serializers.SerializerMethodField()
 
     class Meta:
@@ -105,3 +105,17 @@ class AdminJobPostingSerializer(serializers.ModelSerializer):
             if loc.get('location_string'):
                 return loc['location_string']
         return None
+
+    def get_remote(self, obj):
+        return any(loc.get('type') == 'remote' for loc in obj.locations)
+
+    def get_hybrid(self, obj):
+        return any(loc.get('type') == 'hybrid' for loc in obj.locations)
+
+    def get_onsite(self, obj):
+        return any(loc.get('type') == 'onsite' for loc in obj.locations)
+
+class ScrapeScheduleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ScrapeSchedule
+        fields = ['time']

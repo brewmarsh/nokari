@@ -32,7 +32,7 @@ SECRET_KEY = os.environ.get(
 DEBUG = os.environ.get("DJANGO_DEBUG", "") != "False"
 
 ALLOWED_HOSTS = os.environ.get(
-    "DJANGO_ALLOWED_HOSTS", "backend,localhost,marshall-server.local"
+    "DJANGO_ALLOWED_HOSTS", "backend,localhost,marshall-server.local,marshall-server.marshallfamilly.org"
 ).split(",")
 
 

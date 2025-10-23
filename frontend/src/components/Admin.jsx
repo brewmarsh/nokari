@@ -8,14 +8,26 @@ import api from '../services/api';
 const Admin = () => {
   const [scrapeStatus, setScrapeStatus] = useState('');
   const [loading, setLoading] = useState(false);
-  const [days, setDays] = useState(7); // Default to 7 days
   const [users, setUsers] = useState([]);
+  const [scheduledTime, setScheduledTime] = useState('');
+
+  useEffect(() => {
+    const fetchSchedule = async () => {
+      try {
+        const response = await api.get('/scrape-schedule/');
+        setScheduledTime(response.data.time);
+      } catch (error) {
+        console.error('Error fetching scrape schedule:', error);
+      }
+    };
+    fetchSchedule();
+  }, []);
 
   const handleScrape = useCallback(async () => {
     setLoading(true);
     setScrapeStatus('Scraping...');
     try {
-      const response = await api.post('/scrape/', { days });
+      const response = await api.post('/scrape/', { days: 1 });
       setScrapeStatus(response.data.detail);
     } catch (error) {
       console.error('Error scraping jobs:', error);
@@ -27,7 +39,17 @@ const Admin = () => {
     } finally {
       setLoading(false);
     }
-  }, [days]);
+  }, []);
+
+  const handleSaveSchedule = async () => {
+    try {
+      await api.put('/scrape-schedule/', { time: scheduledTime });
+      alert('Schedule saved!');
+    } catch (error) {
+      console.error('Error saving scrape schedule:', error);
+      alert('Error saving schedule.');
+    }
+  };
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -59,15 +81,19 @@ const Admin = () => {
         <Link to="/admin/jobs">Jobs Table</Link>
       </div>
       <div>
-        <h3>Scrape Jobs</h3>
-        <label>
-          Scrape jobs from the last (days):
-          <input type="number" value={days} onChange={(e) => setDays(e.target.value)} />
-        </label>
+        <h3>Manual Scrape</h3>
         <button onClick={handleScrape} disabled={loading}>
-          {loading ? 'Scraping...' : 'Scrape Jobs'}
+          {loading ? 'Scraping...' : 'Run Manual 1-Day Scrape'}
         </button>
         {scrapeStatus && <p>{scrapeStatus}</p>}
+      </div>
+      <div>
+        <h3>Scheduled Scrape</h3>
+        <label>
+          Daily scrape time:
+          <input type="time" value={scheduledTime} onChange={(e) => setScheduledTime(e.target.value)} />
+        </label>
+        <button onClick={handleSaveSchedule}>Save Schedule</button>
       </div>
       <JobTitles />
       <ScrapableDomains />

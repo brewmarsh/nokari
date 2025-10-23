@@ -2,31 +2,21 @@ from rest_framework import generics, status, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import action
 from .permissions import IsAdmin
-from .serializers import UserSerializer, JobPostingSerializer, ResumeSerializer, CoverLetterSerializer, ScrapableDomainSerializer, ScrapeHistorySerializer, UserJobInteractionSerializer, HiddenCompanySerializer, SearchableJobTitleSerializer, AdminJobPostingSerializer
+from .serializers import UserSerializer, JobPostingSerializer, ResumeSerializer, CoverLetterSerializer, ScrapableDomainSerializer, ScrapeHistorySerializer, UserJobInteractionSerializer, HiddenCompanySerializer, SearchableJobTitleSerializer, AdminJobPostingSerializer, ScrapeScheduleSerializer
 from django.contrib.auth import get_user_model
-from .models import JobPosting, Resume, CoverLetter, ScrapableDomain, ScrapeHistory, UserJobInteraction, HiddenCompany, SearchableJobTitle
+from .models import JobPosting, Resume, CoverLetter, ScrapableDomain, ScrapeHistory, UserJobInteraction, HiddenCompany, SearchableJobTitle, ScrapeSchedule
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import render
-<<<<<<< HEAD
-from .scraper import scrape_jobs
-from .tasks import scrape_and_save_jobs, rescrape_job_details_task
+from .tasks import scrape_and_save_jobs_task, rescrape_job_details_task, analyze_resume_against_jobs
 from celery.result import AsyncResult
 import numpy as np
 from numpy.linalg import norm
 import threading
 from django.db.models import OuterRef, Subquery, BooleanField, Value, Q, Case, When
-=======
-import numpy as np
-from numpy.linalg import norm
-from django.db.models import OuterRef, Subquery, BooleanField, Value
->>>>>>> 3b65a322344b2d6d3a1f6494a12ff858c113fd12
 from django.db.models.functions import Coalesce
 from urllib.parse import unquote
 from .ml_utils import generate_embedding
-from .tasks import scrape_jobs_task, analyze_resume_against_jobs
-from .scraping_logic import scrape_and_save_jobs
-
 User = get_user_model()
 
 class MeView(generics.RetrieveUpdateAPIView):
@@ -70,7 +60,6 @@ class JobPostingView(generics.ListAPIView):
         if search is not None:
             queryset = queryset.filter(description__icontains=search)
 
-<<<<<<< HEAD
         preferences = user.preferred_work_arrangement
         if preferences:
             q_objects = Q()
@@ -92,18 +81,9 @@ class JobPostingView(generics.ListAPIView):
             if q_objects:
                 queryset = queryset.filter(q_objects)
 
-        resume = Resume.objects.filter(user=self.request.user).first()
-        if resume:
-            with open(resume.file.path, 'r') as f:
-                resume_text = f.read()
-            for job_posting in queryset:
-                job_posting.confidence_score = match_resume(resume_text, job_posting.description)['scores'][0]
-                job_posting.save()
-=======
         # The confidence score is now calculated asynchronously by a Celery task
         # triggered on resume upload. This view no longer needs to perform
         # this calculation.
->>>>>>> 3b65a322344b2d6d3a1f6494a12ff858c113fd12
 
         return queryset
 
@@ -191,25 +171,15 @@ class ScrapeView(APIView):
     permission_classes = [IsAdmin]
 
     def post(self, request, *args, **kwargs):
-<<<<<<< HEAD
         domains = ScrapableDomain.objects.all()
         if not domains.exists():
             return Response({'detail': 'No scrapable domains configured.'}, status=status.HTTP_400_BAD_REQUEST)
-=======
-        days = request.data.get('days')
-        try:
-            domains = ScrapableDomain.objects.all()
-            job_titles = SearchableJobTitle.objects.all()
-            if not job_titles:
-                return Response({'detail': 'No job titles to search for.'}, status=status.HTTP_400_BAD_REQUEST)
->>>>>>> 3b65a322344b2d6d3a1f6494a12ff858c113fd12
 
         task_ids = []
         for domain in domains:
-            task = scrape_and_save_jobs.delay(domain.id)
+            task = scrape_and_save_jobs_task.delay(domain.id)
             task_ids.append(task.id)
 
-<<<<<<< HEAD
         return Response({'detail': 'Scraping tasks initiated.', 'task_ids': task_ids}, status=status.HTTP_202_ACCEPTED)
 
 class TaskStatusView(APIView):
@@ -228,23 +198,6 @@ class TaskStatusView(APIView):
             'result': task_result.result
         }
         return Response(result, status=status.HTTP_200_OK)
-=======
-            scraped_count = scrape_and_save_jobs(query, domains, days=days)
-
-            ScrapeHistory.objects.create(
-                user=request.user,
-                status='success',
-                jobs_found=scraped_count
-            )
-            return Response({'detail': f'Scraped {scraped_count} new jobs.'})
-        except Exception as e:
-            ScrapeHistory.objects.create(
-                user=request.user,
-                status='failure',
-                details=str(e)
-            )
-            return Response({'detail': f'An error occurred: {e}'}, status=500)
->>>>>>> 3b65a322344b2d6d3a1f6494a12ff858c113fd12
 
 
 class UserCountView(APIView):
@@ -277,6 +230,16 @@ class HideJobPostingView(APIView):
 
         return Response(status=status.HTTP_200_OK)
 
+class ScrapeScheduleView(generics.RetrieveUpdateAPIView):
+    """
+    API endpoint for managing the daily scrape schedule.
+    """
+    permission_classes = [IsAdmin]
+    serializer_class = ScrapeScheduleSerializer
+
+    def get_object(self):
+        return ScrapeSchedule.load()
+
 class AdminJobPostingViewSet(viewsets.ModelViewSet):
     """
     API endpoint for admins to view and manage job postings.
@@ -286,23 +249,12 @@ class AdminJobPostingViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdmin]
     lookup_field = 'link'
     lookup_value_regex = '.+'
-    http_method_names = ['get', 'post', 'delete'] # Limit methods
 
     def get_queryset(self):
         queryset = super().get_queryset()
-
-        remote_q = Q(locations__contains=[{'type': 'remote'}])
-        hybrid_q = Q(locations__contains=[{'type': 'hybrid'}])
-        onsite_q = Q(locations__contains=[{'type': 'onsite'}])
-
-        queryset = queryset.annotate(
-            remote=Case(When(remote_q, then=Value(True)), default=Value(False), output_field=BooleanField()),
-            hybrid=Case(When(hybrid_q, then=Value(True)), default=Value(False), output_field=BooleanField()),
-            onsite=Case(When(onsite_q, then=Value(True)), default=Value(False), output_field=BooleanField()),
-        )
         return queryset
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['put'])
     def rescrape(self, request, pk=None):
         """
         Triggers a Celery task to rescrape the details of a single job posting.
@@ -326,8 +278,6 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
         user.role = 'admin'
         user.save()
         return Response({'status': 'user promoted'})
-
-from numpy.linalg import norm
 
 class FindSimilarJobsView(APIView):
     permission_classes = [IsAuthenticated]
@@ -365,7 +315,7 @@ class FindSimilarJobsView(APIView):
 
         # --- Part 2: Kick off background scraping ---
         query = f'"{target_job.title}"'
-        scrape_jobs_task.delay(query)
+        scrape_and_save_jobs_task.delay(query)
 
         return Response(serializer.data)
 
