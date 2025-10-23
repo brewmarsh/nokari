@@ -36,7 +36,7 @@ router.register(r'job-titles', SearchableJobTitleViewSet, basename='job-title')
 router.register(r'admin/jobs', AdminJobPostingViewSet, basename='admin-job')
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path('api/', include(router.urls)),
     path('me/', MeView.as_view(), name='me'),
     path('register/', RegisterView.as_view(), name='register'),
     path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
