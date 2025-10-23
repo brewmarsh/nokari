@@ -1,0 +1,56 @@
+services:
+  redis:
+    image: "redis:7-alpine"
+    ports:
+      - "6379:6379"
+  backend:
+    image: ${DOCKERHUB_USERNAME}/${IMAGE_NAME_BACKEND}:${IMAGE_TAG}
+    restart: always
+    env_file:
+      - ./.env
+    command: ["./wait-for-it.sh", "db:5432", "--", "sh", "-c", "python manage.py migrate && gunicorn nokari.wsgi:application --bind 0.0.0.0:8000"]
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+  celery:
+    image: ${DOCKERHUB_USERNAME}/${IMAGE_NAME_BACKEND}:${IMAGE_TAG}
+    restart: always
+    command: celery -A nokari worker -l info
+    env_file:
+      - ./.env
+    depends_on:
+      - db
+      - redis
+  celery-beat:
+    image: ${DOCKERHUB_USERNAME}/${IMAGE_NAME_BACKEND}:${IMAGE_TAG}
+    restart: always
+    command: celery -A nokari beat -l info
+    env_file:
+      - ./.env
+    depends_on:
+      - db
+      - redis
+  frontend:
+    image: ${DOCKERHUB_USERNAME}/${IMAGE_NAME_FRONTEND}:${IMAGE_TAG}
+    restart: always
+    ports:
+      - "${WEB_APP_PORT:-3000}:80"
+    depends_on:
+      - backend
+  db:
+    image: postgres:14
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - ./.env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nokari"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
