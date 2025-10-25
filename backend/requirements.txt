@@ -1,0 +1,15 @@
+fastapi
+pydantic
+mangum
+python-multipart
+passlib
+python-jose
+boto3
+requests
+cachetools
+transformers
+torch
+pytest
+httpx
+pytest-asyncio
+PyJWT
