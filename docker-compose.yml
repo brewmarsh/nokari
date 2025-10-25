@@ -6,45 +6,6 @@ services:
     sysctls:
       - net.core.somaxconn=1024
       - vm.overcommit_memory=1
-  backend:
-    build:
-      context: .
-      dockerfile: Dockerfile.backend
-    volumes:
-      - .:/app
-      - logs:/var/log/
-    env_file:
-      - ./.env
-    command: ["./wait-for-it.sh", "db", "sh", "-c", "python manage.py migrate && python manage.py load_initial_data && gunicorn nokari.wsgi:application --bind 0.0.0.0:8000"]
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_started
-  celery:
-    build:
-      context: .
-      dockerfile: Dockerfile.backend
-    command: celery -A nokari worker -l info
-    volumes:
-      - .:/app
-    env_file:
-      - ./.env
-    depends_on:
-      - db
-      - redis
-  celery-beat:
-    build:
-      context: .
-      dockerfile: Dockerfile.backend
-    command: celery -A nokari beat -l info
-    volumes:
-      - .:/app
-    env_file:
-      - ./.env
-    depends_on:
-      - db
-      - redis
   frontend:
     build:
       context: ./frontend
@@ -53,20 +14,3 @@ services:
       - ./frontend:/app
     ports:
       - "${WEB_APP_PORT:-3000}:80"
-    depends_on:
-      - backend
-  db:
-    image: postgres:14
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
-    env_file:
-      - ./.env
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U nokari"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-volumes:
-  postgres_data:
-  logs:
