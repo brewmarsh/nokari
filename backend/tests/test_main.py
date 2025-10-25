@@ -97,3 +97,17 @@ async def test_upload_resume(mock_s3_client: MagicMock, mock_dynamo_repo: MagicM
     mock_s3_client.upload_fileobj.assert_called_once()
     mock_dynamo_repo.update_user_resume.assert_called_once()
     app.dependency_overrides = {} # Reset overrides
+
+@pytest.mark.asyncio
+@patch("backend.app.main.sqs_client")
+async def test_find_similar_jobs(mock_sqs_client: MagicMock, mock_dynamo_repo: MagicMock):
+    app.dependency_overrides[get_current_user] = mock_regular_user
+    job_id = "test-job-id"
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        response = await ac.post(f"/jobs/{job_id}/find-similar")
+
+    assert response.status_code == 202
+    assert "task_id" in response.json()
+    mock_sqs_client.send_message.assert_called_once()
+    app.dependency_overrides = {} # Reset overrides
