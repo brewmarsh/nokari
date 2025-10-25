@@ -1,4 +1,5 @@
 import uuid
+import json
 import boto3
 from fastapi import FastAPI, Request, Depends, UploadFile, File, HTTPException, status
 from fastapi.responses import JSONResponse
@@ -12,7 +13,9 @@ from backend.app.security import get_current_user
 app = FastAPI()
 dynamo_repo = DynamoRepo(table_name="NokariData")
 s3_client = boto3.client("s3")
+sqs_client = boto3.client("sqs", region_name="us-east-1") # Explicitly set region
 S3_BUCKET_NAME = "nokari-resumes" # In a real app, this would be in config
+SIMILARITY_QUEUE_URL = "https://sqs.us-east-1.amazonaws.com/123456789012/nokari-similarity-queue" # Placeholder
 
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception):
@@ -51,6 +54,27 @@ def search_jobs(
 ):
     jobs = dynamo_repo.search_jobs(location=location, title=title)
     return [models.JobPostResponse(job_id=job["PK"].split("#")[1], **job) for job in jobs]
+
+@app.post("/jobs/{job_id}/find-similar", status_code=status.HTTP_202_ACCEPTED)
+def find_similar_jobs(job_id: str, current_user: dict = Depends(get_current_user)):
+    user_id = current_user.get("sub")
+    task_id = str(uuid.uuid4())
+
+    message = {
+        "job_id": job_id,
+        "user_id": user_id,
+        "task_id": task_id
+    }
+
+    try:
+        sqs_client.send_message(
+            QueueUrl=SIMILARITY_QUEUE_URL,
+            MessageBody=json.dumps(message)
+        )
+        return {"message": "Similarity search initiated.", "task_id": task_id}
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to initiate similarity search: {e}")
+
 
 @app.post("/resumes/upload")
 async def upload_resume(file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):

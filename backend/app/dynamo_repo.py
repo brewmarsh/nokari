@@ -55,6 +55,19 @@ class DynamoRepo:
             print(e.response["Error"]["Message"])
             raise
 
+    def put_similarity_result(self, task_id: str, similar_job_ids: List[str]):
+        try:
+            self.table.put_item(
+                Item={
+                    "PK": f"TASK#{task_id}",
+                    "SK": "RESULT",
+                    "similar_job_ids": similar_job_ids,
+                }
+            )
+        except ClientError as e:
+            print(e.response["Error"]["Message"])
+            raise
+
     def get_user(self, user_id: str):
         try:
             response = self.table.get_item(
@@ -96,9 +109,14 @@ class DynamoRepo:
                     "PK": f"JOB#{job_id}",
                     "SK": "DETAILS",
                     **job_data,
-                }
+                },
+                ConditionExpression="attribute_not_exists(PK)"
             )
+            return True  # Indicates success
         except ClientError as e:
+            if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
+                # This is expected if the job already exists, so we can ignore it.
+                return False
             print(e.response["Error"]["Message"])
             raise
 
