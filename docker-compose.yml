@@ -13,4 +13,4 @@ services:
     volumes:
       - ./frontend:/app
     ports:
-      - "${WEB_APP_PORT:-3000}:80"
+      - "${WEB_APP_PORT:-30000}:80"
