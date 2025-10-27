@@ -35,3 +35,24 @@ class CognitoRepo:
         except ClientError as e:
             print(f"Cognito sign-up failed: {e.response['Error']['Message']}")
             raise
+
+    def sign_in(self, email: str, password: str) -> dict:
+        """
+        Authenticates a user and returns the JWT tokens.
+        """
+        if not self.user_pool_id or not self.client_id:
+            raise ValueError("Cognito User Pool ID and Client ID must be set.")
+
+        try:
+            response = self.client.initiate_auth(
+                ClientId=self.client_id,
+                AuthFlow='USER_PASSWORD_AUTH',
+                AuthParameters={
+                    'USERNAME': email,
+                    'PASSWORD': password,
+                }
+            )
+            return response['AuthenticationResult']
+        except ClientError as e:
+            print(f"Cognito sign-in failed: {e.response['Error']['Message']}")
+            raise

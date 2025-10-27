@@ -21,9 +21,13 @@ sqs_client = boto3.client("sqs", region_name="us-east-1") # Explicitly set regio
 S3_BUCKET_NAME = os.environ.get("S3_BUCKET_NAME", "nokari-resumes")
 SIMILARITY_QUEUE_URL = os.environ.get("SIMILARITY_QUEUE_URL", "https://sqs.us-east-1.amazonaws.com/123456789012/nokari-similarity-queue")
 
-class RegisterRequest(BaseModel):
+class AuthRequest(BaseModel):
     email: str
     password: str
+
+class TokenResponse(BaseModel):
+    access: str
+    refresh: str
 
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception):
@@ -37,12 +41,23 @@ def read_root():
     return {"Hello": "World"}
 
 @app.post("/register/", status_code=status.HTTP_201_CREATED)
-def register(register_request: RegisterRequest):
+def register(register_request: AuthRequest):
     try:
         cognito_repo.sign_up(register_request.email, register_request.password)
         return {"message": "User registered successfully."}
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+@app.post("/login/", response_model=TokenResponse)
+def login(login_request: AuthRequest):
+    try:
+        auth_result = cognito_repo.sign_in(login_request.email, login_request.password)
+        return TokenResponse(
+            access=auth_result['AccessToken'],
+            refresh=auth_result['RefreshToken']
+        )
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 @app.post("/jobs", response_model=models.JobPostResponse)
 def create_job(job_request: models.CreateJobRequest, current_user: dict = Depends(get_current_user)):
