@@ -1,5 +1,6 @@
 import uuid
 import json
+import os
 import boto3
 from fastapi import FastAPI, Request, Depends, UploadFile, File, HTTPException, status
 from fastapi.responses import JSONResponse
@@ -14,8 +15,8 @@ app = FastAPI()
 dynamo_repo = DynamoRepo(table_name="NokariData")
 s3_client = boto3.client("s3")
 sqs_client = boto3.client("sqs", region_name="us-east-1") # Explicitly set region
-S3_BUCKET_NAME = "nokari-resumes" # In a real app, this would be in config
-SIMILARITY_QUEUE_URL = "https://sqs.us-east-1.amazonaws.com/123456789012/nokari-similarity-queue" # Placeholder
+S3_BUCKET_NAME = os.environ.get("S3_BUCKET_NAME", "nokari-resumes")
+SIMILARITY_QUEUE_URL = os.environ.get("SIMILARITY_QUEUE_URL", "https://sqs.us-east-1.amazonaws.com/123456789012/nokari-similarity-queue")
 
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception):
