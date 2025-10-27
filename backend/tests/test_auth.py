@@ -32,3 +32,27 @@ async def test_register_user_failure(mock_cognito_repo: MagicMock):
 
     assert response.status_code == 400
     assert "User already exists" in response.json()["detail"]
+
+@pytest.mark.asyncio
+async def test_login_user_success(mock_cognito_repo: MagicMock):
+    mock_cognito_repo.sign_in.return_value = {
+        "AccessToken": "test_access_token",
+        "RefreshToken": "test_refresh_token"
+    }
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        response = await ac.post("/login/", json={"email": "test@example.com", "password": "password123"})
+
+    assert response.status_code == 200
+    assert response.json() == {"access": "test_access_token", "refresh": "test_refresh_token"}
+    mock_cognito_repo.sign_in.assert_called_once_with("test@example.com", "password123")
+
+@pytest.mark.asyncio
+async def test_login_user_failure(mock_cognito_repo: MagicMock):
+    mock_cognito_repo.sign_in.side_effect = Exception("Incorrect username or password")
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        response = await ac.post("/login/", json={"email": "test@example.com", "password": "wrongpassword"})
+
+    assert response.status_code == 401
+    assert "Incorrect username or password" in response.json()["detail"]
