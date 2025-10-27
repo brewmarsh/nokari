@@ -6,17 +6,24 @@ from fastapi import FastAPI, Request, Depends, UploadFile, File, HTTPException, 
 from fastapi.responses import JSONResponse
 from mangum import Mangum
 from typing import List, Optional
+from pydantic import BaseModel
 
 from backend.app import models
 from backend.app.dynamo_repo import DynamoRepo
 from backend.app.security import get_current_user
+from backend.app.cognito_repo import CognitoRepo
 
 app = FastAPI()
 dynamo_repo = DynamoRepo(table_name="NokariData")
+cognito_repo = CognitoRepo()
 s3_client = boto3.client("s3")
 sqs_client = boto3.client("sqs", region_name="us-east-1") # Explicitly set region
 S3_BUCKET_NAME = os.environ.get("S3_BUCKET_NAME", "nokari-resumes")
 SIMILARITY_QUEUE_URL = os.environ.get("SIMILARITY_QUEUE_URL", "https://sqs.us-east-1.amazonaws.com/123456789012/nokari-similarity-queue")
+
+class RegisterRequest(BaseModel):
+    email: str
+    password: str
 
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception):
@@ -28,6 +35,14 @@ async def generic_exception_handler(request: Request, exc: Exception):
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
+
+@app.post("/register/", status_code=status.HTTP_201_CREATED)
+def register(register_request: RegisterRequest):
+    try:
+        cognito_repo.sign_up(register_request.email, register_request.password)
+        return {"message": "User registered successfully."}
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 @app.post("/jobs", response_model=models.JobPostResponse)
 def create_job(job_request: models.CreateJobRequest, current_user: dict = Depends(get_current_user)):
