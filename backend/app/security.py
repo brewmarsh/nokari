@@ -15,7 +15,9 @@ COGNITO_USER_POOL_ID = os.environ.get("COGNITO_USER_POOL_ID", "us-east-1_example
 COGNITO_AUDIENCE = os.environ.get("COGNITO_AUDIENCE", "your_app_client_id")
 # ---
 
-COGNITO_ISSUER = f"https://cognito-idp.{COGNITO_REGION}.amazonaws.com/{COGNITO_USER_POOL_ID}"
+COGNITO_ISSUER = (
+    f"https://cognito-idp.{COGNITO_REGION}.amazonaws.com/{COGNITO_USER_POOL_ID}"
+)
 JWKS_URL = f"{COGNITO_ISSUER}/.well-known/jwks.json"
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")

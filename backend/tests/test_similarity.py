@@ -1,13 +1,15 @@
 import sys
 import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
 import json
 import pytest
 from unittest.mock import patch, MagicMock
 from backend.app import similarity
 
-@patch('backend.app.similarity.DynamoRepo')
+
+@patch("backend.app.similarity.DynamoRepo")
 def test_similarity_handler(MockDynamoRepo):
     mock_repo_instance = MockDynamoRepo.return_value
     mock_repo_instance.search_jobs.return_value = [
@@ -17,14 +19,7 @@ def test_similarity_handler(MockDynamoRepo):
     ]
 
     event = {
-        'Records': [
-            {
-                'body': json.dumps({
-                    'job_id': 'job1',
-                    'task_id': 'task123'
-                })
-            }
-        ]
+        "Records": [{"body": json.dumps({"job_id": "job1", "task_id": "task123"})}]
     }
     context = {}
 
@@ -34,6 +29,5 @@ def test_similarity_handler(MockDynamoRepo):
     # The similarity logic correctly identifies both 'job2' (due to 'developer') and 'job3' (due to 'python')
     # as similar, and sorts 'job2' first because its similarity score is higher.
     mock_repo_instance.put_similarity_result.assert_called_once_with(
-        'task123',
-        ['job2', 'job3']
+        "task123", ["job2", "job3"]
     )

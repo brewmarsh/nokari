@@ -2,6 +2,7 @@ import boto3
 from botocore.exceptions import ClientError
 from typing import Dict, Any, List, Optional
 
+
 class DynamoRepo:
     """
     A repository for interacting with the DynamoDB table.
@@ -110,11 +111,11 @@ class DynamoRepo:
                     "SK": "DETAILS",
                     **job_data,
                 },
-                ConditionExpression="attribute_not_exists(PK)"
+                ConditionExpression="attribute_not_exists(PK)",
             )
             return True  # Indicates success
         except ClientError as e:
-            if e.response['Error']['Code'] == 'ConditionalCheckFailedException':
+            if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
                 # This is expected if the job already exists, so we can ignore it.
                 return False
             print(e.response["Error"]["Message"])
@@ -122,26 +123,26 @@ class DynamoRepo:
 
     def get_job_posting(self, job_id: str):
         try:
-            response = self.table.get_item(
-                Key={"PK": f"JOB#{job_id}", "SK": "DETAILS"}
-            )
+            response = self.table.get_item(Key={"PK": f"JOB#{job_id}", "SK": "DETAILS"})
             return response.get("Item")
         except ClientError as e:
             print(e.response["Error"]["Message"])
             raise
 
-    def search_jobs(self, location: Optional[str] = None, title: Optional[str] = None) -> List[Dict[str, Any]]:
+    def search_jobs(
+        self, location: Optional[str] = None, title: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
         try:
             if not location and not title:
                 # A full scan is generally not recommended for production use
                 response = self.table.scan(
                     FilterExpression="begins_with(PK, :pk)",
-                    ExpressionAttributeValues={":pk": "JOB#"}
+                    ExpressionAttributeValues={":pk": "JOB#"},
                 )
                 return response.get("Items", [])
 
             query_params = {
-                'IndexName': 'GSI2',
+                "IndexName": "GSI2",
             }
             key_conditions = []
             expr_attr_values = {}
@@ -154,8 +155,8 @@ class DynamoRepo:
                 key_conditions.append("begins_with(GSI2SK, :title)")
                 expr_attr_values[":title"] = f"JOBTITLE#{title}"
 
-            query_params['KeyConditionExpression'] = " AND ".join(key_conditions)
-            query_params['ExpressionAttributeValues'] = expr_attr_values
+            query_params["KeyConditionExpression"] = " AND ".join(key_conditions)
+            query_params["ExpressionAttributeValues"] = expr_attr_values
 
             response = self.table.query(**query_params)
             return response.get("Items", [])
