@@ -1,6 +1,5 @@
 import string
 from typing import List
-from transformers import pipeline
 
 
 def extract_keywords(text: str) -> List[str]:

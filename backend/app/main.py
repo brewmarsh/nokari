@@ -1,23 +1,26 @@
-import uuid
 import json
 import os
+import uuid
+from typing import List, Optional
+
 import boto3
-from fastapi import FastAPI, Request, Depends, UploadFile, File, HTTPException, status
+from fastapi import (Depends, FastAPI, File, HTTPException, Request,
+                     UploadFile, status)
 from fastapi.responses import JSONResponse
 from mangum import Mangum
-from typing import List, Optional
 from pydantic import BaseModel
 
 from backend.app import models
+from backend.app.cognito_repo import CognitoRepo
 from backend.app.dynamo_repo import DynamoRepo
 from backend.app.security import get_current_user
-from backend.app.cognito_repo import CognitoRepo
 
 app = FastAPI()
 dynamo_repo = DynamoRepo(table_name="NokariData")
 cognito_repo = CognitoRepo()
 s3_client = boto3.client("s3")
-sqs_client = boto3.client("sqs", region_name="us-east-1")  # Explicitly set region
+# Explicitly set region
+sqs_client = boto3.client("sqs", region_name="us-east-1")
 S3_BUCKET_NAME = os.environ.get("S3_BUCKET_NAME", "nokari-resumes")
 SIMILARITY_QUEUE_URL = os.environ.get(
     "SIMILARITY_QUEUE_URL",
@@ -54,18 +57,21 @@ def register(register_request: AuthRequest):
         cognito_repo.sign_up(register_request.email, register_request.password)
         return {"message": "User registered successfully."}
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @app.post("/login/", response_model=TokenResponse)
 def login(login_request: AuthRequest):
     try:
-        auth_result = cognito_repo.sign_in(login_request.email, login_request.password)
+        auth_result = cognito_repo.sign_in(
+            login_request.email, login_request.password)
         return TokenResponse(
             access=auth_result["AccessToken"], refresh=auth_result["RefreshToken"]
         )
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
 @app.post("/jobs", response_model=models.JobPostResponse)

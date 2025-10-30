@@ -11,7 +11,8 @@ from fastapi.security import OAuth2PasswordBearer
 
 # --- Cognito Configuration ---
 COGNITO_REGION = os.environ.get("COGNITO_REGION", "us-east-1")
-COGNITO_USER_POOL_ID = os.environ.get("COGNITO_USER_POOL_ID", "us-east-1_example")
+COGNITO_USER_POOL_ID = os.environ.get(
+    "COGNITO_USER_POOL_ID", "us-east-1_example")
 COGNITO_AUDIENCE = os.environ.get("COGNITO_AUDIENCE", "your_app_client_id")
 # ---
 

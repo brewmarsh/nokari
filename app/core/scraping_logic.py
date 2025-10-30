@@ -1,11 +1,13 @@
+import logging
 import os
-from googleapiclient.discovery import build
 from datetime import datetime
-from .models import JobPosting, ScrapableDomain
-from .ml_utils import generate_embedding
+
 import requests
 from bs4 import BeautifulSoup
-import logging
+from googleapiclient.discovery import build
+
+from .ml_utils import generate_embedding
+from .models import JobPosting, ScrapableDomain
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +32,8 @@ def scrape_job_details(url):
         # Description
         # This is a generic attempt to get the main content.
         # A more robust solution would have parsers for specific site structures.
-        main_content = soup.find("main") or soup.find("article") or soup.find("body")
+        main_content = soup.find("main") or soup.find(
+            "article") or soup.find("body")
         if main_content:
             details["description"] = " ".join(main_content.get_text().split())
         else:
@@ -59,7 +62,7 @@ def scrape_jobs(query, domain, days=None):
 
     if not api_key or not search_engine_id:
         raise ScraperException(
-            "GOOGLE_API_KEY and CUSTOM_SEARCH_ENGINE_ID must be set in the environment."
+            "GOOGLE_API_KEY and CUSTOM_SEARCH_ENGINE_ID must be set."
         )
 
     service = build("customsearch", "v1", developerKey=api_key)
@@ -98,16 +101,19 @@ def scrape_jobs(query, domain, days=None):
                 locations.append({"type": "remote"})
             if is_hybrid:
                 locations.append(
-                    {"type": "hybrid", "location_string": location_string or ""}
+                    {"type": "hybrid",
+                        "location_string": location_string or ""}
                 )
             if is_onsite:
                 locations.append(
-                    {"type": "onsite", "location_string": location_string or ""}
+                    {"type": "onsite",
+                        "location_string": location_string or ""}
                 )
 
             if not locations:
                 locations.append(
-                    {"type": "onsite", "location_string": location_string or ""}
+                    {"type": "onsite",
+                        "location_string": location_string or ""}
                 )
 
             # Try to find a date in the metatags
@@ -144,7 +150,8 @@ def scrape_jobs(query, domain, days=None):
                         scraped_details.get("title") or job_data["title"]
                     )
                     job_data["description"] = (
-                        scraped_details.get("description") or job_data["description"]
+                        scraped_details.get(
+                            "description") or job_data["description"]
                     )
 
             jobs.append(job_data)
@@ -166,7 +173,8 @@ def scrape_and_save_jobs(query, domains, days=None):
     scraped_count = 0
     for domain_obj in domains:
         domain_name = (
-            domain_obj.domain if isinstance(domain_obj, ScrapableDomain) else domain_obj
+            domain_obj.domain if isinstance(
+                domain_obj, ScrapableDomain) else domain_obj
         )
         try:
             jobs = scrape_jobs(query, domain_name, days=days)

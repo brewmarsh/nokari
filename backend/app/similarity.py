@@ -1,4 +1,5 @@
 import json
+
 from backend.app.dynamo_repo import DynamoRepo
 from backend.app.ml import calculate_string_similarity
 
@@ -8,7 +9,8 @@ def find_similar_jobs_logic(job_id: str, all_jobs: list):
     Placeholder logic for finding similar jobs.
     In a real implementation, this would involve more sophisticated ML models.
     """
-    source_job = next((job for job in all_jobs if job["PK"] == f"JOB#{job_id}"), None)
+    source_job = next(
+        (job for job in all_jobs if job["PK"] == f"JOB#{job_id}"), None)
     if not source_job:
         return []
 

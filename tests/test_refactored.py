@@ -1,5 +1,6 @@
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from app.core.scraping_logic import scrape_jobs
 
 
@@ -71,7 +72,8 @@ class RefactoredScraperTestCase(unittest.TestCase):
         mock_build.assert_called_once_with(
             "customsearch", "v1", developerKey="fake_key"
         )
-        mock_scrape_details.assert_called_once_with("https://example.com/job/123")
+        mock_scrape_details.assert_called_once_with(
+            "https://example.com/job/123")
 
 
 if __name__ == "__main__":

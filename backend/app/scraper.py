@@ -1,5 +1,5 @@
-import uuid
 import datetime
+
 from backend.app.dynamo_repo import DynamoRepo
 
 # In a real application, this list would be fetched from a database or a config file.

@@ -1,5 +1,6 @@
 import time
-from playwright.sync_api import sync_playwright, expect
+
+from playwright.sync_api import expect, sync_playwright
 
 
 def run():
@@ -31,7 +32,8 @@ def run():
         # The frontend should redirect to the dashboard
         expect(page).to_have_url("http://localhost:30000/dashboard")
 
-        page.screenshot(path="jules-scratch/verification/login_verification.png")
+        page.screenshot(
+            path="jules-scratch/verification/login_verification.png")
         browser.close()
 
 

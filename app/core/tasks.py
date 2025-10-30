@@ -1,19 +1,13 @@
-from celery import shared_task
-from .models import (
-    JobPosting,
-    ScrapableDomain,
-    ScrapeHistory,
-    SearchableJobTitle,
-    Resume,
-    ScrapeSchedule,
-)
-from .scraping_logic import scrape_jobs
-from .scraping_logic import scrape_job_details
-from .scraping_logic import parse_job_title
-from django.utils import timezone
 import datetime
-from django.contrib.auth import get_user_model
 import logging
+
+from celery import shared_task
+from django.contrib.auth import get_user_model
+from django.utils import timezone
+
+from .models import (JobPosting, Resume, ScrapableDomain, ScrapeHistory,
+                     ScrapeSchedule, SearchableJobTitle)
+from .scraping_logic import parse_job_title, scrape_job_details, scrape_jobs
 
 logger = logging.getLogger(__name__)
 
@@ -180,7 +174,8 @@ def analyze_resume_against_jobs(user_id):
     job_postings = JobPosting.objects.all()
     updated_postings = []
     for job in job_postings:
-        score = placeholder_match_resume(resume_text, job.description)["scores"][0]
+        score = placeholder_match_resume(
+            resume_text, job.description)["scores"][0]
         job.confidence_score = score
         updated_postings.append(job)
 

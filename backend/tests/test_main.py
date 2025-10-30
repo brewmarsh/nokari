@@ -1,12 +1,12 @@
-import sys
-import os
-
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
-
-import pytest
-from httpx import AsyncClient, ASGITransport
-from unittest.mock import patch, MagicMock
 from backend.app.main import app, get_current_user
+from httpx import ASGITransport, AsyncClient
+import pytest
+from unittest.mock import MagicMock, patch
+import os
+import sys
+
+sys.path.insert(0, os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "..")))
 
 
 # Mock users for dependency injection

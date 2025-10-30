@@ -1,18 +1,16 @@
-from django.test import TestCase, override_settings
-from unittest.mock import patch, MagicMock
-from app.core.scraping_logic import scrape_jobs, ScraperException
 import os
+from unittest.mock import MagicMock, patch
+
+from django.contrib.auth import get_user_model
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
-from django.contrib.auth import get_user_model
-from .models import (
-    JobPosting,
-    UserJobInteraction,
-    HiddenCompany,
-    SearchableJobTitle,
-    ScrapableDomain,
-)
+
+from app.core.scraping_logic import ScraperException, scrape_jobs
+
+from .models import (HiddenCompany, JobPosting, ScrapableDomain,
+                     SearchableJobTitle, UserJobInteraction)
 
 User = get_user_model()
 
@@ -169,8 +167,10 @@ class SearchableJobTitleViewSetTest(APITestCase):
         self.user = User.objects.create_user(
             email="user@example.com", password="password"
         )
-        self.job_title1 = SearchableJobTitle.objects.create(title="Software Engineer")
-        self.job_title2 = SearchableJobTitle.objects.create(title="Product Manager")
+        self.job_title1 = SearchableJobTitle.objects.create(
+            title="Software Engineer")
+        self.job_title2 = SearchableJobTitle.objects.create(
+            title="Product Manager")
         ScrapableDomain.objects.create(domain="example.com")
 
     def test_list_job_titles_as_admin(self):

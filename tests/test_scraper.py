@@ -1,6 +1,7 @@
 import unittest
-from unittest.mock import patch, MagicMock
-from app.core.scraping_logic import scrape_jobs, ScraperException
+from unittest.mock import MagicMock, patch
+
+from app.core.scraping_logic import scrape_jobs
 
 
 class ScraperTestCase(unittest.TestCase):

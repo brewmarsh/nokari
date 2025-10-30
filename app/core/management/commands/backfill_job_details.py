@@ -1,8 +1,10 @@
+import logging
+
 from django.core.management.base import BaseCommand
 from django.utils import timezone
+
 from app.core.models import JobPosting
 from app.core.scraping_logic import scrape_job_details
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +15,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write(self.style.SUCCESS("Starting backfill process..."))
 
-        job_postings = JobPosting.objects.filter(details_updated_at__isnull=True)
+        job_postings = JobPosting.objects.filter(
+            details_updated_at__isnull=True)
         total_jobs = job_postings.count()
         updated_count = 0
         deleted_count = 0
@@ -22,11 +25,13 @@ class Command(BaseCommand):
         self.stdout.write(f"Found {total_jobs} jobs to process.")
 
         for i, job in enumerate(job_postings):
-            self.stdout.write(f"Processing job {i + 1}/{total_jobs}: {job.link}")
+            self.stdout.write(
+                f"Processing job {i + 1}/{total_jobs}: {job.link}")
 
             if not job.link:
                 self.stdout.write(
-                    self.style.WARNING(f"Skipping job with no link: {job.title}")
+                    self.style.WARNING(
+                        f"Skipping job with no link: {job.title}")
                 )
                 continue
 
@@ -45,7 +50,8 @@ class Command(BaseCommand):
                         updated_count += 1
                         self.stdout.write(
                             self.style.SUCCESS(
-                                f"Successfully updated description for job: {job.link}"
+                                "Successfully updated description for "
+                                f"job: {job.link}"
                             )
                         )
                     else:
@@ -54,21 +60,23 @@ class Command(BaseCommand):
             except Exception as e:
                 if "404" in str(e):
                     self.stdout.write(
-                        self.style.WARNING(f"Job not found (404), deleting: {job.link}")
+                        self.style.WARNING(
+                            f"Job not found (404), deleting: {job.link}")
                     )
                     job.delete()
                     deleted_count += 1
                 else:
                     self.stderr.write(
                         self.style.ERROR(
-                            f"An unexpected error occurred for job {job.link}: {e}"
+                            "An unexpected error occurred for "
+                            f"job {job.link}: {e}"
                         )
                     )
                     error_count += 1
 
-        self.stdout.write(
-            self.style.SUCCESS(
-                f"Backfill process finished. "
-                f"Updated: {updated_count}, Deleted: {deleted_count}, Errors: {error_count}"
-            )
+        summary_message = (
+            "Backfill process finished. "
+            f"Updated: {updated_count}, Deleted: {deleted_count}, "
+            f"Errors: {error_count}"
         )
+        self.stdout.write(self.style.SUCCESS(summary_message))

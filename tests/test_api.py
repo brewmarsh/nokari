@@ -1,9 +1,8 @@
-from django.test import TestCase
 from django.contrib.auth import get_user_model
+from django.test import TestCase
 from rest_framework.test import APIClient
-from unittest.mock import patch
+
 from app.core.models import JobPosting
-import urllib.parse
 
 User = get_user_model()
 
