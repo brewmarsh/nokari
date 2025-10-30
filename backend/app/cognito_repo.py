@@ -1,6 +1,8 @@
-import boto3
 import os
+
+import boto3
 from botocore.exceptions import ClientError
+
 
 class CognitoRepo:
     """
@@ -8,7 +10,9 @@ class CognitoRepo:
     """
 
     def __init__(self):
-        self.client = boto3.client("cognito-idp", region_name=os.environ.get("COGNITO_REGION", "us-east-1"))
+        self.client = boto3.client(
+            "cognito-idp", region_name=os.environ.get("COGNITO_REGION", "us-east-1")
+        )
         self.user_pool_id = os.environ.get("COGNITO_USER_POOL_ID")
         self.client_id = os.environ.get("COGNITO_AUDIENCE")
 
@@ -24,12 +28,7 @@ class CognitoRepo:
                 ClientId=self.client_id,
                 Username=email,
                 Password=password,
-                UserAttributes=[
-                    {
-                        'Name': 'email',
-                        'Value': email
-                    }
-                ]
+                UserAttributes=[{"Name": "email", "Value": email}],
             )
             return True
         except ClientError as e:
@@ -46,13 +45,13 @@ class CognitoRepo:
         try:
             response = self.client.initiate_auth(
                 ClientId=self.client_id,
-                AuthFlow='USER_PASSWORD_AUTH',
+                AuthFlow="USER_PASSWORD_AUTH",
                 AuthParameters={
-                    'USERNAME': email,
-                    'PASSWORD': password,
-                }
+                    "USERNAME": email,
+                    "PASSWORD": password,
+                },
             )
-            return response['AuthenticationResult']
+            return response["AuthenticationResult"]
         except ClientError as e:
             print(f"Cognito sign-in failed: {e.response['Error']['Message']}")
             raise

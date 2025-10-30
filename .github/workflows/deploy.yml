@@ -46,8 +46,30 @@ jobs:
           push: true
           tags: ${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME_FRONTEND }}:${{ env.IMAGE_TAG }}
 
-  deploy:
+  scan-images:
     needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Trivy vulnerability scanner on backend image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME_BACKEND }}:${{ env.IMAGE_TAG }}'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+      - name: Run Trivy vulnerability scanner on frontend image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME_FRONTEND }}:${{ env.IMAGE_TAG }}'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+  deploy:
+    needs: scan-images
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

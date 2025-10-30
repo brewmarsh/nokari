@@ -23,6 +23,7 @@ This project consists of a Django backend and a React frontend.
 
 ### General
 *   Error handling should use centralized `try-catch` blocks and log to `console.error`.
+*   **Separation of Concerns:** Code should be organized into distinct sections that each address a separate concern. If a component or function is responsible for too many different things, it should be refactored.
 
 ### Backend
 *   Follow the PEP 8 style guide for Python.

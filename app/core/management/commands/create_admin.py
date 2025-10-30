@@ -1,4 +1,5 @@
 import getpass
+
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
@@ -20,6 +21,7 @@ class Command(BaseCommand):
                 username=username,
                 role="admin",
             )
-            self.stdout.write(self.style.SUCCESS("Admin user created successfully."))
+            self.stdout.write(self.style.SUCCESS(
+                "Admin user created successfully."))
         else:
             self.stdout.write(self.style.WARNING("Admin user already exists."))
