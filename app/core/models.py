@@ -32,8 +32,7 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractUser):
-    username = models.CharField(
-        max_length=150, unique=True, null=True, blank=True)
+    username = models.CharField(max_length=150, unique=True, null=True, blank=True)
     email = models.EmailField(unique=True)
     role = models.CharField(
         max_length=10, choices=[("admin", "Admin"), ("user", "User")]
@@ -70,9 +69,7 @@ class JobPosting(models.Model):
 
 
 class Resume(models.Model):
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE
-    )
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     name = models.CharField(max_length=255, default="default_resume_name")
     file = models.FileField(upload_to="resumes/")
     uploaded_at = models.DateTimeField(auto_now_add=True)
@@ -82,10 +79,8 @@ class Resume(models.Model):
 
 
 class CoverLetter(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL,
-                             on_delete=models.CASCADE)
-    name = models.CharField(
-        max_length=255, default="default_cover_letter_name")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255, default="default_cover_letter_name")
     file = models.FileField(upload_to="cover_letters/")
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
@@ -118,8 +113,7 @@ class ScrapeHistory(models.Model):
 
 
 class UserJobInteraction(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL,
-                             on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     job_posting = models.ForeignKey(JobPosting, on_delete=models.CASCADE)
     hidden = models.BooleanField(default=False)
     pinned = models.BooleanField(default=False)
@@ -129,8 +123,7 @@ class UserJobInteraction(models.Model):
 
 
 class HiddenCompany(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL,
-                             on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
 
     class Meta:

@@ -37,7 +37,6 @@ def convert_json_to_work_arrangement(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("core", "0014_jobposting_details_updated_at"),
     ]

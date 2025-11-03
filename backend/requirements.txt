@@ -7,8 +7,6 @@ python-jose
 boto3
 requests
 cachetools
-transformers
-torch
 pytest
 httpx
 pytest-asyncio

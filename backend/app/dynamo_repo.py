@@ -124,8 +124,7 @@ class DynamoRepo:
 
     def get_job_posting(self, job_id: str):
         try:
-            response = self.table.get_item(
-                Key={"PK": f"JOB#{job_id}", "SK": "DETAILS"})
+            response = self.table.get_item(Key={"PK": f"JOB#{job_id}", "SK": "DETAILS"})
             return response.get("Item")
         except ClientError as e:
             print(e.response["Error"]["Message"])
@@ -157,8 +156,7 @@ class DynamoRepo:
                 key_conditions.append("begins_with(GSI2SK, :title)")
                 expr_attr_values[":title"] = f"JOBTITLE#{title}"
 
-            query_params["KeyConditionExpression"] = " AND ".join(
-                key_conditions)
+            query_params["KeyConditionExpression"] = " AND ".join(key_conditions)
             query_params["ExpressionAttributeValues"] = expr_attr_values
 
             response = self.table.query(**query_params)

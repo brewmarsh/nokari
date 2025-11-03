@@ -3,9 +3,17 @@ from rest_framework import serializers
 from rest_framework_simplejwt.exceptions import InvalidToken
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 
-from .models import (CoverLetter, HiddenCompany, JobPosting, Resume,
-                     ScrapableDomain, ScrapeHistory, ScrapeSchedule,
-                     SearchableJobTitle, UserJobInteraction)
+from .models import (
+    CoverLetter,
+    HiddenCompany,
+    JobPosting,
+    Resume,
+    ScrapableDomain,
+    ScrapeHistory,
+    ScrapeSchedule,
+    SearchableJobTitle,
+    UserJobInteraction,
+)
 
 User = get_user_model()
 

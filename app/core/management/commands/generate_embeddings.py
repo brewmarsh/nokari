@@ -23,9 +23,7 @@ class Command(BaseCommand):
                 )
                 continue
 
-            self.stdout.write(
-                f"Generating embedding for job: {job_posting.title}"
-            )
+            self.stdout.write(f"Generating embedding for job: {job_posting.title}")
             text = f"{job_posting.title} {job_posting.description}"
             inputs = tokenizer(
                 text, return_tensors="pt", truncation=True, max_length=512
@@ -36,10 +34,7 @@ class Command(BaseCommand):
             # Mean pooling
             embeddings = outputs.last_hidden_state
             mask = (
-                inputs["attention_mask"]
-                .unsqueeze(-1)
-                .expand(embeddings.size())
-                .float()
+                inputs["attention_mask"].unsqueeze(-1).expand(embeddings.size()).float()
             )
             masked_embeddings = embeddings * mask
             summed = torch.sum(masked_embeddings, 1)
@@ -47,14 +42,11 @@ class Command(BaseCommand):
             mean_pooled = summed / counted
 
             # Normalize
-            mean_pooled = torch.nn.functional.normalize(
-                mean_pooled, p=2, dim=1)
+            mean_pooled = torch.nn.functional.normalize(mean_pooled, p=2, dim=1)
 
             job_posting.embedding = mean_pooled.tolist()[0]
             job_posting.save()
 
         self.stdout.write(
-            self.style.SUCCESS(
-                "Successfully generated all job embeddings."
-            )
+            self.style.SUCCESS("Successfully generated all job embeddings.")
         )

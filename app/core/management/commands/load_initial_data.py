@@ -15,15 +15,11 @@ class Command(BaseCommand):
         for domain_name in data["domains"]:
             ScrapableDomain.objects.get_or_create(domain=domain_name)
             self.stdout.write(
-                self.style.SUCCESS(
-                    f'Successfully added domain "{domain_name}"'
-                )
+                self.style.SUCCESS(f'Successfully added domain "{domain_name}"')
             )
 
         for job_title in data["job_titles"]:
-            link = (
-                f"http://default.com/{job_title.replace(' ', '-').lower()}"
-            )
+            link = f"http://default.com/{job_title.replace(' ', '-').lower()}"
             JobPosting.objects.get_or_create(
                 link=link,
                 defaults={
@@ -33,7 +29,5 @@ class Command(BaseCommand):
                 },
             )
             self.stdout.write(
-                self.style.SUCCESS(
-                    f'Successfully added job title "{job_title}"'
-                )
+                self.style.SUCCESS(f'Successfully added job title "{job_title}"')
             )

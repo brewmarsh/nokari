@@ -8,7 +8,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -62,8 +61,7 @@ class Migration(migrations.Migration):
                         verbose_name="ID",
                     ),
                 ),
-                ("password", models.CharField(
-                    max_length=128, verbose_name="password")),
+                ("password", models.CharField(max_length=128, verbose_name="password")),
                 (
                     "last_login",
                     models.DateTimeField(
@@ -177,7 +175,8 @@ class Migration(migrations.Migration):
                 (
                     "name",
                     models.CharField(
-                        default="default_cover_letter_name", max_length=255  # noqa
+                        default="default_cover_letter_name",
+                        max_length=255,  # noqa
                     ),
                 ),
                 ("file", models.FileField(upload_to="cover_letters/")),
@@ -205,8 +204,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "name",
-                    models.CharField(
-                        default="default_resume_name", max_length=255),  # noqa
+                    models.CharField(default="default_resume_name", max_length=255),  # noqa
                 ),
                 ("file", models.FileField(upload_to="resumes/")),
                 ("uploaded_at", models.DateTimeField(auto_now_add=True)),

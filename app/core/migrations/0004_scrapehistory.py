@@ -6,7 +6,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("core", "0003_remove_jobposting_id_remove_jobposting_posting_date_and_more"),  # noqa
     ]
@@ -28,8 +27,7 @@ class Migration(migrations.Migration):
                 (
                     "status",
                     models.CharField(
-                        choices=[("success", "Success"),
-                                 ("failure", "Failure")],
+                        choices=[("success", "Success"), ("failure", "Failure")],
                         max_length=10,
                     ),
                 ),

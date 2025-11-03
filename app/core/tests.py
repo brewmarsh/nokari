@@ -9,14 +9,18 @@ from rest_framework.test import APITestCase
 
 from app.core.scraping_logic import ScraperException, scrape_jobs
 
-from .models import (HiddenCompany, JobPosting, ScrapableDomain,
-                     SearchableJobTitle, UserJobInteraction)
+from .models import (
+    HiddenCompany,
+    JobPosting,
+    ScrapableDomain,
+    SearchableJobTitle,
+    UserJobInteraction,
+)
 
 User = get_user_model()
 
 
 class HideJobPostingViewTest(APITestCase):
-
     def setUp(self):
         self.user = User.objects.create_user(
             email="test@example.com", password="password"
@@ -167,10 +171,8 @@ class SearchableJobTitleViewSetTest(APITestCase):
         self.user = User.objects.create_user(
             email="user@example.com", password="password"
         )
-        self.job_title1 = SearchableJobTitle.objects.create(
-            title="Software Engineer")
-        self.job_title2 = SearchableJobTitle.objects.create(
-            title="Product Manager")
+        self.job_title1 = SearchableJobTitle.objects.create(title="Software Engineer")
+        self.job_title2 = SearchableJobTitle.objects.create(title="Product Manager")
         ScrapableDomain.objects.create(domain="example.com")
 
     def test_list_job_titles_as_admin(self):
@@ -220,7 +222,6 @@ class ScrapeViewTest(APITestCase):
 
 
 class ScraperTests(TestCase):
-
     @patch("app.core.scraping_logic.requests.get")
     @patch("app.core.scraping_logic.build")
     def test_scrape_jobs_success(self, mock_build, mock_get):

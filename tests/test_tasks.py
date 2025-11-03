@@ -42,8 +42,7 @@ class TaskTestCase(TestCase):
         # Run the backfill task
         result = backfill_job_titles_task()
 
-        self.assertEqual(
-            result, "Backfill complete. Processed 4 jobs. Updated 3 jobs.")
+        self.assertEqual(result, "Backfill complete. Processed 4 jobs. Updated 3 jobs.")
 
         # Verify Case 1
         job1 = JobPosting.objects.get(link="http://example.com/1")

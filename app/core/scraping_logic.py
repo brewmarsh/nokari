@@ -32,8 +32,7 @@ def scrape_job_details(url):
         # Description
         # This is a generic attempt to get the main content.
         # A more robust solution would have parsers for specific site structures.
-        main_content = soup.find("main") or soup.find(
-            "article") or soup.find("body")
+        main_content = soup.find("main") or soup.find("article") or soup.find("body")
         if main_content:
             details["description"] = " ".join(main_content.get_text().split())
         else:
@@ -101,19 +100,16 @@ def scrape_jobs(query, domain, days=None):
                 locations.append({"type": "remote"})
             if is_hybrid:
                 locations.append(
-                    {"type": "hybrid",
-                        "location_string": location_string or ""}
+                    {"type": "hybrid", "location_string": location_string or ""}
                 )
             if is_onsite:
                 locations.append(
-                    {"type": "onsite",
-                        "location_string": location_string or ""}
+                    {"type": "onsite", "location_string": location_string or ""}
                 )
 
             if not locations:
                 locations.append(
-                    {"type": "onsite",
-                        "location_string": location_string or ""}
+                    {"type": "onsite", "location_string": location_string or ""}
                 )
 
             # Try to find a date in the metatags
@@ -150,8 +146,7 @@ def scrape_jobs(query, domain, days=None):
                         scraped_details.get("title") or job_data["title"]
                     )
                     job_data["description"] = (
-                        scraped_details.get(
-                            "description") or job_data["description"]
+                        scraped_details.get("description") or job_data["description"]
                     )
 
             jobs.append(job_data)
@@ -173,8 +168,7 @@ def scrape_and_save_jobs(query, domains, days=None):
     scraped_count = 0
     for domain_obj in domains:
         domain_name = (
-            domain_obj.domain if isinstance(
-                domain_obj, ScrapableDomain) else domain_obj
+            domain_obj.domain if isinstance(domain_obj, ScrapableDomain) else domain_obj
         )
         try:
             jobs = scrape_jobs(query, domain_name, days=days)

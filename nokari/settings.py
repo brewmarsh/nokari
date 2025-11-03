@@ -120,13 +120,13 @@ AUTH_PASSWORD_VALIDATORS = [
         ".UserAttributeSimilarityValidator",
     },
     {
-        "NAME": "django.contrib.auth.password_validation" ".MinimumLengthValidator",
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        "NAME": "django.contrib.auth.password_validation" ".CommonPasswordValidator",
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        "NAME": "django.contrib.auth.password_validation" ".NumericPasswordValidator",
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
@@ -159,7 +159,7 @@ SIMPLE_JWT = {
     "ROTATE_REFRESH_TOKENS": False,
     "TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers"
     ".TokenObtainPairSerializer",
-    "TOKEN_REFRESH_SERIALIZER": "app.core.serializers" ".CustomTokenRefreshSerializer",
+    "TOKEN_REFRESH_SERIALIZER": "app.core.serializers.CustomTokenRefreshSerializer",
 }
 
 # Default primary key field type

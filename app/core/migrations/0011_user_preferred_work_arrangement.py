@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("core", "0010_jobposting_days_in_office_jobposting_location_and_more"),  # noqa
     ]

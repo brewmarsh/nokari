@@ -5,8 +5,7 @@ from unittest.mock import MagicMock, patch
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "..")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
 
 @pytest.fixture
@@ -28,8 +27,7 @@ async def test_register_user_success(mock_cognito_repo: MagicMock):
 
     assert response.status_code == 201
     assert response.json() == {"message": "User registered successfully."}
-    mock_cognito_repo.sign_up.assert_called_once_with(
-        "test@example.com", "password123")
+    mock_cognito_repo.sign_up.assert_called_once_with("test@example.com", "password123")
 
 
 @pytest.mark.asyncio
@@ -66,14 +64,12 @@ async def test_login_user_success(mock_cognito_repo: MagicMock):
         "access": "test_access_token",
         "refresh": "test_refresh_token",
     }
-    mock_cognito_repo.sign_in.assert_called_once_with(
-        "test@example.com", "password123")
+    mock_cognito_repo.sign_in.assert_called_once_with("test@example.com", "password123")
 
 
 @pytest.mark.asyncio
 async def test_login_user_failure(mock_cognito_repo: MagicMock):
-    mock_cognito_repo.sign_in.side_effect = Exception(
-        "Incorrect username or password")
+    mock_cognito_repo.sign_in.side_effect = Exception("Incorrect username or password")
 
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"

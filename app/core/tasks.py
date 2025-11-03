@@ -5,8 +5,14 @@ from celery import shared_task
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 
-from .models import (JobPosting, Resume, ScrapableDomain, ScrapeHistory,
-                     ScrapeSchedule, SearchableJobTitle)
+from .models import (
+    JobPosting,
+    Resume,
+    ScrapableDomain,
+    ScrapeHistory,
+    ScrapeSchedule,
+    SearchableJobTitle,
+)
 from .scraping_logic import parse_job_title, scrape_job_details, scrape_jobs
 
 logger = logging.getLogger(__name__)
@@ -32,7 +38,7 @@ def scrape_and_save_jobs_task(domain_id):
         errors = []
 
         query_parts = [f'"{title.title}"' for title in job_titles]
-        query = f'({" OR ".join(query_parts)})'
+        query = f"({' OR '.join(query_parts)})"
 
         try:
             scraped_jobs = scrape_jobs(query=query, domain=domain.domain)
@@ -174,8 +180,7 @@ def analyze_resume_against_jobs(user_id):
     job_postings = JobPosting.objects.all()
     updated_postings = []
     for job in job_postings:
-        score = placeholder_match_resume(
-            resume_text, job.description)["scores"][0]
+        score = placeholder_match_resume(resume_text, job.description)["scores"][0]
         job.confidence_score = score
         updated_postings.append(job)
 

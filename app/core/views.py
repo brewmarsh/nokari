@@ -1,7 +1,7 @@
 import numpy as np
 from celery.result import AsyncResult
 from django.contrib.auth import get_user_model
-from django.db.models import (BooleanField, OuterRef, Q, Subquery, Value)
+from django.db.models import BooleanField, OuterRef, Q, Subquery, Value
 from django.db.models.functions import Coalesce
 from numpy.linalg import norm
 from rest_framework import generics, status, viewsets
@@ -10,18 +10,36 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import (CoverLetter, HiddenCompany, JobPosting, Resume,
-                     ScrapableDomain, ScrapeHistory, ScrapeSchedule,
-                     SearchableJobTitle, UserJobInteraction)
+from .models import (
+    CoverLetter,
+    HiddenCompany,
+    JobPosting,
+    Resume,
+    ScrapableDomain,
+    ScrapeHistory,
+    ScrapeSchedule,
+    SearchableJobTitle,
+    UserJobInteraction,
+)
 from .permissions import IsAdmin
-from .serializers import (AdminJobPostingSerializer, CoverLetterSerializer,
-                          HiddenCompanySerializer, JobPostingSerializer,
-                          ResumeSerializer, ScrapableDomainSerializer,
-                          ScrapeHistorySerializer, ScrapeScheduleSerializer,
-                          SearchableJobTitleSerializer,
-                          UserJobInteractionSerializer, UserSerializer)
-from .tasks import (analyze_resume_against_jobs, rescrape_job_details_task,
-                    scrape_and_save_jobs_task)
+from .serializers import (
+    AdminJobPostingSerializer,
+    CoverLetterSerializer,
+    HiddenCompanySerializer,
+    JobPostingSerializer,
+    ResumeSerializer,
+    ScrapableDomainSerializer,
+    ScrapeHistorySerializer,
+    ScrapeScheduleSerializer,
+    SearchableJobTitleSerializer,
+    UserJobInteractionSerializer,
+    UserSerializer,
+)
+from .tasks import (
+    analyze_resume_against_jobs,
+    rescrape_job_details_task,
+    scrape_and_save_jobs_task,
+)
 
 User = get_user_model()
 
@@ -53,8 +71,7 @@ class JobPostingView(generics.ListAPIView):
         ).values("pinned")
         queryset = JobPosting.objects.annotate(
             is_pinned=Coalesce(
-                Subquery(pinned_status, output_field=BooleanField()
-                         ), Value(False)
+                Subquery(pinned_status, output_field=BooleanField()), Value(False)
             )
         ).order_by("-is_pinned")
 
@@ -289,8 +306,7 @@ class AdminJobPostingViewSet(viewsets.ModelViewSet):
     API endpoint for admins to view and manage job postings.
     """
 
-    queryset = JobPosting.objects.all().order_by(
-        "-details_updated_at", "-posting_date")
+    queryset = JobPosting.objects.all().order_by("-details_updated_at", "-posting_date")
     serializer_class = AdminJobPostingSerializer
     permission_classes = [IsAdmin]
     lookup_field = "link"

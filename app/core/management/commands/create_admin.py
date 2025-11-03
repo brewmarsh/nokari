@@ -21,7 +21,6 @@ class Command(BaseCommand):
                 username=username,
                 role="admin",
             )
-            self.stdout.write(self.style.SUCCESS(
-                "Admin user created successfully."))
+            self.stdout.write(self.style.SUCCESS("Admin user created successfully."))
         else:
             self.stdout.write(self.style.WARNING("Admin user already exists."))

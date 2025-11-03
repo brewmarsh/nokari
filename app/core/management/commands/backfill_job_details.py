@@ -15,8 +15,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write(self.style.SUCCESS("Starting backfill process..."))
 
-        job_postings = JobPosting.objects.filter(
-            details_updated_at__isnull=True)
+        job_postings = JobPosting.objects.filter(details_updated_at__isnull=True)
         total_jobs = job_postings.count()
         updated_count = 0
         deleted_count = 0
@@ -25,13 +24,11 @@ class Command(BaseCommand):
         self.stdout.write(f"Found {total_jobs} jobs to process.")
 
         for i, job in enumerate(job_postings):
-            self.stdout.write(
-                f"Processing job {i + 1}/{total_jobs}: {job.link}")
+            self.stdout.write(f"Processing job {i + 1}/{total_jobs}: {job.link}")
 
             if not job.link:
                 self.stdout.write(
-                    self.style.WARNING(
-                        f"Skipping job with no link: {job.title}")
+                    self.style.WARNING(f"Skipping job with no link: {job.title}")
                 )
                 continue
 
@@ -50,8 +47,7 @@ class Command(BaseCommand):
                         updated_count += 1
                         self.stdout.write(
                             self.style.SUCCESS(
-                                "Successfully updated description for "
-                                f"job: {job.link}"
+                                f"Successfully updated description for job: {job.link}"
                             )
                         )
                     else:
@@ -60,16 +56,14 @@ class Command(BaseCommand):
             except Exception as e:
                 if "404" in str(e):
                     self.stdout.write(
-                        self.style.WARNING(
-                            f"Job not found (404), deleting: {job.link}")
+                        self.style.WARNING(f"Job not found (404), deleting: {job.link}")
                     )
                     job.delete()
                     deleted_count += 1
                 else:
                     self.stderr.write(
                         self.style.ERROR(
-                            "An unexpected error occurred for "
-                            f"job {job.link}: {e}"
+                            f"An unexpected error occurred for job {job.link}: {e}"
                         )
                     )
                     error_count += 1
