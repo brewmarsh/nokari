@@ -12,4 +12,3 @@ httpx
 pytest-asyncio
 PyJWT
 uvicorn
-torch
