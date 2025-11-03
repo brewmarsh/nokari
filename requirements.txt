@@ -176,7 +176,7 @@ pyproject-hooks==1.2.0
     #   pip-tools
 python-dateutil==2.9.0.post0
     # via celery
-python-json-logger==3.3.0
+python-json-logger==4.0.0
     # via -r requirements.in
 pyyaml==6.0.2
     # via
