@@ -4,6 +4,8 @@ psycopg2-binary
 beautifulsoup4
 requests
 transformers
+torch
+networkx<3.5
 djangorestframework
 djangorestframework-simplejwt==5.5.1
 django-cors-headers

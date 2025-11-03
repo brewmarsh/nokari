@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime, timezone
 
 from backend.app.dynamo_repo import DynamoRepo
 
@@ -20,8 +20,8 @@ def scrape_domain(domain: str):
             "location": "Remote",
             "description": "A scraped job opening.",
             "work_arrangement": "Remote",
-            "created_at": datetime.datetime.now(datetime.UTC).isoformat(),
-            "updated_at": datetime.datetime.now(datetime.UTC).isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
         },
         {
             "title": f"Product Manager at {domain.split('.')[0]}",
@@ -29,8 +29,8 @@ def scrape_domain(domain: str):
             "location": "New York, NY",
             "description": "Another scraped job opening.",
             "work_arrangement": "Hybrid",
-            "created_at": datetime.datetime.now(datetime.UTC).isoformat(),
-            "updated_at": datetime.datetime.now(datetime.UTC).isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
         },
     ]
 
