@@ -95,7 +95,7 @@ packaging==25.0
     #   huggingface-hub
     #   kombu
     #   transformers
-pip-tools==7.5.0
+pip-tools==7.5.1
     # via -r requirements.in
 prompt-toolkit==3.0.51
     # via click-repl
