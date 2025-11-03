@@ -214,6 +214,7 @@ class ScrapeViewTest(APITestCase):
     @override_settings(CELERY_TASK_ALWAYS_EAGER=False)
     @patch("app.core.views.scrape_and_save_jobs_task.delay")
     def test_scrape_view_starts_celery_task(self, mock_delay):
+        mock_delay.return_value = MagicMock(id="test_task_id")
         ScrapableDomain.objects.create(domain="example.com")
         url = reverse("scrape")
         response = self.client.post(url)
@@ -308,15 +309,10 @@ class FindSimilarJobsViewTest(APITestCase):
     @override_settings(CELERY_TASK_ALWAYS_EAGER=False)
     @patch("app.core.scraping_logic.requests.get")
     @patch("app.core.views.scrape_and_save_jobs_task.delay")
-    @patch("app.core.views.generate_embedding")
-    def test_find_similar_jobs_triggers_scraping(
-        self, mock_generate_embedding, mock_delay, mock_get
-    ):
+    def test_find_similar_jobs_triggers_scraping(self, mock_delay, mock_get):
         """
         Ensure the find-similar-jobs endpoint triggers a new scrape and returns similar jobs.
         """
-        # Mock the embedding generation for any new job
-        mock_generate_embedding.return_value = [0.5, 0.5, 0.5]
         mock_get.return_value.content = "<html><head><title>Test Job Page</title></head><body><p>Job description.</p></body></html>"
         mock_get.return_value.status_code = 200
 
