@@ -43,7 +43,7 @@ django==5.2.5
     #   django-cors-headers
     #   djangorestframework
     #   djangorestframework-simplejwt
-django-cors-headers==4.7.0
+django-cors-headers==4.9.0
     # via -r requirements.in
 djangorestframework==3.16.1
     # via
@@ -176,7 +176,6 @@ vine==5.1.0
 wcwidth==0.2.13
     # via prompt-toolkit
 wheel==0.45.1
-torch
     # via pip-tools
 
 # The following packages are considered to be unsafe in a requirements file:
