@@ -1,14 +1,22 @@
-from celery import shared_task
-from .models import JobPosting, ScrapableDomain, ScrapeHistory, SearchableJobTitle, Resume, ScrapeSchedule
-from .scraping_logic import scrape_jobs
-from .scraping_logic import scrape_job_details
-from .scraping_logic import parse_job_title
-from django.utils import timezone
 import datetime
-from django.contrib.auth import get_user_model
 import logging
 
+from celery import shared_task
+from django.contrib.auth import get_user_model
+from django.utils import timezone
+
+from .models import (
+    JobPosting,
+    Resume,
+    ScrapableDomain,
+    ScrapeHistory,
+    ScrapeSchedule,
+    SearchableJobTitle,
+)
+from .scraping_logic import parse_job_title, scrape_job_details, scrape_jobs
+
 logger = logging.getLogger(__name__)
+
 
 @shared_task
 def scrape_and_save_jobs_task(domain_id):
@@ -19,8 +27,10 @@ def scrape_and_save_jobs_task(domain_id):
         domain = ScrapableDomain.objects.get(id=domain_id)
         job_titles = SearchableJobTitle.objects.all()
         if not job_titles:
-            details = f"No searchable job titles found. Skipping scrape for {domain.domain}."
-            ScrapeHistory.objects.create(status='success', details=details)
+            details = (
+                f"No searchable job titles found. Skipping scrape for {domain.domain}."
+            )
+            ScrapeHistory.objects.create(status="success", details=details)
             return details
 
         total_jobs_found = 0
@@ -28,7 +38,7 @@ def scrape_and_save_jobs_task(domain_id):
         errors = []
 
         query_parts = [f'"{title.title}"' for title in job_titles]
-        query = f'({" OR ".join(query_parts)})'
+        query = f"({' OR '.join(query_parts)})"
 
         try:
             scraped_jobs = scrape_jobs(query=query, domain=domain.domain)
@@ -36,14 +46,14 @@ def scrape_and_save_jobs_task(domain_id):
 
             for job_data in scraped_jobs:
                 obj, created = JobPosting.objects.get_or_create(
-                    link=job_data['link'],
+                    link=job_data["link"],
                     defaults={
-                        'title': job_data['title'],
-                        'company': job_data['company'],
-                        'description': job_data['description'],
-                        'posting_date': job_data.get('posting_date'),
-                        'locations': job_data.get('locations', [])
-                    }
+                        "title": job_data["title"],
+                        "company": job_data["company"],
+                        "description": job_data["description"],
+                        "posting_date": job_data.get("posting_date"),
+                        "locations": job_data.get("locations", []),
+                    },
                 )
                 if created:
                     total_jobs_added += 1
@@ -54,24 +64,21 @@ def scrape_and_save_jobs_task(domain_id):
         if errors:
             details += f" Errors: {', '.join(errors)}"
         ScrapeHistory.objects.create(
-            status='success' if not errors else 'partial_failure',
+            status="success" if not errors else "partial_failure",
             jobs_found=total_jobs_found,
-            details=details
+            details=details,
         )
         return f"Scraping finished for {domain.domain}. Found: {total_jobs_found}, Added: {total_jobs_added}."
 
     except ScrapableDomain.DoesNotExist:
         ScrapeHistory.objects.create(
-            status='failure',
-            details=f"ScrapableDomain with id={domain_id} not found."
+            status="failure", details=f"ScrapableDomain with id={domain_id} not found."
         )
         return f"Error: ScrapableDomain with id={domain_id} not found."
     except Exception as e:
-        ScrapeHistory.objects.create(
-            status='failure',
-            details=str(e)
-        )
+        ScrapeHistory.objects.create(status="failure", details=str(e))
         return f"An unexpected error occurred: {str(e)}"
+
 
 @shared_task
 def backfill_job_titles_task():
@@ -85,9 +92,9 @@ def backfill_job_titles_task():
     for job in JobPosting.objects.all():
         parsed_data = parse_job_title(job.title)
 
-        cleaned_title = parsed_data['cleaned_title']
-        extracted_company = parsed_data['company']
-        extracted_work_types = parsed_data['work_types']
+        cleaned_title = parsed_data["cleaned_title"]
+        extracted_company = parsed_data["company"]
+        extracted_work_types = parsed_data["work_types"]
 
         updated = False
 
@@ -95,24 +102,28 @@ def backfill_job_titles_task():
             job.title = cleaned_title
             updated = True
 
-        if (not job.company or job.company.startswith('http')) and extracted_company:
+        if (not job.company or job.company.startswith("http")) and extracted_company:
             job.company = extracted_company
             updated = True
 
         if job.locations is None:
             job.locations = []
 
-        existing_work_types = {loc.get('type') for loc in job.locations if isinstance(loc, dict)}
+        existing_work_types = {
+            loc.get("type") for loc in job.locations if isinstance(loc, dict)
+        }
         for work_type in extracted_work_types:
             if work_type not in existing_work_types:
-                job.locations.append({'type': work_type})
+                job.locations.append({"type": work_type})
                 updated = True
 
         if updated:
             job.save()
             updated_count += 1
 
-    return f"Backfill complete. Processed {total_jobs} jobs. Updated {updated_count} jobs."
+    return (
+        f"Backfill complete. Processed {total_jobs} jobs. Updated {updated_count} jobs."
+    )
 
 
 @shared_task
@@ -134,9 +145,11 @@ def rescrape_job_details_task(job_posting_pk):
     except Exception as e:
         return f"An unexpected error occurred for job {job.link}: {e}"
 
+
 def placeholder_match_resume(resume_text, job_description):
     """A placeholder function to simulate resume matching."""
-    return {'scores': [0.5]}
+    return {"scores": [0.5]}
+
 
 @shared_task
 def analyze_resume_against_jobs(user_id):
@@ -147,7 +160,7 @@ def analyze_resume_against_jobs(user_id):
     User = get_user_model()
     try:
         user = User.objects.get(id=user_id)
-        resume = Resume.objects.filter(user=user).latest('uploaded_at')
+        resume = Resume.objects.filter(user=user).latest("uploaded_at")
     except User.DoesNotExist:
         logger.error(f"User with id {user_id} not found.")
         return
@@ -156,22 +169,27 @@ def analyze_resume_against_jobs(user_id):
         return
 
     try:
-        with open(resume.file.path, 'r') as f:
+        with open(resume.file.path, "r") as f:
             resume_text = f.read()
     except FileNotFoundError:
-        logger.error(f"Resume file not found for user {user_id} at path {resume.file.path}")
+        logger.error(
+            f"Resume file not found for user {user_id} at path {resume.file.path}"
+        )
         return
 
     job_postings = JobPosting.objects.all()
     updated_postings = []
     for job in job_postings:
-        score = placeholder_match_resume(resume_text, job.description)['scores'][0]
+        score = placeholder_match_resume(resume_text, job.description)["scores"][0]
         job.confidence_score = score
         updated_postings.append(job)
 
     if updated_postings:
-        JobPosting.objects.bulk_update(updated_postings, ['confidence_score'])
-        logger.info(f"Updated confidence scores for {len(updated_postings)} jobs against resume of user {user_id}.")
+        JobPosting.objects.bulk_update(updated_postings, ["confidence_score"])
+        logger.info(
+            f"Updated confidence scores for {len(updated_postings)} jobs against resume of user {user_id}."
+        )
+
 
 @shared_task
 def trigger_daily_scrape():

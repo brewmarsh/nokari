@@ -1,26 +1,26 @@
-from django.test import TestCase
 from django.contrib.auth import get_user_model
+from django.test import TestCase
 from rest_framework.test import APIClient
-from unittest.mock import patch
+
 from app.core.models import JobPosting
-import urllib.parse
 
 User = get_user_model()
+
 
 class APITestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.admin_user = User.objects.create_user(
-            username='admin',
-            email='admin@example.com',
-            password='password',
-            role='admin'
+            username="admin",
+            email="admin@example.com",
+            password="password",
+            role="admin",
         )
         self.job_posting = JobPosting.objects.create(
             title="Software Engineer",
             link="https://jobs.lever.co/calstart/123",
             company="Calstart",
-            description="A job."
+            description="A job.",
         )
 
     # TODO for next agent: This test is disabled due to a persistent 404 Not Found error.

@@ -1,15 +1,15 @@
-import sys
-import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-
-import pytest
-from unittest.mock import patch, MagicMock
 from backend.app import scraper
+from unittest.mock import patch
+import os
+import sys
 
-@patch('backend.app.scraper.DynamoRepo')
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+
+
+@patch("backend.app.scraper.DynamoRepo")
 def test_scraper_handler(MockDynamoRepo):
     mock_repo_instance = MockDynamoRepo.return_value
-    mock_repo_instance.put_job_posting.return_value = True # Simulate all jobs are new
+    mock_repo_instance.put_job_posting.return_value = True  # Simulate all jobs are new
 
     event = {}
     context = {}

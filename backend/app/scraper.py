@@ -1,9 +1,10 @@
-import uuid
 import datetime
+
 from backend.app.dynamo_repo import DynamoRepo
 
 # In a real application, this list would be fetched from a database or a config file.
 SCRAPABLE_DOMAINS = ["example.com/jobs", "another-example.com/careers"]
+
 
 def scrape_domain(domain: str):
     """
@@ -15,7 +16,7 @@ def scrape_domain(domain: str):
     return [
         {
             "title": f"Software Engineer at {domain.split('.')[0]}",
-            "company": domain.split('.')[0],
+            "company": domain.split(".")[0],
             "location": "Remote",
             "description": "A scraped job opening.",
             "work_arrangement": "Remote",
@@ -24,7 +25,7 @@ def scrape_domain(domain: str):
         },
         {
             "title": f"Product Manager at {domain.split('.')[0]}",
-            "company": domain.split('.')[0],
+            "company": domain.split(".")[0],
             "location": "New York, NY",
             "description": "Another scraped job opening.",
             "work_arrangement": "Hybrid",
@@ -32,6 +33,7 @@ def scrape_domain(domain: str):
             "updated_at": datetime.datetime.now(datetime.UTC).isoformat(),
         },
     ]
+
 
 def handler(event, context):
     """
@@ -45,7 +47,9 @@ def handler(event, context):
         for job_data in scraped_jobs:
             # We'll use a combination of the company and title to create a unique ID
             # to help with idempotency. In a real scenario, we might use the job's URL.
-            job_id = f"{job_data['company']}-{job_data['title']}".replace(" ", "-").lower()
+            job_id = f"{job_data['company']}-{job_data['title']}".replace(
+                " ", "-"
+            ).lower()
 
             was_added = dynamo_repo.put_job_posting(job_id, job_data)
             if was_added:
@@ -55,5 +59,5 @@ def handler(event, context):
     print(f"Scraping complete. Added {total_jobs_added} new jobs.")
     return {
         "statusCode": 200,
-        "body": f"Successfully added {total_jobs_added} new jobs."
+        "body": f"Successfully added {total_jobs_added} new jobs.",
     }

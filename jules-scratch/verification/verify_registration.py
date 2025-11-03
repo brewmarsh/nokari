@@ -1,5 +1,7 @@
 import time
-from playwright.sync_api import sync_playwright, expect
+
+from playwright.sync_api import expect, sync_playwright
+
 
 def run():
     with sync_playwright() as p:
@@ -16,7 +18,7 @@ def run():
             ),
         )
 
-        time.sleep(5) # Wait for servers to start
+        time.sleep(5)  # Wait for servers to start
         page.goto("http://localhost:30000/register")
 
         # Fill out the registration form
@@ -33,6 +35,7 @@ def run():
 
         page.screenshot(path="jules-scratch/verification/verification.png")
         browser.close()
+
 
 if __name__ == "__main__":
     run()

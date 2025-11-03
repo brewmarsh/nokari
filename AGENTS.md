@@ -23,11 +23,11 @@ This project consists of a Django backend and a React frontend.
 
 ### General
 *   Error handling should use centralized `try-catch` blocks and log to `console.error`.
+*   **Separation of Concerns:** Code should be organized into distinct sections that each address a separate concern. If a component or function is responsible for too many different things, it should be refactored.
 
 ### Backend
 *   Follow the PEP 8 style guide for Python.
-*   Use a linter like `flake8` or `pylint` to check for style issues.
-*   Run `black .` and `flake8 .` before submitting any changes to the backend.
+*   Use `ruff` for linting and formatting. Run `ruff format .` and `ruff check .` before submitting any changes.
 *   All public functions and classes must have comprehensive docstrings using the Google Python Style Guide format.
 *   All configuration data must be validated using `voluptuous` schemas.
 *   Define constants in `custom_components/meraki_ha/const.py`.

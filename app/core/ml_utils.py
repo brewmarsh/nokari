@@ -1,9 +1,10 @@
-from transformers import AutoTokenizer, AutoModel
 import torch
+from transformers import AutoModel, AutoTokenizer
 
 # Load model and tokenizer
-tokenizer = AutoTokenizer.from_pretrained('sentence-transformers/all-MiniLM-L6-v2')
-model = AutoModel.from_pretrained('sentence-transformers/all-MiniLM-L6-v2')
+tokenizer = AutoTokenizer.from_pretrained("sentence-transformers/all-MiniLM-L6-v2")
+model = AutoModel.from_pretrained("sentence-transformers/all-MiniLM-L6-v2")
+
 
 def generate_embedding(text):
     """
@@ -16,13 +17,13 @@ def generate_embedding(text):
     Returns:
         list: A list of floats representing the embedding.
     """
-    inputs = tokenizer(text, return_tensors='pt', truncation=True, max_length=512)
+    inputs = tokenizer(text, return_tensors="pt", truncation=True, max_length=512)
     with torch.no_grad():
         outputs = model(**inputs)
 
     # Mean pooling
     embeddings = outputs.last_hidden_state
-    mask = inputs['attention_mask'].unsqueeze(-1).expand(embeddings.size()).float()
+    mask = inputs["attention_mask"].unsqueeze(-1).expand(embeddings.size()).float()
     masked_embeddings = embeddings * mask
     summed = torch.sum(masked_embeddings, 1)
     counted = torch.clamp(mask.sum(1), min=1e-9)

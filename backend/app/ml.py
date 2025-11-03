@@ -1,15 +1,16 @@
 import string
 from typing import List
-from transformers import pipeline
+
 
 def extract_keywords(text: str) -> List[str]:
     """
     Extracts keywords from a given text.
     In a real implementation, this would use a proper keyword extraction model.
     """
-    translator = str.maketrans('', '', string.punctuation)
+    translator = str.maketrans("", "", string.punctuation)
     text = text.translate(translator)
     return [word for word in text.lower().split() if len(word) > 4]
+
 
 def calculate_string_similarity(text1: str, text2: str) -> float:
     """
@@ -21,6 +22,7 @@ def calculate_string_similarity(text1: str, text2: str) -> float:
     intersection = words1.intersection(words2)
     union = words1.union(words2)
     return len(intersection) / len(union) if union else 0.0
+
 
 def get_resume_confidence(job_description: str, resume_text: str) -> float:
     """

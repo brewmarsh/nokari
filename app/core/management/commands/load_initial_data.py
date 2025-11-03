@@ -1,6 +1,8 @@
 import json
+
 from django.core.management.base import BaseCommand
-from app.core.models import ScrapableDomain, JobPosting
+
+from app.core.models import JobPosting, ScrapableDomain
 
 
 class Command(BaseCommand):
@@ -17,8 +19,6 @@ class Command(BaseCommand):
             )
 
         for job_title in data["job_titles"]:
-            # Note: JobPosting requires a company, so we'll create dummy entries
-            # This can be adjusted based on more specific requirements
             link = f"http://default.com/{job_title.replace(' ', '-').lower()}"
             JobPosting.objects.get_or_create(
                 link=link,
