@@ -9,6 +9,8 @@ services:
       - "8000:8000"
     env_file:
       - ./.env
+    networks:
+      - nokari-net
   frontend:
     build:
       context: ./frontend
@@ -19,3 +21,9 @@ services:
       - "30000:80"
     depends_on:
       - backend
+    networks:
+      - nokari-net
+
+networks:
+  nokari-net:
+    driver: bridge
