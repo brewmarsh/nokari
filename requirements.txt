@@ -182,7 +182,7 @@ pyyaml==6.0.2
     # via
     #   huggingface-hub
     #   transformers
-redis==6.4.0
+redis==7.0.1
     # via -r requirements.in
 regex==2025.7.34
     # via transformers
