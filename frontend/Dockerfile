@@ -1,8 +1,9 @@
 # build environment
-FROM node:20-alpine as build
+FROM node:20.19.1-alpine as build
 WORKDIR /app
 COPY . .
 RUN npm ci
+RUN npm test
 RUN npm run build
 
 # production environment
