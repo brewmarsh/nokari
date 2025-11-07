@@ -8,7 +8,7 @@ services:
     restart: always
     env_file:
       - ./.env
-    command: ["./wait-for-it.sh", "db:5432", "--", "sh", "-c", "python manage.py migrate && gunicorn nokari.wsgi:application --bind 0.0.0.0:8000"]
+    command: ["sh", "-c", "python manage.py migrate && gunicorn nokari.wsgi:application --bind 0.0.0.0:8000"]
     depends_on:
       db:
         condition: service_healthy
