@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api_unauthenticated } from '../services/api';
+import ConnectionStatus from './ConnectionStatus';
+
+const version = process.env.APP_VERSION;
 
 const Login = ({ onLoginSuccess }) => {
   const [formData, setFormData] = useState({
@@ -31,6 +34,7 @@ const Login = ({ onLoginSuccess }) => {
   return (
     <div>
       <h1>Login</h1>
+      <ConnectionStatus />
       <form onSubmit={onSubmit}>
         <div>
           <input
@@ -54,6 +58,7 @@ const Login = ({ onLoginSuccess }) => {
         </div>
         <button type="submit">Login</button>
       </form>
+      <p>Version: {version}</p>
     </div>
   );
 };
