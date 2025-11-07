@@ -50,6 +50,11 @@ def read_root():
     return {"Hello": "World"}
 
 
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
+
+
 @app.post("/register/", status_code=status.HTTP_201_CREATED)
 def register(register_request: AuthRequest):
     try:
