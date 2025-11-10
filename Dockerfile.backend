@@ -8,7 +8,7 @@ WORKDIR /app
 COPY . /app
 
 # Copy the wait-for-it.sh script and make it executable
-COPY wait-for-it.sh /app/wait-for-it.sh
+COPY frontend/wait-for-it.sh /app/wait-for-it.sh
 RUN chmod +x /app/wait-for-it.sh
 
 # Install any needed packages specified in requirements.txt
@@ -22,7 +22,7 @@ RUN pip install torch --index-url https://download.pytorch.org/whl/cpu && \
 EXPOSE 8000
 
 # Define environment variable
-ENV NAME World
+ENV NAME=World
 
 # Run app.py when the container launches
 CMD ["sh", "-c", "python manage.py migrate && python manage.py load_initial_data && gunicorn nokari.wsgi:application --bind 0.0.0.0:8000"]
