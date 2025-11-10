@@ -1,7 +1,7 @@
 # build environment
 FROM node:20-alpine AS build
 WORKDIR /app
-COPY frontend/. .
+COPY . .
 RUN npm ci
 RUN npm test
 RUN npm run build
