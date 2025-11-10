@@ -1,7 +1,7 @@
 # build environment
-FROM node:20-alpine as build
+FROM node:20-alpine AS build
 WORKDIR /app
-COPY . .
+COPY frontend/. .
 RUN npm ci
 RUN npm test
 RUN npm run build
@@ -15,4 +15,4 @@ RUN chmod +x /app/wait-for-it.sh
 COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["/app/wait-for-it.sh", "backend:8000", "--", "nginx", "-g", "daemon off;"]
