@@ -26,6 +26,13 @@ if [ ! -f .env ]; then
     exit 1
 fi
 
+# Configure ALLOWED_HOSTS
+echo "Configuring ALLOWED_HOSTS..."
+# Remove existing DJANGO_ALLOWED_HOSTS line if it exists
+sed -i '/^DJANGO_ALLOWED_HOSTS=/d' .env
+# Add the new DJANGO_ALLOWED_HOSTS line, including localhost and the server's IP
+echo "DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,$VPS_HOST" >> .env
+
 # Log in to Docker Hub
 echo "Logging in to Docker Hub..."
 echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
