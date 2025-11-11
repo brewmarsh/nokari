@@ -26,6 +26,7 @@ from .views import (
     TaskStatusView,
     UserCountView,
     UserViewSet,
+    health_check,
 )
 
 router = DefaultRouter()
@@ -34,6 +35,7 @@ router.register(r"job-titles", SearchableJobTitleViewSet, basename="job-title")
 router.register(r"admin/jobs", AdminJobPostingViewSet, basename="admin-job")
 
 urlpatterns = [
+    path("health/", health_check, name="health_check"),
     path("api/", include(router.urls)),
     path("me/", MeView.as_view(), name="me"),
     path("register/", RegisterView.as_view(), name="register"),
