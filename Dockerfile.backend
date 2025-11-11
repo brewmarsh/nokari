@@ -7,9 +7,6 @@ WORKDIR /app
 # Copy the current directory contents into the container at /app
 COPY . /app
 
-# Copy the wait-for-it.sh script and make it executable
-COPY frontend/wait-for-it.sh /app/wait-for-it.sh
-RUN chmod +x /app/wait-for-it.sh
 
 # Install any needed packages specified in requirements.txt
 RUN pip install torch --index-url https://download.pytorch.org/whl/cpu && \
