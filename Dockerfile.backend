@@ -13,9 +13,9 @@ RUN chmod +x /app/wait-for-db.sh
 
 
 # Install any needed packages specified in requirements.txt
-RUN pip install torch --index-url https://download.pytorch.org/whl/cpu && \
-    apt-get update --allow-insecure-repositories && \
+RUN apt-get update && \
     apt-get install -y postgresql-client && \
+    pip install torch --index-url https://download.pytorch.org/whl/cpu && \
     pip install --no-cache-dir -r requirements.txt && \
     apt-get clean
 
