@@ -7,14 +7,15 @@ WORKDIR /app
 # Copy the current directory contents into the container at /app
 COPY . /app
 
-# Copy the wait-for-it.sh script and make it executable
-COPY frontend/wait-for-it.sh /app/wait-for-it.sh
-RUN chmod +x /app/wait-for-it.sh
+# Copy the wait-for-db.sh script and make it executable
+COPY wait-for-db.sh /app/wait-for-db.sh
+RUN chmod +x /app/wait-for-db.sh
+
 
 # Install any needed packages specified in requirements.txt
-RUN pip install torch --index-url https://download.pytorch.org/whl/cpu && \
-    apt-get update --allow-insecure-repositories && \
+RUN apt-get update && \
     apt-get install -y postgresql-client && \
+    pip install torch --index-url https://download.pytorch.org/whl/cpu && \
     pip install --no-cache-dir -r requirements.txt && \
     apt-get clean
 

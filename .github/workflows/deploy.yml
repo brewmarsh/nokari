@@ -107,4 +107,5 @@ jobs:
             export IMAGE_NAME_FRONTEND=${{ env.IMAGE_NAME_FRONTEND }}
             export IMAGE_TAG=${{ env.IMAGE_TAG }}
             export VPS_USERNAME=${{ secrets.VPS_USERNAME }}
+            export VPS_HOST=${{ secrets.VPS_HOST }}
             cd /home/${{ secrets.VPS_USERNAME }}/nokari-app && chmod +x deploy.sh && ./deploy.sh
