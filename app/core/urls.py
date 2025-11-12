@@ -59,9 +59,7 @@ urlpatterns = [
         CoverLetterDetailView.as_view(),
         name="cover_letter_detail",
     ),
-    path(
-        "api/generate-resume/", GenerateResumeView.as_view(), name="generate_resume"
-    ),
+    path("api/generate-resume/", GenerateResumeView.as_view(), name="generate_resume"),
     path(
         "api/generate-cover-letter/",
         GenerateCoverLetterView.as_view(),
