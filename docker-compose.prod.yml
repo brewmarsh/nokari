@@ -8,10 +8,8 @@ services:
     restart: always
     env_file:
       - ./.env
-    command: ["/app/wait-for-db.sh", "db", "sh", "-c", "python manage.py migrate && gunicorn nokari.wsgi:application --bind 0.0.0.0:8000"]
+    command: ["/app/wait-for-db.sh", "redis", "sh", "-c", "gunicorn nokari.wsgi:application --bind 0.0.0.0:8000"]
     depends_on:
-      db:
-        condition: service_healthy
       redis:
         condition: service_started
   celery:
@@ -21,7 +19,6 @@ services:
     env_file:
       - ./.env
     depends_on:
-      - db
       - redis
   celery-beat:
     image: ${DOCKERHUB_USERNAME}/${IMAGE_NAME_BACKEND}:${IMAGE_TAG}
@@ -30,7 +27,6 @@ services:
     env_file:
       - ./.env
     depends_on:
-      - db
       - redis
   frontend:
     image: ${DOCKERHUB_USERNAME}/${IMAGE_NAME_FRONTEND}:${IMAGE_TAG}
@@ -39,18 +35,6 @@ services:
       - "${WEB_APP_PORT:-3000}:80"
     depends_on:
       - backend
-  db:
-    image: postgres:14
-    restart: always
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
-    env_file:
-      - ./.env
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U nokari"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
 
 volumes:
-  postgres_data:
+  # postgres_data: # Removed postgres_data volume
