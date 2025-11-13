@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api_unauthenticated } from '../services/api';
 import ConnectionStatus from './ConnectionStatus';
+import { auth } from '../firebaseConfig';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 const version = process.env.APP_VERSION;
 
@@ -20,14 +21,13 @@ const Login = ({ onLoginSuccess }) => {
   const onSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await api_unauthenticated.post('/login/', { email, password });
-      localStorage.setItem('access_token', res.data.access);
-      localStorage.setItem('refresh_token', res.data.refresh);
+      await signInWithEmailAndPassword(auth, email, password);
       onLoginSuccess();
       navigate('/dashboard');
     } catch (err) {
       console.error(err);
       // Handle login error
+      alert(err.message); // Display Firebase error message
     }
   };
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import api from '../services/api';
 import DocumentUploadForm from './DocumentUploadForm.jsx';
+import { db, auth } from '../firebaseConfig';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 
 const Documents = () => {
   const [resumes, setResumes] = useState([]);
@@ -8,12 +9,23 @@ const Documents = () => {
   const [error, setError] = useState(null);
 
   const fetchDocuments = useCallback(async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      setError(new Error("User not authenticated."));
+      return;
+    }
+
     try {
-      const resumesRes = await api.get('/resumes/');
-      setResumes(resumesRes.data);
-      const coverLettersRes = await api.get('/cover-letters/');
-      setCoverLetters(coverLettersRes.data);
+      const resumesQuery = query(collection(db, "users", user.uid, "resumes"));
+      const resumesSnapshot = await getDocs(resumesQuery);
+      setResumes(resumesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+
+      const coverLettersQuery = query(collection(db, "users", user.uid, "cover_letters"));
+      const coverLettersSnapshot = await getDocs(coverLettersQuery);
+      setCoverLetters(coverLettersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+
     } catch (err) {
+      console.error("Error fetching documents:", err);
       setError(err);
     }
   }, []);

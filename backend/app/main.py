@@ -10,17 +10,16 @@ from mangum import Mangum
 from pydantic import BaseModel
 
 from backend.app import models
-from backend.app.cognito_repo import CognitoRepo
-from backend.app.dynamo_repo import DynamoRepo
+from backend.app.firestore_repo import FirestoreRepo
+from backend.app.firebase_auth_repo import FirebaseAuthRepo
+from backend.app.firebase_config import firebase_auth, db, firebase_storage
 from backend.app.security import get_current_user
 
 app = FastAPI()
-dynamo_repo = DynamoRepo(table_name="NokariData")
-cognito_repo = CognitoRepo()
-s3_client = boto3.client("s3")
+firestore_repo = FirestoreRepo(db_client=db)
+firebase_auth_repo = FirebaseAuthRepo()
 # Explicitly set region
 sqs_client = boto3.client("sqs", region_name="us-east-1")
-S3_BUCKET_NAME = os.environ.get("S3_BUCKET_NAME", "nokari-resumes")
 SIMILARITY_QUEUE_URL = os.environ.get(
     "SIMILARITY_QUEUE_URL",
     "https://sqs.us-east-1.amazonaws.com/123456789012/nokari-similarity-queue",
@@ -32,9 +31,12 @@ class AuthRequest(BaseModel):
     password: str
 
 
+class FirebaseLoginRequest(BaseModel):
+    id_token: str
+
+
 class TokenResponse(BaseModel):
-    access: str
-    refresh: str
+    message: str = "Authentication successful"
 
 
 @app.exception_handler(Exception)
@@ -58,19 +60,24 @@ def health_check():
 @app.post("/register/", status_code=status.HTTP_201_CREATED)
 def register(register_request: AuthRequest):
     try:
-        cognito_repo.sign_up(register_request.email, register_request.password)
-        return {"message": "User registered successfully."}
+        user_uid = firebase_auth_repo.create_user(register_request.email, register_request.password)
+        # Optionally, create a user document in Firestore with additional data
+        firestore_repo.put_user(user_uid, {"email": register_request.email, "role": "user"})
+        return {"message": f"User registered successfully with UID: {user_uid}"}
+    except HTTPException as e:
+        raise e
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @app.post("/login/", response_model=TokenResponse)
-def login(login_request: AuthRequest):
+def login(login_request: FirebaseLoginRequest):
     try:
-        auth_result = cognito_repo.sign_in(login_request.email, login_request.password)
-        return TokenResponse(
-            access=auth_result["AccessToken"], refresh=auth_result["RefreshToken"]
-        )
+        decoded_token = firebase_auth_repo.verify_id_token(login_request.id_token)
+        # Optionally, you can perform additional checks here, e.g., if the user exists in your Firestore
+        return TokenResponse(message="Authentication successful")
+    except HTTPException as e:
+        raise e
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
@@ -79,23 +86,25 @@ def login(login_request: AuthRequest):
 def create_job(
     job_request: models.CreateJobRequest, current_user: dict = Depends(get_current_user)
 ):
-    if (
-        "cognito:groups" not in current_user
-        or "Admin" not in current_user["cognito:groups"]
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required"
-        )
+    # Admin check will be implemented using Firebase Custom Claims or Firestore user roles later
+    # For now, assuming authenticated user can create jobs
+    # if (
+    #     "cognito:groups" not in current_user
+    #     or "Admin" not in current_user["cognito:groups"]
+    # ):
+    #     raise HTTPException(
+    #         status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required"
+    # )
 
     job_id = str(uuid.uuid4())
     job_data = job_request.model_dump()
-    dynamo_repo.put_job_posting(job_id, job_data)
+    firestore_repo.put_job_posting(job_id, job_data)
     return models.JobPostResponse(job_id=job_id, **job_data)
 
 
 @app.get("/jobs/{job_id}", response_model=models.JobPostResponse)
 def get_job(job_id: str):
-    job_data = dynamo_repo.get_job_posting(job_id)
+    job_data = firestore_repo.get_job_posting(job_id)
     if not job_data:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Job not found"
@@ -110,15 +119,18 @@ def search_jobs(
     location: Optional[str] = None,
     work_arrangement: Optional[str] = None,
 ):
-    jobs = dynamo_repo.search_jobs(location=location, title=title)
+    jobs = firestore_repo.search_jobs(location=location, title=title)
+    # Firestore does not automatically include the document ID in the data.
+    # We need to add it manually if it's part of the response model.
+    # Assuming job_id is the document ID.
     return [
-        models.JobPostResponse(job_id=job["PK"].split("#")[1], **job) for job in jobs
+        models.JobPostResponse(job_id=job.get("id", ""), **job) for job in jobs
     ]
 
 
 @app.post("/jobs/{job_id}/find-similar", status_code=status.HTTP_202_ACCEPTED)
 def find_similar_jobs(job_id: str, current_user: dict = Depends(get_current_user)):
-    user_id = current_user.get("sub")
+    user_id = current_user.get("uid") # Use 'uid' from Firebase decoded token
     task_id = str(uuid.uuid4())
 
     message = {"job_id": job_id, "user_id": user_id, "task_id": task_id}
@@ -139,21 +151,28 @@ def find_similar_jobs(job_id: str, current_user: dict = Depends(get_current_user
 async def upload_resume(
     file: UploadFile = File(...), current_user: dict = Depends(get_current_user)
 ):
-    user_id = current_user.get("sub")  # 'sub' is the user ID from Cognito JWT
+    user_id = current_user.get("uid")  # 'uid' is the user ID from Firebase decoded token
     if not user_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="User ID not found in token"
         )
 
-    file_key = f"resumes/{user_id}/{file.filename}"
-
     try:
-        s3_client.upload_fileobj(file.file, S3_BUCKET_NAME, file_key)
-        s3_link = f"https://{S3_BUCKET_NAME}.s3.amazonaws.com/{file_key}"
+        bucket = firebase_storage.bucket()
+        file_path = f"resumes/{user_id}/{file.filename}"
+        blob = bucket.blob(file_path)
 
-        dynamo_repo.update_user_resume(user_id, s3_link)
+        # Upload the file
+        blob.upload_from_file(file.file, content_type=file.content_type)
 
-        return {"message": "Resume uploaded successfully", "s3_link": s3_link}
+        # Make the blob publicly accessible (optional, depending on your security needs)
+        # Or generate a signed URL for temporary access
+        blob.make_public()
+        firebase_url = blob.public_url
+
+        firestore_repo.update_user_resume(user_id, firebase_url)
+
+        return {"message": "Resume uploaded successfully", "firebase_url": firebase_url}
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

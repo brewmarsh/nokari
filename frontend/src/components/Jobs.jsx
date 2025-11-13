@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import api from '../services/api';
 import './Jobs.css';
 import useDebounce from '../hooks/useDebounce.js';
+import { db, auth } from '../firebaseConfig';
+import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, setDoc } from 'firebase/firestore';
+import api from '../services/api'; // Keep api for find-similar for now
 
 import JobCard from './JobCard.jsx';
 import JobFilters from './JobFilters.jsx';
@@ -31,17 +33,30 @@ const Jobs = ({ preferences }) => {
   const fetchJobs = useCallback(async () => {
     setIsLoadingSimilar(false);
     setSimilarJobsTitle('');
+    setError(null); // Clear previous errors
     try {
-      const res = await api.get('/jobs/', {
-        params: {
-          title: debouncedTitle,
-          company: debouncedCompany,
-          search: debouncedSearch,
-          work_arrangement: preferences.join(','),
-        },
-      });
-      setJobs(res.data);
+      const jobsRef = collection(db, "job_postings");
+      let q = query(jobsRef);
+
+      if (debouncedTitle) {
+        q = query(q, where("title", "==", debouncedTitle));
+      }
+      if (debouncedCompany) {
+        q = query(q, where("company", "==", debouncedCompany));
+      }
+      // For 'search' and 'work_arrangement', Firestore has limitations for complex queries.
+      // For now, we'll handle simple filtering. More complex search might require a dedicated search service.
+      if (preferences && preferences.length > 0) {
+        // Assuming 'locations' field in job_postings is an array and 'preferences' can match
+        // This is a simplified approach. Real-world might need more complex logic.
+        q = query(q, where("locations", "array-contains-any", preferences));
+      }
+
+      const querySnapshot = await getDocs(q);
+      const fetchedJobs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setJobs(fetchedJobs);
     } catch (err) {
+      console.error("Error fetching jobs:", err);
       setError(err);
     }
   }, [debouncedTitle, debouncedCompany, debouncedSearch, preferences]);
@@ -54,29 +69,45 @@ const Jobs = ({ preferences }) => {
     return <div>Error: {error.message}</div>;
   }
 
-  const handleHide = useCallback(async (jobLink) => {
+  const handleHide = useCallback(async (jobId) => {
+    const user = auth.currentUser;
+    if (!user) return;
+
     try {
-      await api.post('/jobs/hide/', { job_posting_link: jobLink });
-      setJobs(jobs.filter((job) => job.link !== jobLink));
+      const userJobInteractionRef = doc(db, "users", user.uid, "job_interactions", jobId);
+      await setDoc(userJobInteractionRef, { hidden: true }, { merge: true });
+      setJobs(jobs.filter((job) => job.id !== jobId));
     } catch (err) {
+      console.error("Error hiding job:", err);
       setError(err);
     }
   }, [jobs]);
 
   const handleHideCompany = useCallback(async (companyName) => {
+    const user = auth.currentUser;
+    if (!user) return;
+
     try {
-      await api.post('/companies/hide/', { name: companyName });
+      const hiddenCompanyRef = doc(db, "users", user.uid, "hidden_companies", companyName);
+      await setDoc(hiddenCompanyRef, { name: companyName });
       setJobs(jobs.filter((job) => job.company !== companyName));
     } catch (err) {
+      console.error("Error hiding company:", err);
       setError(err);
     }
   }, [jobs]);
 
-  const handlePin = useCallback(async (jobLink, isPinned) => {
+  const handlePin = useCallback(async (jobId, isPinned) => {
+    const user = auth.currentUser;
+    if (!user) return;
+
     try {
-      await api.post('/jobs/pin/', { job_posting_link: jobLink, pinned: !isPinned });
+      const userJobInteractionRef = doc(db, "users", user.uid, "job_interactions", jobId);
+      await setDoc(userJobInteractionRef, { pinned: !isPinned }, { merge: true });
+      // Re-fetch jobs to update the pinned status in the UI
       fetchJobs();
     } catch (err) {
+      console.error("Error pinning job:", err);
       setError(err);
     }
   }, [fetchJobs]);
@@ -86,14 +117,21 @@ const Jobs = ({ preferences }) => {
     setSimilarJobsTitle(job.title);
     setOpenMenu(null);
     try {
+      // This still calls the backend API as similarity search is a backend operation
       const res = await api.post('/jobs/find-similar/', { link: job.link });
-      setJobs(res.data);
+      // The response from backend should ideally trigger a Firestore update
+      // or provide a task_id to poll Firestore for results.
+      // For now, we'll assume the backend will handle populating Firestore
+      // and we might need to fetch from Firestore based on task_id.
+      // For simplicity, we'll just re-fetch all jobs for now.
+      fetchJobs();
     } catch (err) {
+      console.error("Error finding similar jobs:", err);
       setError(err);
     } finally {
       setIsLoadingSimilar(false);
     }
-  }, []);
+  }, [fetchJobs]);
 
   return (
     <div>
@@ -125,7 +163,7 @@ const Jobs = ({ preferences }) => {
           <div className="jobs-container">
             {jobs.map((job) => (
               <JobCard
-                key={job.link}
+                key={job.id} // Use job.id from Firestore
                 job={job}
                 openMenu={openMenu}
                 setOpenMenu={setOpenMenu}

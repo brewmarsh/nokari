@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import api from '../services/api';
 import Jobs from './Jobs.jsx';
 import './Dashboard.css';
+import { db } from '../firebaseConfig';
+import { doc, updateDoc } from 'firebase/firestore';
 
 const WorkArrangementFilter = ({ preferences, onPreferenceChange }) => {
     const options = ['remote', 'hybrid', 'onsite', 'unspecified'];
@@ -40,7 +41,8 @@ const Dashboard = ({ user }) => {
     const handlePreferenceChange = async (newPreferences) => {
         setPreferences(newPreferences);
         try {
-            await api.patch('/me/', { preferred_work_arrangement: newPreferences });
+            const userDocRef = doc(db, "users", user.uid);
+            await updateDoc(userDocRef, { preferred_work_arrangement: newPreferences });
         } catch (err) {
             console.error("Failed to save preferences:", err);
         }

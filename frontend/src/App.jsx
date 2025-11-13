@@ -10,8 +10,10 @@ import Settings from './components/Settings.jsx';
 import Admin from './components/Admin.jsx';
 import AdminJobs from './components/AdminJobs.jsx';
 import UserProfileIcon from './components/UserProfileIcon.jsx';
-import api from './services/api';
 import './App.css';
+import { auth, db } from './firebaseConfig';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 
 const AppRoutes = memo(({ user, onOnboardingSuccess, onLoginSuccess, handleLogout }) => {
   const [isDropdownOpen, setDropdownOpen] = useState(false);
@@ -100,36 +102,56 @@ function App() {
   const [user, setUser] = useState(undefined);
   const navigate = useNavigate();
 
-  const fetchUser = useCallback(async () => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      try {
-        const res = await api.get('/me/');
-        setUser(res.data);
-      } catch (err) {
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        // User is signed in, see if we have additional data in Firestore
+        const userDocRef = doc(db, "users", firebaseUser.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists()) {
+          setUser({ ...firebaseUser, ...userDoc.data() });
+        } else {
+          setUser(firebaseUser);
+        }
+      } else {
+        // User is signed out
         setUser(null);
       }
-    } else {
-      setUser(null);
-    }
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  const handleLogout = useCallback(() => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    setUser(null);
-    navigate('/login');
+  const handleLogout = useCallback(async () => {
+    try {
+      await signOut(auth);
+      setUser(null);
+      navigate('/login');
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
   }, [navigate]);
 
-  useEffect(() => {
-    fetchUser();
-  }, [fetchUser]);
+  // Placeholder for onOnboardingSuccess and onLoginSuccess
+  // These functions might need to be updated based on how they are used in Login/Onboarding components
+  const onOnboardingSuccess = useCallback(() => {
+    // After onboarding, the user should already be logged in via Firebase
+    // The onAuthStateChanged listener will pick up the user
+    navigate('/dashboard');
+  }, [navigate]);
+
+  const onLoginSuccess = useCallback(() => {
+    // After login, the user should already be logged in via Firebase
+    // The onAuthStateChanged listener will pick up the user
+    navigate('/dashboard');
+  }, [navigate]);
+
 
   return (
     <AppRoutes
       user={user}
-      onOnboardingSuccess={fetchUser}
-      onLoginSuccess={fetchUser}
+      onOnboardingSuccess={onOnboardingSuccess}
+      onLoginSuccess={onLoginSuccess}
       handleLogout={handleLogout}
     />
   );

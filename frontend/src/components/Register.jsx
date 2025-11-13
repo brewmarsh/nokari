@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api_unauthenticated } from '../services/api';
+import { auth } from '../firebaseConfig';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -21,23 +22,11 @@ const Register = () => {
       alert('Passwords do not match');
     } else {
       try {
-        await api_unauthenticated.post('/register/', {
-          email,
-          password,
-        });
+        await createUserWithEmailAndPassword(auth, email, password);
         navigate('/login');
       } catch (err) {
-        if (err.response) {
-          // The request was made and the server responded with a status code
-          // that falls out of the range of 2xx
-          alert('Registration failed: ' + (err.response ? JSON.stringify(err.response.data, null, 2) : err.message));
-        } else if (err.request) {
-          // The request was made but no response was received
-          alert('Registration failed: No response from server.');
-        } else {
-          // Something happened in setting up the request that triggered an Error
-          alert('Registration failed: ' + err.message);
-        }
+        console.error(err);
+        alert('Registration failed: ' + err.message); // Display Firebase error message
       }
     }
   };

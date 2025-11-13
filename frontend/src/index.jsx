@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import './index.css';
 import App from './App.jsx';
 import reportWebVitals from './reportWebVitals';
+import './firebaseConfig'; // Import to initialize Firebase
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
