@@ -1,22 +1,50 @@
-from backend.app.main import app
-from httpx import ASGITransport, AsyncClient
+import os
+import json
+import sys
 import pytest
 from unittest.mock import MagicMock, patch
-import os
-import sys
+
+# Set a dummy environment variable to satisfy the check in firebase_config.py
+os.environ['FIREBASE_CREDENTIALS_JSON'] = json.dumps({
+    "type": "service_account",
+    "project_id": "dummy",
+    "private_key_id": "dummy",
+    "private_key": "dummy",
+    "client_email": "dummy",
+    "client_id": "dummy",
+    "auth_uri": "dummy",
+    "token_uri": "dummy",
+    "auth_provider_x509_cert_url": "dummy",
+    "client_x509_cert_url": "dummy"
+})
+
+# Mock the entire firebase_admin module to prevent it from trying to initialize.
+sys.modules['firebase_admin'] = MagicMock()
+sys.modules['firebase_admin.credentials'] = MagicMock()
+sys.modules['firebase_admin.firestore'] = MagicMock()
+sys.modules['firebase_admin.storage'] = MagicMock()
+sys.modules['firebase_admin.auth'] = MagicMock()
+
+# Now it's safe to import the app
+from backend.app.main import app
+from httpx import ASGITransport, AsyncClient
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
-
 @pytest.fixture
-def mock_cognito_repo():
-    with patch("backend.app.main.cognito_repo", autospec=True) as mock_repo:
+def mock_auth_repo():
+    with patch("backend.app.main.firebase_auth_repo", autospec=True) as mock_repo:
         yield mock_repo
 
+@pytest.fixture
+def mock_firestore_repo():
+    with patch("backend.app.main.firestore_repo", autospec=True) as mock_repo:
+        yield mock_repo
 
 @pytest.mark.asyncio
-async def test_register_user_success(mock_cognito_repo: MagicMock):
-    mock_cognito_repo.sign_up.return_value = True
+async def test_register_user_success(mock_auth_repo: MagicMock, mock_firestore_repo: MagicMock):
+    mock_auth_repo.create_user.return_value = "some_uid"
+    mock_firestore_repo.put_user.return_value = None
 
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
@@ -26,13 +54,13 @@ async def test_register_user_success(mock_cognito_repo: MagicMock):
         )
 
     assert response.status_code == 201
-    assert response.json() == {"message": "User registered successfully."}
-    mock_cognito_repo.sign_up.assert_called_once_with("test@example.com", "password123")
-
+    assert "User registered successfully" in response.json()["message"]
+    mock_auth_repo.create_user.assert_called_once_with("test@example.com", "password123")
+    mock_firestore_repo.put_user.assert_called_once_with("some_uid", {"email": "test@example.com", "role": "user"})
 
 @pytest.mark.asyncio
-async def test_register_user_failure(mock_cognito_repo: MagicMock):
-    mock_cognito_repo.sign_up.side_effect = Exception("User already exists")
+async def test_register_user_failure(mock_auth_repo: MagicMock, mock_firestore_repo: MagicMock):
+    mock_auth_repo.create_user.side_effect = Exception("User already exists")
 
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
@@ -43,40 +71,33 @@ async def test_register_user_failure(mock_cognito_repo: MagicMock):
 
     assert response.status_code == 400
     assert "User already exists" in response.json()["detail"]
-
+    mock_firestore_repo.put_user.assert_not_called()
 
 @pytest.mark.asyncio
-async def test_login_user_success(mock_cognito_repo: MagicMock):
-    mock_cognito_repo.sign_in.return_value = {
-        "AccessToken": "test_access_token",
-        "RefreshToken": "test_refresh_token",
-    }
+async def test_login_user_success(mock_auth_repo: MagicMock):
+    mock_auth_repo.verify_id_token.return_value = {"uid": "some_uid"}
 
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
         response = await ac.post(
-            "/login/", json={"email": "test@example.com", "password": "password123"}
+            "/login/", json={"id_token": "some_id_token"}
         )
 
     assert response.status_code == 200
-    assert response.json() == {
-        "access": "test_access_token",
-        "refresh": "test_refresh_token",
-    }
-    mock_cognito_repo.sign_in.assert_called_once_with("test@example.com", "password123")
-
+    assert response.json() == {"message": "Authentication successful"}
+    mock_auth_repo.verify_id_token.assert_called_once_with("some_id_token")
 
 @pytest.mark.asyncio
-async def test_login_user_failure(mock_cognito_repo: MagicMock):
-    mock_cognito_repo.sign_in.side_effect = Exception("Incorrect username or password")
+async def test_login_user_failure(mock_auth_repo: MagicMock):
+    mock_auth_repo.verify_id_token.side_effect = Exception("Invalid ID token")
 
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
         response = await ac.post(
-            "/login/", json={"email": "test@example.com", "password": "wrongpassword"}
+            "/login/", json={"id_token": "invalid_id_token"}
         )
 
     assert response.status_code == 401
-    assert "Incorrect username or password" in response.json()["detail"]
+    assert "Invalid ID token" in response.json()["detail"]
