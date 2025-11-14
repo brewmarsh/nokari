@@ -4,7 +4,7 @@ import os
 import json
 
 # Load Firebase Service Account Key from environment variable
-firebase_credentials_json = os.environ.get('FIREBASE_CREDENTIALS_JSON')
+firebase_credentials_json = os.environ.get("FIREBASE_CREDENTIALS_JSON")
 if not firebase_credentials_json:
     raise ValueError("FIREBASE_CREDENTIALS_JSON environment variable not set.")
 
@@ -17,8 +17,10 @@ try:
 
     # In some shell environments, newlines in the private key might get replaced
     # with literal '\n'. Let's fix that.
-    if 'private_key' in FIREBASE_SERVICE_ACCOUNT_KEY:
-        FIREBASE_SERVICE_ACCOUNT_KEY['private_key'] = FIREBASE_SERVICE_ACCOUNT_KEY['private_key'].replace('\\n', '\n')
+    if "private_key" in FIREBASE_SERVICE_ACCOUNT_KEY:
+        FIREBASE_SERVICE_ACCOUNT_KEY["private_key"] = FIREBASE_SERVICE_ACCOUNT_KEY[
+            "private_key"
+        ].replace("\\n", "\n")
 
 except json.JSONDecodeError as e:
     raise ValueError(f"Could not decode FIREBASE_CREDENTIALS_JSON: {e}")
@@ -26,7 +28,10 @@ except json.JSONDecodeError as e:
 # Initialize Firebase Admin SDK
 try:
     cred = credentials.Certificate(FIREBASE_SERVICE_ACCOUNT_KEY)
-    firebase_admin.initialize_app(cred, {'storageBucket': f"{FIREBASE_SERVICE_ACCOUNT_KEY['project_id']}.appspot.com"})
+    firebase_admin.initialize_app(
+        cred,
+        {"storageBucket": f"{FIREBASE_SERVICE_ACCOUNT_KEY['project_id']}.appspot.com"},
+    )
     print("Firebase Admin SDK initialized successfully.")
 except ValueError as e:
     print(f"Error initializing Firebase Admin SDK: {e}")

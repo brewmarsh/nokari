@@ -60,9 +60,13 @@ def health_check():
 @app.post("/register/", status_code=status.HTTP_201_CREATED)
 def register(register_request: AuthRequest):
     try:
-        user_uid = firebase_auth_repo.create_user(register_request.email, register_request.password)
+        user_uid = firebase_auth_repo.create_user(
+            register_request.email, register_request.password
+        )
         # Optionally, create a user document in Firestore with additional data
-        firestore_repo.put_user(user_uid, {"email": register_request.email, "role": "user"})
+        firestore_repo.put_user(
+            user_uid, {"email": register_request.email, "role": "user"}
+        )
         return {"message": f"User registered successfully with UID: {user_uid}"}
     except HTTPException as e:
         raise e
@@ -123,14 +127,12 @@ def search_jobs(
     # Firestore does not automatically include the document ID in the data.
     # We need to add it manually if it's part of the response model.
     # Assuming job_id is the document ID.
-    return [
-        models.JobPostResponse(job_id=job.get("id", ""), **job) for job in jobs
-    ]
+    return [models.JobPostResponse(job_id=job.get("id", ""), **job) for job in jobs]
 
 
 @app.post("/jobs/{job_id}/find-similar", status_code=status.HTTP_202_ACCEPTED)
 def find_similar_jobs(job_id: str, current_user: dict = Depends(get_current_user)):
-    user_id = current_user.get("uid") # Use 'uid' from Firebase decoded token
+    user_id = current_user.get("uid")  # Use 'uid' from Firebase decoded token
     task_id = str(uuid.uuid4())
 
     message = {"job_id": job_id, "user_id": user_id, "task_id": task_id}
@@ -151,7 +153,9 @@ def find_similar_jobs(job_id: str, current_user: dict = Depends(get_current_user
 async def upload_resume(
     file: UploadFile = File(...), current_user: dict = Depends(get_current_user)
 ):
-    user_id = current_user.get("uid")  # 'uid' is the user ID from Firebase decoded token
+    user_id = current_user.get(
+        "uid"
+    )  # 'uid' is the user ID from Firebase decoded token
     if not user_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="User ID not found in token"
