@@ -26,8 +26,8 @@ sys.modules['firebase_admin.storage'] = MagicMock()
 sys.modules['firebase_admin.auth'] = MagicMock()
 
 # Now it's safe to import the app
-from backend.app.main import app
-from httpx import ASGITransport, AsyncClient
+from backend.app.main import app  # noqa: E402
+from httpx import ASGITransport, AsyncClient  # noqa: E402
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
@@ -78,7 +78,7 @@ async def test_login_user_success(mock_auth_repo: MagicMock):
     mock_auth_repo.verify_id_token.return_value = {"uid": "some_uid"}
 
     async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
+        transport=ASGITransport(app=app), base_ul="http://test"
     ) as ac:
         response = await ac.post(
             "/login/", json={"id_token": "some_id_token"}
