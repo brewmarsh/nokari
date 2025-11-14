@@ -93,7 +93,7 @@ async def test_login_user_success(mock_auth_repo: MagicMock):
     mock_auth_repo.verify_id_token.return_value = {"uid": "some_uid"}
 
     async with AsyncClient(
-        transport=ASGITransport(app=app), base_ul="http://test"
+        transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
         response = await ac.post("/login/", json={"id_token": "some_id_token"})
 
