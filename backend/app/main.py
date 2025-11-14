@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from backend.app import models
 from backend.app.firestore_repo import FirestoreRepo
 from backend.app.firebase_auth_repo import FirebaseAuthRepo
-from backend.app.firebase_config import firebase_auth, db, firebase_storage
+from backend.app.firebase_config import db, firebase_storage
 from backend.app.security import get_current_user
 
 app = FastAPI()
@@ -73,7 +73,7 @@ def register(register_request: AuthRequest):
 @app.post("/login/", response_model=TokenResponse)
 def login(login_request: FirebaseLoginRequest):
     try:
-        decoded_token = firebase_auth_repo.verify_id_token(login_request.id_token)
+        firebase_auth_repo.verify_id_token(login_request.id_token)
         # Optionally, you can perform additional checks here, e.g., if the user exists in your Firestore
         return TokenResponse(message="Authentication successful")
     except HTTPException as e:

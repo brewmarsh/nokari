@@ -1,10 +1,8 @@
 from typing import Any, Dict, List, Optional
 
-from firebase_admin import firestore
 from firebase_admin.firestore import Client
 from fastapi import HTTPException, status
 
-from backend.app.firebase_config import db
 
 
 class FirestoreRepo:
