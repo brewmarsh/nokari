@@ -22,4 +22,3 @@ async def get_current_user(id_token: str = Depends(oauth2_scheme)) -> Dict:
             detail=f"Invalid authentication credentials: {e}",
             headers={"WWW-Authenticate": "Bearer"},
         )
-

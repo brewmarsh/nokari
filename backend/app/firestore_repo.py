@@ -4,7 +4,6 @@ from firebase_admin.firestore import Client
 from fastapi import HTTPException, status
 
 
-
 class FirestoreRepo:
     """
     A repository for interacting with the Firestore database.
