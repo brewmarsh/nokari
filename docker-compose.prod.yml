@@ -35,6 +35,3 @@ services:
       - "${WEB_APP_PORT:-3000}:80"
     depends_on:
       - backend
-
-volumes:
-  # postgres_data: # Removed postgres_data volume
