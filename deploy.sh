@@ -44,7 +44,7 @@ docker pull "$DOCKERHUB_USERNAME/$IMAGE_NAME_FRONTEND:$IMAGE_TAG"
 
 # Stop the current services and start the new ones
 echo "Stopping and restarting services..."
-docker-compose -f docker-compose.prod.yml down
+docker-compose -f docker-compose.prod.yml down --remove-orphans
 docker-compose -f docker-compose.prod.yml up -d
 
 # Clean up unused images
