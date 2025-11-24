@@ -212,7 +212,7 @@ tqdm==4.67.1
     # via
     #   huggingface-hub
     #   transformers
-transformers==4.57.1
+transformers==4.57.2
     # via -r requirements.in
 triton==3.5.1
     # via torch
