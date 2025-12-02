@@ -1,16 +1,23 @@
 services:
   db:
+    container_name: nokari-db
     image: postgres:15-alpine
     restart: always
     volumes:
       - postgres_data:/var/lib/postgresql/data
     env_file:
       - ./.env
+    networks:
+      - nokari-prod-net
   redis:
+    container_name: nokari-redis
     image: "redis:7-alpine"
     ports:
       - "6379:6379"
+    networks:
+      - nokari-prod-net
   backend:
+    container_name: nokari-backend
     image: ${DOCKERHUB_USERNAME}/${IMAGE_NAME_BACKEND}:${IMAGE_TAG}
     restart: always
     env_file:
@@ -21,7 +28,10 @@ services:
         condition: service_started
       db:
         condition: service_started
+    networks:
+      - nokari-prod-net
   celery:
+    container_name: nokari-worker
     image: ${DOCKERHUB_USERNAME}/${IMAGE_NAME_BACKEND}:${IMAGE_TAG}
     restart: always
     command: celery -A nokari worker -l info
@@ -30,7 +40,10 @@ services:
     depends_on:
       - redis
       - db
+    networks:
+      - nokari-prod-net
   celery-beat:
+    container_name: nokari-beat
     image: ${DOCKERHUB_USERNAME}/${IMAGE_NAME_BACKEND}:${IMAGE_TAG}
     restart: always
     command: celery -A nokari beat -l info
@@ -39,13 +52,22 @@ services:
     depends_on:
       - redis
       - db
+    networks:
+      - nokari-prod-net
   frontend:
+    container_name: nokari-frontend
     image: ${DOCKERHUB_USERNAME}/${IMAGE_NAME_FRONTEND}:${IMAGE_TAG}
     restart: always
     ports:
       - "${WEB_APP_PORT:-3000}:80"
     depends_on:
       - backend
+    networks:
+      - nokari-prod-net
 
 volumes:
   postgres_data:
+
+networks:
+  nokari-prod-net:
+    driver: bridge

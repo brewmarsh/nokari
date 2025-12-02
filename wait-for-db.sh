@@ -5,7 +5,7 @@ set -e
 
 host="$1"
 shift
-until pg_isready -h "$host" -p 5432 -U "nokari"; do
+until pg_isready -h "$host" -p 5432 -U "${POSTGRES_USER:-nokari}"; do
   >&2 echo "Postgres is unavailable - sleeping"
   sleep 1
 done
