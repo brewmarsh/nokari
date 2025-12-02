@@ -1,4 +1,11 @@
 services:
+  db:
+    image: postgres:15-alpine
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    env_file:
+      - ./.env
   redis:
     image: "redis:7-alpine"
     ports:
@@ -8,9 +15,11 @@ services:
     restart: always
     env_file:
       - ./.env
-    command: ["/app/wait-for-db.sh", "redis", "sh", "-c", "gunicorn nokari.wsgi:application --bind 0.0.0.0:8000"]
+    command: ["/app/wait-for-db.sh", "db", "sh", "-c", "gunicorn nokari.wsgi:application --bind 0.0.0.0:8000"]
     depends_on:
       redis:
+        condition: service_started
+      db:
         condition: service_started
   celery:
     image: ${DOCKERHUB_USERNAME}/${IMAGE_NAME_BACKEND}:${IMAGE_TAG}
@@ -20,6 +29,7 @@ services:
       - ./.env
     depends_on:
       - redis
+      - db
   celery-beat:
     image: ${DOCKERHUB_USERNAME}/${IMAGE_NAME_BACKEND}:${IMAGE_TAG}
     restart: always
@@ -28,6 +38,7 @@ services:
       - ./.env
     depends_on:
       - redis
+      - db
   frontend:
     image: ${DOCKERHUB_USERNAME}/${IMAGE_NAME_FRONTEND}:${IMAGE_TAG}
     restart: always
@@ -35,3 +46,6 @@ services:
       - "${WEB_APP_PORT:-3000}:80"
     depends_on:
       - backend
+
+volumes:
+  postgres_data:

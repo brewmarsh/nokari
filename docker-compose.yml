@@ -19,7 +19,6 @@ services:
       - ./frontend:/app
     ports:
       - "30000:80"
-    command: ["/app/wait-for-it.sh", "backend:8000", "--", "nginx", "-g", "daemon off;"]
     depends_on:
       - backend
     networks:

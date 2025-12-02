@@ -47,17 +47,17 @@ async def generic_exception_handler(request: Request, exc: Exception):
     )
 
 
-@app.get("/")
+@app.get("/api/")
 def read_root():
     return {"Hello": "World"}
 
 
-@app.get("/health")
+@app.get("/api/health")
 def health_check():
     return {"status": "ok"}
 
 
-@app.post("/register/", status_code=status.HTTP_201_CREATED)
+@app.post("/api/register/", status_code=status.HTTP_201_CREATED)
 def register(register_request: AuthRequest):
     try:
         user_uid = firebase_auth_repo.create_user(
@@ -74,7 +74,7 @@ def register(register_request: AuthRequest):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@app.post("/login/", response_model=TokenResponse)
+@app.post("/api/login/", response_model=TokenResponse)
 def login(login_request: FirebaseLoginRequest):
     try:
         firebase_auth_repo.verify_id_token(login_request.id_token)
@@ -86,7 +86,7 @@ def login(login_request: FirebaseLoginRequest):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
-@app.post("/jobs", response_model=models.JobPostResponse)
+@app.post("/api/jobs", response_model=models.JobPostResponse)
 def create_job(
     job_request: models.CreateJobRequest, current_user: dict = Depends(get_current_user)
 ):
@@ -106,7 +106,7 @@ def create_job(
     return models.JobPostResponse(job_id=job_id, **job_data)
 
 
-@app.get("/jobs/{job_id}", response_model=models.JobPostResponse)
+@app.get("/api/jobs/{job_id}", response_model=models.JobPostResponse)
 def get_job(job_id: str):
     job_data = firestore_repo.get_job_posting(job_id)
     if not job_data:
@@ -116,7 +116,7 @@ def get_job(job_id: str):
     return models.JobPostResponse(job_id=job_id, **job_data)
 
 
-@app.get("/jobs", response_model=List[models.JobPostResponse])
+@app.get("/api/jobs", response_model=List[models.JobPostResponse])
 def search_jobs(
     title: Optional[str] = None,
     company: Optional[str] = None,
@@ -130,7 +130,7 @@ def search_jobs(
     return [models.JobPostResponse(job_id=job.get("id", ""), **job) for job in jobs]
 
 
-@app.post("/jobs/{job_id}/find-similar", status_code=status.HTTP_202_ACCEPTED)
+@app.post("/api/jobs/{job_id}/find-similar", status_code=status.HTTP_202_ACCEPTED)
 def find_similar_jobs(job_id: str, current_user: dict = Depends(get_current_user)):
     user_id = current_user.get("uid")  # Use 'uid' from Firebase decoded token
     task_id = str(uuid.uuid4())
@@ -149,7 +149,7 @@ def find_similar_jobs(job_id: str, current_user: dict = Depends(get_current_user
         )
 
 
-@app.post("/resumes/upload")
+@app.post("/api/resumes/upload")
 async def upload_resume(
     file: UploadFile = File(...), current_user: dict = Depends(get_current_user)
 ):
