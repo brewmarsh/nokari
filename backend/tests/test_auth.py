@@ -57,7 +57,8 @@ async def test_register_user_success(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
         response = await ac.post(
-            "/api/register/", json={"email": "test@example.com", "password": "password123"}
+            "/api/register/",
+            json={"email": "test@example.com", "password": "password123"},
         )
 
     assert response.status_code == 201
@@ -80,7 +81,8 @@ async def test_register_user_failure(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
         response = await ac.post(
-            "/api/register/", json={"email": "test@example.com", "password": "password123"}
+            "/api/register/",
+            json={"email": "test@example.com", "password": "password123"},
         )
 
     assert response.status_code == 400
