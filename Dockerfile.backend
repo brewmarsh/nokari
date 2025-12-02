@@ -4,20 +4,33 @@ FROM python:3.11-slim
 # Set the working directory to /app
 WORKDIR /app
 
-# Copy the current directory contents into the container at /app
+# Install system dependencies
+RUN apt-get update && \
+    apt-get install -y postgresql-client && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create a non-root user
+RUN groupadd -r appuser && useradd -r -g appuser -u 1000 -m appuser
+
+# Copy requirements file first to leverage Docker cache
+COPY requirements.txt /app/
+
+# Install python dependencies
+RUN pip install torch --index-url https://download.pytorch.org/whl/cpu && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Copy the application code
 COPY . /app
 
-# Copy the wait-for-db.sh script and make it executable
+# Ensure wait-for-db.sh is executable
 COPY wait-for-db.sh /app/wait-for-db.sh
 RUN chmod +x /app/wait-for-db.sh
 
+# Change ownership of the application directory to the non-root user
+RUN chown -R appuser:appuser /app
 
-# Install any needed packages specified in requirements.txt
-RUN apt-get update && \
-    apt-get install -y postgresql-client && \
-    pip install torch --index-url https://download.pytorch.org/whl/cpu && \
-    pip install --no-cache-dir -r requirements.txt && \
-    apt-get clean
+# Switch to the non-root user
+USER appuser
 
 # Make port 8000 available to the world outside this container
 EXPOSE 8000
