@@ -57,7 +57,8 @@ async def test_register_user_success(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
         response = await ac.post(
-            "/register/", json={"email": "test@example.com", "password": "password123"}
+            "/api/register/",
+            json={"email": "test@example.com", "password": "password123"},
         )
 
     assert response.status_code == 201
@@ -80,7 +81,8 @@ async def test_register_user_failure(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
         response = await ac.post(
-            "/register/", json={"email": "test@example.com", "password": "password123"}
+            "/api/register/",
+            json={"email": "test@example.com", "password": "password123"},
         )
 
     assert response.status_code == 400
@@ -95,7 +97,7 @@ async def test_login_user_success(mock_auth_repo: MagicMock):
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
-        response = await ac.post("/login/", json={"id_token": "some_id_token"})
+        response = await ac.post("/api/login/", json={"id_token": "some_id_token"})
 
     assert response.status_code == 200
     assert response.json() == {"message": "Authentication successful"}
@@ -109,7 +111,7 @@ async def test_login_user_failure(mock_auth_repo: MagicMock):
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
-        response = await ac.post("/login/", json={"id_token": "invalid_id_token"})
+        response = await ac.post("/api/login/", json={"id_token": "invalid_id_token"})
 
     assert response.status_code == 401
     assert "Invalid ID token" in response.json()["detail"]
