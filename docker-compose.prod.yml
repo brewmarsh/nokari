@@ -1,7 +1,7 @@
 services:
   db:
     container_name: nokari-db
-    image: postgres:15-alpine
+    image: postgres:14-alpine
     restart: always
     volumes:
       - postgres_data:/var/lib/postgresql/data
