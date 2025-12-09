@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, memo, useRef, Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
 import './App.css';
-import { auth, db } from './firebaseConfig';
+import { auth, db, initializationError } from './firebaseConfig';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import UserProfileIcon from './components/UserProfileIcon.jsx';
@@ -107,6 +107,8 @@ function App() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (!auth) return;
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         // User is signed in, see if we have additional data in Firestore
@@ -125,6 +127,16 @@ function App() {
 
     return () => unsubscribe();
   }, []);
+
+  if (initializationError) {
+    return (
+      <div style={{ padding: '20px', color: 'red' }}>
+        <h1>Application Initialization Error</h1>
+        <p>{initializationError.message}</p>
+        <p>Please check the browser console for more details.</p>
+      </div>
+    );
+  }
 
   const handleLogout = useCallback(async () => {
     try {
