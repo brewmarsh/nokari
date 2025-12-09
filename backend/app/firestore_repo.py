@@ -1,5 +1,5 @@
 from typing import Any, Dict, List, Optional
-
+from firebase_admin import firestore
 from firebase_admin.firestore import Client
 from fastapi import HTTPException, status
 
@@ -88,16 +88,32 @@ class FirestoreRepo:
             )
 
     def search_jobs(
-        self, location: Optional[str] = None, title: Optional[str] = None
+        self,
+        location: Optional[str] = None,
+        title: Optional[str] = None,
+        limit: int = 20,
+        last_doc_id: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         try:
             query = self.db.collection("job_postings")
+
             if location:
                 query = query.where("locations", "array_contains", location)
             if title:
                 query = query.where("title", "==", title)
 
-            docs = query.get()
+            # Order by posting_date desc
+            # Note: This requires an index in Firestore if combined with other filters
+            query = query.order_by("posting_date", direction=firestore.Query.DESCENDING)
+
+            if last_doc_id:
+                last_doc = self.db.collection("job_postings").document(last_doc_id).get()
+                if last_doc.exists:
+                    query = query.start_after(last_doc)
+
+            query = query.limit(limit)
+
+            docs = query.stream()
             return [{**doc.to_dict(), "id": doc.id} for doc in docs]
         except Exception as e:
             raise HTTPException(

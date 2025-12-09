@@ -2,11 +2,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import './Jobs.css';
 import useDebounce from '../hooks/useDebounce.js';
 import { db, auth } from '../firebaseConfig';
-import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, setDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, setDoc, orderBy, limit, startAfter } from 'firebase/firestore';
 import api from '../services/api'; // Keep api for find-similar for now
 
 import JobCard from './JobCard.jsx';
 import JobFilters from './JobFilters.jsx';
+
+const JOBS_PER_PAGE = 20;
 
 const Jobs = ({ preferences }) => {
   const [jobs, setJobs] = useState([]);
@@ -22,48 +24,127 @@ const Jobs = ({ preferences }) => {
     return saved !== null ? JSON.parse(saved) : true;
   });
 
+  const [lastDoc, setLastDoc] = useState(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [resetKey, setResetKey] = useState(0); // Add a key to force re-fetch
+
   useEffect(() => {
     localStorage.setItem('filtersVisible', JSON.stringify(filtersVisible));
   }, [filtersVisible]);
 
   const debouncedTitle = useDebounce(title, 500);
   const debouncedCompany = useDebounce(company, 500);
-  const debouncedSearch = useDebounce(search, 500);
 
-  const fetchJobs = useCallback(async () => {
-    setIsLoadingSimilar(false);
-    setSimilarJobsTitle('');
-    setError(null); // Clear previous errors
-    try {
-      const jobsRef = collection(db, "job_postings");
-      let q = query(jobsRef);
+  // Common function to build the query
+  const buildQuery = useCallback((startAfterDoc = null) => {
+    const jobsRef = collection(db, "job_postings");
+    let q = query(jobsRef);
 
-      if (debouncedTitle) {
-        q = query(q, where("title", "==", debouncedTitle));
-      }
-      if (debouncedCompany) {
-        q = query(q, where("company", "==", debouncedCompany));
-      }
-      // For 'search' and 'work_arrangement', Firestore has limitations for complex queries.
-      // For now, we'll handle simple filtering. More complex search might require a dedicated search service.
-      if (preferences && preferences.length > 0) {
-        // Assuming 'locations' field in job_postings is an array and 'preferences' can match
-        // This is a simplified approach. Real-world might need more complex logic.
-        q = query(q, where("locations", "array-contains-any", preferences));
-      }
-
-      const querySnapshot = await getDocs(q);
-      const fetchedJobs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setJobs(fetchedJobs);
-    } catch (err) {
-      console.error("Error fetching jobs:", err);
-      setError(err);
+    if (debouncedTitle) {
+      q = query(q, where("title", "==", debouncedTitle));
     }
-  }, [debouncedTitle, debouncedCompany, debouncedSearch, preferences]);
+    if (debouncedCompany) {
+      q = query(q, where("company", "==", debouncedCompany));
+    }
+    if (preferences && preferences.length > 0) {
+      q = query(q, where("locations", "array-contains-any", preferences));
+    }
 
+    q = query(q, orderBy("posting_date", "desc"), limit(JOBS_PER_PAGE));
+
+    if (startAfterDoc) {
+      q = query(q, startAfter(startAfterDoc));
+    }
+    return q;
+  }, [debouncedTitle, debouncedCompany, preferences]);
+
+  const executeFetch = useCallback(async (isLoadMore = false) => {
+     if (loading) return;
+     setLoading(true);
+     setError(null);
+
+     try {
+         // Determine if we are loading more or starting fresh
+         // Note: We use 'lastDoc' from state if isLoadMore is true, else null.
+         // Wait, 'lastDoc' state might be stale inside callback if dependencies are not correct?
+         // But we are passing it to buildQuery.
+         // Actually, if isLoadMore is true, we need the *current* lastDoc.
+         // If isLoadMore is false, we start from scratch.
+
+         const q = buildQuery(isLoadMore ? lastDoc : null);
+         const querySnapshot = await getDocs(q);
+         const fetchedJobs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+         if (isLoadMore) {
+             setJobs(prevJobs => [...prevJobs, ...fetchedJobs]);
+         } else {
+             setJobs(fetchedJobs);
+         }
+
+         const newLastDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
+         setLastDoc(newLastDoc);
+
+         if (querySnapshot.docs.length < JOBS_PER_PAGE) {
+             setHasMore(false);
+         } else {
+             setHasMore(true);
+         }
+     } catch (err) {
+         console.error("Error fetching jobs:", err);
+         setError(err);
+     } finally {
+         setLoading(false);
+     }
+  }, [buildQuery, lastDoc, loading]);
+
+
+  // Effect for initial load and filter changes
   useEffect(() => {
-    fetchJobs();
-  }, [debouncedTitle, debouncedCompany, debouncedSearch, fetchJobs, preferences]);
+    // Reset state and fetch
+    setJobs([]);
+    setLastDoc(null);
+    setHasMore(true);
+
+    // We can't reuse executeFetch here easily because it depends on state that we just reset (but React updates are async).
+    // So we manually execute the first fetch logic here.
+
+    const initialFetch = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const q = buildQuery(null);
+            const querySnapshot = await getDocs(q);
+            const fetchedJobs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+            setJobs(fetchedJobs);
+            setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1]);
+
+            if (querySnapshot.docs.length < JOBS_PER_PAGE) {
+                setHasMore(false);
+            } else {
+                setHasMore(true);
+            }
+        } catch(err) {
+             console.error("Error fetching jobs:", err);
+             setError(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    initialFetch();
+    // We add resetKey as dependency to force re-fetch when requested (e.g. Clear button)
+  }, [buildQuery, resetKey]);
+
+  const handleLoadMore = () => {
+    executeFetch(true);
+  };
+
+  const handleClearSimilar = () => {
+      setSimilarJobsTitle('');
+      setResetKey(prev => prev + 1); // Trigger re-fetch of default list
+  };
 
   if (error) {
     return <div>Error: {error.message}</div>;
@@ -104,41 +185,36 @@ const Jobs = ({ preferences }) => {
     try {
       const userJobInteractionRef = doc(db, "users", user.uid, "job_interactions", jobId);
       await setDoc(userJobInteractionRef, { pinned: !isPinned }, { merge: true });
-      // Re-fetch jobs to update the pinned status in the UI
-      fetchJobs();
+      setJobs(prevJobs => prevJobs.map(job =>
+          job.id === jobId ? { ...job, is_pinned: !isPinned } : job
+      ));
     } catch (err) {
       console.error("Error pinning job:", err);
       setError(err);
     }
-  }, [fetchJobs]);
+  }, []);
 
   const handleFindSimilar = useCallback(async (job) => {
     setIsLoadingSimilar(true);
     setSimilarJobsTitle(job.title);
     setOpenMenu(null);
     try {
-      // This still calls the backend API as similarity search is a backend operation
-      const res = await api.post('/jobs/find-similar/', { link: job.link });
-      // The response from backend should ideally trigger a Firestore update
-      // or provide a task_id to poll Firestore for results.
-      // For now, we'll assume the backend will handle populating Firestore
-      // and we might need to fetch from Firestore based on task_id.
-      // For simplicity, we'll just re-fetch all jobs for now.
-      fetchJobs();
+      await api.post('/jobs/find-similar/', { link: job.link });
+       alert("Similarity search initiated. Check back later.");
     } catch (err) {
       console.error("Error finding similar jobs:", err);
       setError(err);
     } finally {
       setIsLoadingSimilar(false);
     }
-  }, [fetchJobs]);
+  }, []);
 
   return (
     <div>
       {similarJobsTitle ? (
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
           <h1>Jobs similar to "{similarJobsTitle}"</h1>
-          <button onClick={fetchJobs} style={{ marginLeft: '20px' }}>Clear</button>
+          <button onClick={handleClearSimilar} style={{ marginLeft: '20px' }}>Clear</button>
         </div>
       ) : (
         <h1>Job Postings</h1>
@@ -174,6 +250,13 @@ const Jobs = ({ preferences }) => {
               />
             ))}
           </div>
+          {hasMore && (
+              <div style={{ display: 'flex', justifyContent: 'center', margin: '20px 0' }}>
+                  <button onClick={handleLoadMore} disabled={loading}>
+                      {loading ? 'Loading...' : 'Load More'}
+                  </button>
+              </div>
+          )}
         </>
       )}
     </div>
