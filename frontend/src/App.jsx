@@ -1,19 +1,21 @@
-import React, { useState, useEffect, useCallback, memo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, memo, useRef, Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
-import Login from './components/Login.jsx';
-import Register from './components/Register.jsx';
-import Dashboard from './components/Dashboard.jsx';
-import Onboarding from './components/Onboarding.jsx';
-import Documents from './components/Documents.jsx';
-import Profile from './components/Profile.jsx';
-import Settings from './components/Settings.jsx';
-import Admin from './components/Admin.jsx';
-import AdminJobs from './components/AdminJobs.jsx';
-import UserProfileIcon from './components/UserProfileIcon.jsx';
 import './App.css';
 import { auth, db } from './firebaseConfig';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
+import UserProfileIcon from './components/UserProfileIcon.jsx';
+
+// Lazy load components
+const Login = lazy(() => import('./components/Login.jsx'));
+const Register = lazy(() => import('./components/Register.jsx'));
+const Dashboard = lazy(() => import('./components/Dashboard.jsx'));
+const Onboarding = lazy(() => import('./components/Onboarding.jsx'));
+const Documents = lazy(() => import('./components/Documents.jsx'));
+const Profile = lazy(() => import('./components/Profile.jsx'));
+const Settings = lazy(() => import('./components/Settings.jsx'));
+const Admin = lazy(() => import('./components/Admin.jsx'));
+const AdminJobs = lazy(() => import('./components/AdminJobs.jsx'));
 
 const AppRoutes = memo(({ user, onOnboardingSuccess, onLoginSuccess, handleLogout }) => {
   const [isDropdownOpen, setDropdownOpen] = useState(false);
@@ -52,7 +54,7 @@ const AppRoutes = memo(({ user, onOnboardingSuccess, onLoginSuccess, handleLogou
             <Link to="/dashboard">Dashboard</Link>
             {user.role === 'admin' && <Link to="/admin">Admin</Link>}
             <div style={{ position: 'relative', marginLeft: 'auto' }} ref={dropdownRef}>
-              <button onClick={() => setDropdownOpen(!isDropdownOpen)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+              <button onClick={() => setDropdownOpen(!isDropdownOpen)} style={{ background: 'none', border: 'none', cursor: 'pointer' }} aria-label="User Menu">
                 <UserProfileIcon />
               </button>
               {isDropdownOpen && (
@@ -73,26 +75,28 @@ const AppRoutes = memo(({ user, onOnboardingSuccess, onLoginSuccess, handleLogou
         )}
       </nav>
       <div className="container">
-        <Routes>
-          {user ? (
-            <>
-              <Route path="/dashboard" element={<Dashboard user={user} />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/admin/jobs" element={<AdminJobs />} />
-              <Route path="/documents" element={<Documents />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/*" element={<Navigate to="/dashboard" />} />
-            </>
-          ) : (
-            <>
-              <Route path="/onboarding" element={<Onboarding onOnboardingSuccess={onOnboardingSuccess} onLoginSuccess={onLoginSuccess} />} />
-              <Route path="/login" element={<Login onLoginSuccess={onLoginSuccess} />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/*" element={<Navigate to="/login" />} />
-            </>
-          )}
-        </Routes>
+        <Suspense fallback={<div>Loading page...</div>}>
+          <Routes>
+            {user ? (
+              <>
+                <Route path="/dashboard" element={<Dashboard user={user} />} />
+                <Route path="/admin" element={<Admin />} />
+                <Route path="/admin/jobs" element={<AdminJobs />} />
+                <Route path="/documents" element={<Documents />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/*" element={<Navigate to="/dashboard" />} />
+              </>
+            ) : (
+              <>
+                <Route path="/onboarding" element={<Onboarding onOnboardingSuccess={onOnboardingSuccess} onLoginSuccess={onLoginSuccess} />} />
+                <Route path="/login" element={<Login onLoginSuccess={onLoginSuccess} />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/*" element={<Navigate to="/login" />} />
+              </>
+            )}
+          </Routes>
+        </Suspense>
       </div>
     </>
   );
