@@ -107,7 +107,9 @@ class FirestoreRepo:
             query = query.order_by("posting_date", direction=firestore.Query.DESCENDING)
 
             if last_doc_id:
-                last_doc = self.db.collection("job_postings").document(last_doc_id).get()
+                last_doc = (
+                    self.db.collection("job_postings").document(last_doc_id).get()
+                )
                 if last_doc.exists:
                     query = query.start_after(last_doc)
 
