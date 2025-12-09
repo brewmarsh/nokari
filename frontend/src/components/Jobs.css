@@ -28,6 +28,29 @@
     margin-left: 20px;
 }
 
+@media (max-width: 600px) {
+    .jobs-container {
+        grid-template-columns: 1fr;
+    }
+
+    .job-card {
+        flex-direction: column;
+    }
+
+    .job-card-right {
+        margin-left: 0;
+        margin-top: 15px;
+        align-items: flex-start;
+        flex-direction: row;
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .job-card-badges {
+        margin-top: 0;
+    }
+}
+
 .job-card-header {
     margin-bottom: 10px;
 }

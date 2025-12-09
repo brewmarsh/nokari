@@ -122,8 +122,12 @@ def search_jobs(
     company: Optional[str] = None,
     location: Optional[str] = None,
     work_arrangement: Optional[str] = None,
+    limit: int = 20,
+    last_doc_id: Optional[str] = None,
 ):
-    jobs = firestore_repo.search_jobs(location=location, title=title)
+    jobs = firestore_repo.search_jobs(
+        location=location, title=title, limit=limit, last_doc_id=last_doc_id
+    )
     # Firestore does not automatically include the document ID in the data.
     # We need to add it manually if it's part of the response model.
     # Assuming job_id is the document ID.

@@ -52,11 +52,22 @@ const JobCard = ({ job, openMenu, setOpenMenu, handlePin, handleHide, handleHide
       </div>
       <div className="job-card-right">
         <div className="job-card-actions">
-          <button onClick={() => handlePin(job.link, job.is_pinned)} title={job.is_pinned ? 'Unpin Job' : 'Pin Job'} className="pin-icon">
+          <button
+            onClick={() => handlePin(job.link, job.is_pinned)}
+            title={job.is_pinned ? 'Unpin Job' : 'Pin Job'}
+            className="pin-icon"
+            aria-label={job.is_pinned ? 'Unpin Job' : 'Pin Job'}
+          >
             <PinIcon isPinned={job.is_pinned} />
           </button>
           <div className="action-menu">
-            <button onClick={() => setOpenMenu(openMenu === job.link ? null : job.link)} className="three-dots-icon">
+            <button
+              onClick={() => setOpenMenu(openMenu === job.link ? null : job.link)}
+              className="three-dots-icon"
+              aria-label="More actions"
+              aria-haspopup="true"
+              aria-expanded={openMenu === job.link}
+            >
               <ThreeDotsIcon />
             </button>
             {openMenu === job.link && (
