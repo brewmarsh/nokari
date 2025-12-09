@@ -13,6 +13,7 @@ vi.mock('../firebaseConfig', () => ({
     getDoc: vi.fn(),
   },
   storage: {},
+  initializationError: null,
 }));
 
 // Mock Firebase auth functions

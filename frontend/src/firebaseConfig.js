@@ -15,10 +15,28 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+let app;
+let auth;
+let db;
+let storage;
+let initializationError = null;
 
-// Export Firebase services
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
+try {
+  // Check for required configuration
+  if (!firebaseConfig.apiKey) {
+    throw new Error("VITE_FIREBASE_API_KEY is missing. Check your build environment variables.");
+  }
+
+  // Initialize Firebase
+  app = initializeApp(firebaseConfig);
+
+  // Export Firebase services
+  auth = getAuth(app);
+  db = getFirestore(app);
+  storage = getStorage(app);
+} catch (error) {
+  console.error("Firebase initialization failed:", error);
+  initializationError = error;
+}
+
+export { auth, db, storage, initializationError };
