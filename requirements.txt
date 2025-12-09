@@ -230,8 +230,10 @@ tzlocal==5.3.1
     # via celery
 uritemplate==4.2.0
     # via google-api-python-client
-urllib3==2.5.0
-    # via requests
+urllib3==2.6.1
+    # via
+    #   -r requirements.in
+    #   requests
 vine==5.1.0
     # via
     #   amqp
