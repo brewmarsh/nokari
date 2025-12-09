@@ -1,6 +1,12 @@
 # build environment
 FROM node:20-alpine AS build
 WORKDIR /app
+
+# Copy package files first to leverage cache for dependencies
+COPY package*.json ./
+RUN npm install
+
+# Copy source code
 COPY . .
 
 # Define build arguments
@@ -21,7 +27,6 @@ ENV VITE_FIREBASE_MESSAGING_SENDER_ID=$VITE_FIREBASE_MESSAGING_SENDER_ID
 ENV VITE_FIREBASE_APP_ID=$VITE_FIREBASE_APP_ID
 ENV VITE_FIREBASE_MEASUREMENT_ID=$VITE_FIREBASE_MEASUREMENT_ID
 
-RUN npm install
 RUN npm test
 RUN npm run build
 
