@@ -19,11 +19,15 @@ You will need to have [Docker](https://www.docker.com/get-started) installed on 
     ```
 
 2.  **Create an environment file:**
-    Copy the example environment file `.env.example` to a new file named `.env`.
+    You can use the provided setup script to create a `.env` file with placeholder values, which allows the application to build and start locally:
+    ```sh
+    ./setup_env.sh
+    ```
+    Alternatively, copy the example environment file `.env.example` to a new file named `.env` and fill it manually:
     ```sh
     cp .env.example .env
     ```
-    You will need to fill in the required environment variables in this file. See the Configuration section below for more details.
+    You will need to fill in the required environment variables in this file with real credentials for full functionality. See the Configuration section below for more details.
 
 3.  **Build and run the application using Docker Compose:**
     ```sh
