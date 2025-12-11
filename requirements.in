@@ -6,6 +6,7 @@ requests
 transformers
 torch
 networkx<3.5  # 3.5+ requires Python 3.11+
+numpy<2.3  # 2.3+ requires Python 3.11+
 djangorestframework
 djangorestframework-simplejwt==5.5.1
 django-cors-headers
