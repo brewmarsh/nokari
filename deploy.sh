@@ -31,7 +31,7 @@ echo "Configuring ALLOWED_HOSTS..."
 # Remove existing DJANGO_ALLOWED_HOSTS line if it exists
 sed -i '/^DJANGO_ALLOWED_HOSTS=/d' .env
 # Add the new DJANGO_ALLOWED_HOSTS line, including localhost and the server's IP
-echo "DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,$VPS_HOST" >> .env
+echo "DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,$VPS_HOST,pickaladder.io" >> .env
 
 # Log in to Docker Hub
 echo "Logging in to Docker Hub..."
