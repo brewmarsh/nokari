@@ -27,6 +27,11 @@ try {
     throw new Error("VITE_FIREBASE_API_KEY is missing. Check your build environment variables.");
   }
 
+  // Check if running with default test credentials
+  if (firebaseConfig.apiKey === 'test-api-key') {
+    throw new Error("Application is running with default test credentials. Please configure your .env file with valid Firebase credentials.");
+  }
+
   // Initialize Firebase
   app = initializeApp(firebaseConfig);
 
