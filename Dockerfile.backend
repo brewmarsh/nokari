@@ -16,8 +16,7 @@ RUN groupadd -r appuser && useradd -r -g appuser -u 1000 -m appuser
 COPY requirements.txt /app/
 
 # Install python dependencies
-RUN pip install torch --index-url https://download.pytorch.org/whl/cpu && \
-    pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the application code
 COPY . /app
