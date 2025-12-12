@@ -132,10 +132,15 @@ function App() {
         if (firebaseUser) {
           // User is signed in, see if we have additional data in Firestore
           const userDocRef = doc(db, "users", firebaseUser.uid);
-          const userDoc = await getDoc(userDocRef);
-          if (userDoc.exists()) {
-            setUser({ ...firebaseUser, ...userDoc.data() });
-          } else {
+          try {
+            const userDoc = await getDoc(userDocRef);
+            if (userDoc.exists()) {
+              setUser({ ...firebaseUser, ...userDoc.data() });
+            } else {
+              setUser(firebaseUser);
+            }
+          } catch (docError) {
+            console.warn("Failed to fetch user profile, proceeding with auth user only:", docError);
             setUser(firebaseUser);
           }
         } else {
