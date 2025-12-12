@@ -27,7 +27,11 @@ const Login = ({ onLoginSuccess }) => {
     } catch (err) {
       console.error(err);
       // Handle login error
-      alert(`Login Failed: ${err.code || 'Unknown Error'} - ${err.message}\n\nPlease check the /debug page to verify your configuration.`);
+      if (err.code === 'auth/operation-not-allowed') {
+        alert('Login Failed: Email/Password login is not enabled.\n\nPlease go to the Firebase Console > Authentication > Sign-in method, and enable the "Email/Password" provider.');
+      } else {
+        alert(`Login Failed: ${err.code || 'Unknown Error'} - ${err.message}\n\nPlease check the /debug page to verify your configuration.`);
+      }
     }
   };
 
