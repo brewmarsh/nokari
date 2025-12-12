@@ -89,6 +89,10 @@ To enable authentication and database features, you must configure a Firebase pr
     *   `VITE_FIREBASE_APP_ID`: Your `appId`
     *   `VITE_FIREBASE_MEASUREMENT_ID`: Your `measurementId` (optional)
 
+    **Self-Hosting Note:** If you are hosting the application on a VPS or a domain other than Firebase Hosting (e.g., `pickaladder.io`), your `VITE_FIREBASE_AUTH_DOMAIN` should typically remain the default `your-project-id.firebaseapp.com`. You do not need to change it to your custom domain unless you have set up a custom domain proxy in Firebase Hosting.
+
+    **Authorized Domains:** Remember to add your hosting domain (e.g., `pickaladder.io`) to the **Authorized Domains** list in the Firebase Console (Authentication > Settings > Authorized Domains).
+
 ## Automatic Scraping
 
 The application is configured to automatically scrape for new jobs every day. The time of the daily scrape can be configured from the admin panel.

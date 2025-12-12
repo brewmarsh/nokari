@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { firebaseConfig, initializationError, auth } from '../firebaseConfig';
 
 const Debug = () => {
@@ -85,9 +86,36 @@ const Debug = () => {
         <p><strong>User Agent:</strong> {navigator.userAgent}</p>
       </section>
 
+      <section style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ccc', borderRadius: '5px', backgroundColor: '#fff3cd' }}>
+        <h2>Troubleshooting Guide</h2>
+        <p>If you are seeing <strong>auth/configuration-not-found</strong>:</p>
+        <ul style={{ paddingLeft: '20px' }}>
+          <li><strong>Enable Authentication:</strong> Go to the Firebase Console &gt; Build &gt; Authentication and click "Get Started".</li>
+          <li><strong>Enable Email/Password:</strong> In the Authentication "Sign-in method" tab, ensure "Email/Password" is enabled.</li>
+          <li><strong>Check API Key:</strong> Go to Google Cloud Console &gt; APIs & Credentials. Ensure your API Key (ending in {firebaseConfig.apiKey ? firebaseConfig.apiKey.slice(-4) : '...'}) is not restricted, or allows "Identity Toolkit API".</li>
+          <li><strong>Verify authDomain:</strong>
+            Your authDomain is <code>{firebaseConfig.authDomain}</code>.
+            {!firebaseConfig.authDomain?.endsWith('.firebaseapp.com') && !firebaseConfig.authDomain?.endsWith('.web.app') && (
+               <div style={{ color: 'red', fontWeight: 'bold', marginTop: '5px' }}>
+                 Warning: You are using a custom domain for authDomain.
+                 Since you are self-hosting (not using Firebase Hosting),
+                 you should typically set <code>VITE_FIREBASE_AUTH_DOMAIN</code> to your default
+                 <code>{firebaseConfig.projectId}.firebaseapp.com</code>.
+               </div>
+            )}
+            {firebaseConfig.authDomain?.endsWith('.firebaseapp.com') && window.location.hostname !== 'localhost' && !window.location.hostname.endsWith('.firebaseapp.com') && (
+               <div style={{ marginTop: '5px', color: '#664d03' }}>
+                  Note: You are hosting on <strong>{window.location.hostname}</strong>.
+                  Ensure you have added this domain to the <strong>Authorized Domains</strong> list in the Firebase Console (Authentication &gt; Settings &gt; Authorized Domains).
+               </div>
+            )}
+          </li>
+        </ul>
+      </section>
+
       <div style={{ marginTop: '20px' }}>
-          <a href="/login" style={{ marginRight: '15px' }}>Back to Login</a>
-          <a href="/dashboard">Back to Dashboard</a>
+          <Link to="/login" style={{ marginRight: '15px' }}>Back to Login</Link>
+          <Link to="/dashboard">Back to Dashboard</Link>
       </div>
     </div>
   );
