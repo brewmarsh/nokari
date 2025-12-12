@@ -96,7 +96,18 @@ const Debug = () => {
           <li><strong>Verify authDomain:</strong>
             Your authDomain is <code>{firebaseConfig.authDomain}</code>.
             {!firebaseConfig.authDomain?.endsWith('.firebaseapp.com') && !firebaseConfig.authDomain?.endsWith('.web.app') && (
-               <span style={{ color: 'red', fontWeight: 'bold' }}> Warning: This looks like a custom domain. Ensure you have configured it in Firebase Hosting or use the default `project-id.firebaseapp.com`.</span>
+               <div style={{ color: 'red', fontWeight: 'bold', marginTop: '5px' }}>
+                 Warning: You are using a custom domain for authDomain.
+                 Since you are self-hosting (not using Firebase Hosting),
+                 you should typically set <code>VITE_FIREBASE_AUTH_DOMAIN</code> to your default
+                 <code>{firebaseConfig.projectId}.firebaseapp.com</code>.
+               </div>
+            )}
+            {firebaseConfig.authDomain?.endsWith('.firebaseapp.com') && window.location.hostname !== 'localhost' && !window.location.hostname.endsWith('.firebaseapp.com') && (
+               <div style={{ marginTop: '5px', color: '#664d03' }}>
+                  Note: You are hosting on <strong>{window.location.hostname}</strong>.
+                  Ensure you have added this domain to the <strong>Authorized Domains</strong> list in the Firebase Console (Authentication &gt; Settings &gt; Authorized Domains).
+               </div>
             )}
           </li>
         </ul>
