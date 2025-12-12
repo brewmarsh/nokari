@@ -32,6 +32,18 @@ try {
     throw new Error("Application is running with default test credentials. Please configure your .env file with valid Firebase credentials.");
   }
 
+  // Verify other configuration values if apiKey is valid
+  // We skip measurementId as it is optional
+  const requiredKeys = ['authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
+  const missingKeys = requiredKeys.filter(key => {
+    const value = firebaseConfig[key];
+    return !value || value.startsWith('test-');
+  });
+
+  if (missingKeys.length > 0) {
+    throw new Error(`Invalid Firebase configuration. The following keys are missing or using default test values: ${missingKeys.join(', ')}. Please update your .env file.`);
+  }
+
   // Initialize Firebase
   app = initializeApp(firebaseConfig);
 
