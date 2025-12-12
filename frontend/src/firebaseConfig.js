@@ -22,6 +22,13 @@ let storage;
 let initializationError = null;
 
 try {
+  // Trim values and remove potential build artifacts
+  Object.keys(firebaseConfig).forEach(key => {
+    if (typeof firebaseConfig[key] === 'string') {
+        firebaseConfig[key] = firebaseConfig[key].trim();
+    }
+  });
+
   // Check for required configuration
   if (!firebaseConfig.apiKey) {
     throw new Error("VITE_FIREBASE_API_KEY is missing. Check your build environment variables.");
@@ -37,11 +44,14 @@ try {
   const requiredKeys = ['authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
   const missingKeys = requiredKeys.filter(key => {
     const value = firebaseConfig[key];
-    return !value || value.startsWith('test-');
+    return !value ||
+           value === 'undefined' ||
+           value === 'null' ||
+           value.startsWith('test-');
   });
 
   if (missingKeys.length > 0) {
-    throw new Error(`Invalid Firebase configuration. The following keys are missing or using default test values: ${missingKeys.join(', ')}. Please update your .env file.`);
+    throw new Error(`Invalid Firebase configuration. The following keys are missing, undefined, or using default test values: ${missingKeys.join(', ')}. Please update your .env file or build secrets.`);
   }
 
   // Initialize Firebase
@@ -53,6 +63,15 @@ try {
   storage = getStorage(app);
 } catch (error) {
   console.error("Firebase initialization failed:", error);
+  // Log configuration state (masking sensitive API Key) for debugging
+  const configState = Object.keys(firebaseConfig).reduce((acc, key) => {
+      const val = firebaseConfig[key];
+      const isSet = val && val !== 'undefined' && val !== 'null';
+      acc[key] = isSet ? (key === 'apiKey' ? '***' : val) : 'MISSING/INVALID';
+      return acc;
+  }, {});
+  console.error("Config state:", configState);
+
   initializationError = error;
 }
 
