@@ -75,4 +75,4 @@ try {
   initializationError = error;
 }
 
-export { auth, db, storage, initializationError };
+export { auth, db, storage, initializationError, firebaseConfig };
