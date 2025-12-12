@@ -12,6 +12,19 @@
     <link rel="apple-touch-icon" href="/logo192.png" />
     <link rel="manifest" href="/manifest.json" />
     <title>nokari</title>
+    <script>
+      window.onerror = function(message, source, lineno, colno, error) {
+        var root = document.getElementById('root');
+        if (!root || root.innerHTML === '') {
+          document.body.innerHTML += '<div style="color: red; padding: 20px; border: 1px solid red; margin: 20px; background: #fff;">' +
+            '<h1>Application Error</h1>' +
+            '<p>The application failed to start.</p>' +
+            '<p><strong>Error:</strong> ' + message + '</p>' +
+            '<p><strong>Source:</strong> ' + source + ':' + lineno + '</p>' +
+            '</div>';
+        }
+      };
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
