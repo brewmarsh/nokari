@@ -107,28 +107,55 @@ const AppRoutes = memo(({ user, onOnboardingSuccess, onLoginSuccess, handleLogou
 
 function App() {
   const [user, setUser] = useState(undefined);
+  const [loadingError, setLoadingError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!auth) return;
+    if (!auth) {
+      console.error("Auth is not initialized");
+      return;
+    }
+
+    console.log("Setting up auth listener");
+    // Timeout to detect if Firebase is hanging
+    const timeoutId = setTimeout(() => {
+      if (user === undefined) {
+        console.warn("Firebase auth listener timed out");
+        setLoadingError(new Error("Firebase authentication timed out. Check network connection or API key configuration."));
+      }
+    }, 10000); // 10 seconds timeout
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        // User is signed in, see if we have additional data in Firestore
-        const userDocRef = doc(db, "users", firebaseUser.uid);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists()) {
-          setUser({ ...firebaseUser, ...userDoc.data() });
+      clearTimeout(timeoutId);
+      console.log("Auth state changed:", firebaseUser ? "User found" : "No user");
+      try {
+        if (firebaseUser) {
+          // User is signed in, see if we have additional data in Firestore
+          const userDocRef = doc(db, "users", firebaseUser.uid);
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists()) {
+            setUser({ ...firebaseUser, ...userDoc.data() });
+          } else {
+            setUser(firebaseUser);
+          }
         } else {
-          setUser(firebaseUser);
+          // User is signed out
+          setUser(null);
         }
-      } else {
-        // User is signed out
-        setUser(null);
+      } catch (err) {
+        console.error("Error fetching user data:", err);
+        setLoadingError(err);
       }
+    }, (error) => {
+      clearTimeout(timeoutId);
+      console.error("Auth listener error:", error);
+      setLoadingError(error);
     });
 
-    return () => unsubscribe();
+    return () => {
+      clearTimeout(timeoutId);
+      unsubscribe();
+    };
   }, []);
 
   if (initializationError) {
@@ -165,6 +192,16 @@ function App() {
     navigate('/dashboard');
   }, [navigate]);
 
+
+  if (loadingError) {
+    return (
+      <div style={{ padding: '20px', color: 'red' }}>
+        <h1>Loading Error</h1>
+        <p>{loadingError.message}</p>
+        <button onClick={() => window.location.reload()} style={{ marginTop: '10px' }}>Retry</button>
+      </div>
+    );
+  }
 
   return (
     <AppRoutes
