@@ -16,6 +16,7 @@ const Profile = lazy(() => import('./components/Profile.jsx'));
 const Settings = lazy(() => import('./components/Settings.jsx'));
 const Admin = lazy(() => import('./components/Admin.jsx'));
 const AdminJobs = lazy(() => import('./components/AdminJobs.jsx'));
+const Debug = lazy(() => import('./components/Debug.jsx'));
 
 const AppRoutes = memo(({ user, onOnboardingSuccess, onLoginSuccess, handleLogout }) => {
   const [isDropdownOpen, setDropdownOpen] = useState(false);
@@ -85,6 +86,7 @@ const AppRoutes = memo(({ user, onOnboardingSuccess, onLoginSuccess, handleLogou
                 <Route path="/documents" element={<Documents />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/debug" element={<Debug />} />
                 <Route path="/*" element={<Navigate to="/dashboard" />} />
               </>
             ) : (
@@ -92,6 +94,7 @@ const AppRoutes = memo(({ user, onOnboardingSuccess, onLoginSuccess, handleLogou
                 <Route path="/onboarding" element={<Onboarding onOnboardingSuccess={onOnboardingSuccess} onLoginSuccess={onLoginSuccess} />} />
                 <Route path="/login" element={<Login onLoginSuccess={onLoginSuccess} />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/debug" element={<Debug />} />
                 <Route path="/*" element={<Navigate to="/login" />} />
               </>
             )}

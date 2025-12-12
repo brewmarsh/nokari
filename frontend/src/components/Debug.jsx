@@ -1,0 +1,124 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { firebaseConfig, initializationError, auth } from '../firebaseConfig';
+
+const Debug = () => {
+  const configKeys = [
+    'apiKey',
+    'authDomain',
+    'projectId',
+    'storageBucket',
+    'messagingSenderId',
+    'appId',
+    'measurementId'
+  ];
+
+  const safeConfig = {};
+  configKeys.forEach(key => {
+    const val = firebaseConfig[key];
+    if (!val) {
+      safeConfig[key] = 'MISSING/EMPTY';
+    } else if (val === 'undefined') {
+      safeConfig[key] = '"undefined" (string)';
+    } else if (val === 'null') {
+        safeConfig[key] = '"null" (string)';
+    } else {
+      // Mask values for safety, but show first/last chars to verify
+      if (val.length > 8) {
+        safeConfig[key] = `${val.substring(0, 4)}...${val.substring(val.length - 4)}`;
+      } else {
+        safeConfig[key] = val; // Short values shown as is
+      }
+    }
+  });
+
+  return (
+    <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
+      <h1>Debug Information</h1>
+
+      <section style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ccc', borderRadius: '5px' }}>
+        <h2>Firebase Configuration Status</h2>
+        {initializationError ? (
+          <div style={{ color: 'red', fontWeight: 'bold' }}>
+            <h3>Initialization Error:</h3>
+            <p>{initializationError.message}</p>
+          </div>
+        ) : (
+          <div style={{ color: 'green', fontWeight: 'bold' }}>
+             Initialization Successful
+          </div>
+        )}
+      </section>
+
+      <section style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ccc', borderRadius: '5px' }}>
+        <h2>Configuration Values (Masked)</h2>
+        <p>Verify that these match your Firebase Console settings.</p>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ textAlign: 'left', backgroundColor: '#f5f5f5' }}>
+              <th style={{ padding: '8px', borderBottom: '1px solid #ddd' }}>Key</th>
+              <th style={{ padding: '8px', borderBottom: '1px solid #ddd' }}>Value</th>
+              <th style={{ padding: '8px', borderBottom: '1px solid #ddd' }}>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {configKeys.map(key => {
+                const isSuspicious = safeConfig[key] === 'MISSING/EMPTY' || safeConfig[key].includes('"undefined"');
+                return (
+                    <tr key={key}>
+                    <td style={{ padding: '8px', borderBottom: '1px solid #ddd' }}>{key}</td>
+                    <td style={{ padding: '8px', borderBottom: '1px solid #ddd', fontFamily: 'monospace' }}>{safeConfig[key]}</td>
+                    <td style={{ padding: '8px', borderBottom: '1px solid #ddd', color: isSuspicious ? 'red' : 'green' }}>
+                        {isSuspicious ? 'Check Config!' : 'OK'}
+                    </td>
+                    </tr>
+                );
+            })}
+          </tbody>
+        </table>
+      </section>
+
+      <section style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ccc', borderRadius: '5px' }}>
+        <h2>Environment</h2>
+        <p><strong>App Version:</strong> {process.env.APP_VERSION || 'Unknown'}</p>
+        <p><strong>Auth Initialized:</strong> {auth ? 'Yes' : 'No'}</p>
+        <p><strong>Current Domain:</strong> {window.location.hostname}</p>
+        <p><strong>User Agent:</strong> {navigator.userAgent}</p>
+      </section>
+
+      <section style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ccc', borderRadius: '5px', backgroundColor: '#fff3cd' }}>
+        <h2>Troubleshooting Guide</h2>
+        <p>If you are seeing <strong>auth/configuration-not-found</strong>:</p>
+        <ul style={{ paddingLeft: '20px' }}>
+          <li><strong>Enable Authentication:</strong> Go to the Firebase Console &gt; Build &gt; Authentication and click "Get Started".</li>
+          <li><strong>Enable Email/Password:</strong> In the Authentication "Sign-in method" tab, ensure "Email/Password" is enabled.</li>
+          <li><strong>Check API Key:</strong> Go to Google Cloud Console &gt; APIs & Credentials. Ensure your API Key (ending in {firebaseConfig.apiKey ? firebaseConfig.apiKey.slice(-4) : '...'}) is not restricted, or allows "Identity Toolkit API".</li>
+          <li><strong>Verify authDomain:</strong>
+            Your authDomain is <code>{firebaseConfig.authDomain}</code>.
+            {!firebaseConfig.authDomain?.endsWith('.firebaseapp.com') && !firebaseConfig.authDomain?.endsWith('.web.app') && (
+               <div style={{ color: 'red', fontWeight: 'bold', marginTop: '5px' }}>
+                 Warning: You are using a custom domain for authDomain.
+                 Since you are self-hosting (not using Firebase Hosting),
+                 you should typically set <code>VITE_FIREBASE_AUTH_DOMAIN</code> to your default
+                 <code>{firebaseConfig.projectId}.firebaseapp.com</code>.
+               </div>
+            )}
+            {firebaseConfig.authDomain?.endsWith('.firebaseapp.com') && window.location.hostname !== 'localhost' && !window.location.hostname.endsWith('.firebaseapp.com') && (
+               <div style={{ marginTop: '5px', color: '#664d03' }}>
+                  Note: You are hosting on <strong>{window.location.hostname}</strong>.
+                  Ensure you have added this domain to the <strong>Authorized Domains</strong> list in the Firebase Console (Authentication &gt; Settings &gt; Authorized Domains).
+               </div>
+            )}
+          </li>
+        </ul>
+      </section>
+
+      <div style={{ marginTop: '20px' }}>
+          <Link to="/login" style={{ marginRight: '15px' }}>Back to Login</Link>
+          <Link to="/dashboard">Back to Dashboard</Link>
+      </div>
+    </div>
+  );
+};
+
+export default Debug;

@@ -71,6 +71,28 @@ To enable the job scraping functionality, you need to obtain a Google API Key an
     ```
 9.  **Important**: Make sure "Search the entire web" is turned **ON** in your search engine's setup tab. This is required for the `site:` search operator to work correctly.
 
+### Firebase Configuration
+
+To enable authentication and database features, you must configure a Firebase project.
+
+1.  Go to the [Firebase Console](https://console.firebase.google.com/).
+2.  Create a new project or select an existing one.
+3.  Register a web app (click the `</>` icon) in your Project Overview.
+4.  Copy the configuration object properties (`apiKey`, `authDomain`, etc.) provided in the setup step.
+5.  Add these values to your `.env` file (for local development) or your CI/CD secrets (for production):
+
+    *   `VITE_FIREBASE_API_KEY`: Your `apiKey`
+    *   `VITE_FIREBASE_AUTH_DOMAIN`: Your `authDomain` (usually `your-project-id.firebaseapp.com`)
+    *   `VITE_FIREBASE_PROJECT_ID`: Your `projectId`
+    *   `VITE_FIREBASE_STORAGE_BUCKET`: Your `storageBucket`
+    *   `VITE_FIREBASE_MESSAGING_SENDER_ID`: Your `messagingSenderId`
+    *   `VITE_FIREBASE_APP_ID`: Your `appId`
+    *   `VITE_FIREBASE_MEASUREMENT_ID`: Your `measurementId` (optional)
+
+    **Self-Hosting Note:** If you are hosting the application on a VPS or a domain other than Firebase Hosting (e.g., `pickaladder.io`), your `VITE_FIREBASE_AUTH_DOMAIN` should typically remain the default `your-project-id.firebaseapp.com`. You do not need to change it to your custom domain unless you have set up a custom domain proxy in Firebase Hosting.
+
+    **Authorized Domains:** Remember to add your hosting domain (e.g., `pickaladder.io`) to the **Authorized Domains** list in the Firebase Console (Authentication > Settings > Authorized Domains).
+
 ## Automatic Scraping
 
 The application is configured to automatically scrape for new jobs every day. The time of the daily scrape can be configured from the admin panel.
