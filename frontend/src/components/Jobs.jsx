@@ -146,10 +146,6 @@ const Jobs = ({ preferences }) => {
       setResetKey(prev => prev + 1); // Trigger re-fetch of default list
   };
 
-  if (error) {
-    return <div>Error: {error.message}</div>;
-  }
-
   const handleHide = useCallback(async (jobId) => {
     const user = auth.currentUser;
     if (!user) return;
@@ -208,6 +204,10 @@ const Jobs = ({ preferences }) => {
       setIsLoadingSimilar(false);
     }
   }, []);
+
+  if (error) {
+    return <div>Error: {error.message}</div>;
+  }
 
   return (
     <div>
