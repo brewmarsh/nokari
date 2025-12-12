@@ -27,7 +27,7 @@ const Login = ({ onLoginSuccess }) => {
     } catch (err) {
       console.error(err);
       // Handle login error
-      alert(err.message); // Display Firebase error message
+      alert(`Login Failed: ${err.code || 'Unknown Error'} - ${err.message}\n\nPlease check the /debug page to verify your configuration.`);
     }
   };
 

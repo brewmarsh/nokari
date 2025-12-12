@@ -29,6 +29,7 @@ ENV VITE_FIREBASE_MEASUREMENT_ID=$VITE_FIREBASE_MEASUREMENT_ID
 
 # Check for required build arguments to prevent deployment with missing secrets
 RUN if [ -z "$VITE_FIREBASE_API_KEY" ]; then echo "Error: VITE_FIREBASE_API_KEY build argument is missing!" && exit 1; fi
+RUN if [ -z "$VITE_FIREBASE_AUTH_DOMAIN" ]; then echo "Error: VITE_FIREBASE_AUTH_DOMAIN build argument is missing!" && exit 1; fi
 
 RUN npm test
 RUN npm run build
