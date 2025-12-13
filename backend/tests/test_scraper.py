@@ -5,7 +5,7 @@ from backend.app import scraper
 
 @patch("backend.app.scraper.FirestoreRepo")
 @patch("backend.app.scraping_logic.scrape_and_save_jobs")
-@patch("backend.app.scraper.db") # Mock db to avoid real connection attempt
+@patch("backend.app.scraper.db")  # Mock db to avoid real connection attempt
 def test_handler(mock_db, mock_scrape, MockRepo):
     # Setup mocks
     mock_repo_instance = MockRepo.return_value

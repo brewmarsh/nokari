@@ -4,7 +4,16 @@ import uuid
 from typing import List, Optional
 
 import boto3
-from fastapi import BackgroundTasks, Depends, FastAPI, File, HTTPException, Request, UploadFile, status
+from fastapi import (
+    BackgroundTasks,
+    Depends,
+    FastAPI,
+    File,
+    HTTPException,
+    Request,
+    UploadFile,
+    status,
+)
 from fastapi.responses import JSONResponse
 from mangum import Mangum
 from pydantic import BaseModel

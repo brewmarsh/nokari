@@ -38,12 +38,10 @@ from backend.app.security import get_current_user  # noqa: E402
 async def test_add_scrapable_domain_as_admin():
     app.dependency_overrides[get_current_user] = lambda: {"uid": "admin-uid"}
 
-    with patch(
-        "backend.app.main.firestore_repo.get_user"
-    ) as mock_db_user, patch(
-        "backend.app.main.firestore_repo.add_scrapable_domain"
-    ) as mock_add:
-
+    with (
+        patch("backend.app.main.firestore_repo.get_user") as mock_db_user,
+        patch("backend.app.main.firestore_repo.add_scrapable_domain") as mock_add,
+    ):
         mock_db_user.return_value = {"role": "admin"}
 
         async with AsyncClient(
@@ -63,7 +61,6 @@ async def test_add_scrapable_domain_as_user():
     app.dependency_overrides[get_current_user] = lambda: {"uid": "user-uid"}
 
     with patch("backend.app.main.firestore_repo.get_user") as mock_db_user:
-
         mock_db_user.return_value = {"role": "user"}
 
         async with AsyncClient(
@@ -82,7 +79,6 @@ async def test_trigger_scrape():
     app.dependency_overrides[get_current_user] = lambda: {"uid": "admin-uid"}
 
     with patch("backend.app.main.firestore_repo.get_user") as mock_db_user:
-
         mock_db_user.return_value = {"role": "admin"}
 
         async with AsyncClient(

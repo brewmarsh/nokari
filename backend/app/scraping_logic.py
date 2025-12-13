@@ -125,9 +125,7 @@ def scrape_jobs(query, domain, days=None):
             posting_date = None
             if posting_date_str:
                 try:
-                    posting_date = datetime.strptime(
-                        posting_date_str, "%Y-%m-%d"
-                    )
+                    posting_date = datetime.strptime(posting_date_str, "%Y-%m-%d")
                 except (ValueError, TypeError):
                     pass  # Keep as None if parsing fails
 
@@ -136,7 +134,7 @@ def scrape_jobs(query, domain, days=None):
                 "link": item.get("link"),
                 "company": metatags.get("og:site_name", "")
                 or pagemap.get("cse_thumbnail", [{}])[0].get("src", "")
-                or domain.split('.')[0], # Fallback to domain name
+                or domain.split(".")[0],  # Fallback to domain name
                 "description": description,
                 "locations": locations,
                 "posting_date": posting_date,
@@ -174,7 +172,9 @@ def scrape_and_save_jobs(repo: FirestoreRepo, query_term: str, domains, days=Non
     scraped_count = 0
     for domain_obj in domains:
         domain_name = (
-            domain_obj["domain"] if isinstance(domain_obj, dict) and "domain" in domain_obj else domain_obj
+            domain_obj["domain"]
+            if isinstance(domain_obj, dict) and "domain" in domain_obj
+            else domain_obj
         )
         try:
             logger.info(f"Scraping {domain_name} for {query_term}...")
@@ -226,7 +226,7 @@ def scrape_and_save_jobs(repo: FirestoreRepo, query_term: str, domains, days=Non
                     # I'll save `locations` as list.
                     # Also map `location` (singular) to a string representation for compatibility.
 
-                    loc_str = "Remote" # Default
+                    loc_str = "Remote"  # Default
                     if job_data["locations"]:
                         # rough heuristic
                         first_location = job_data["locations"][0]
@@ -241,9 +241,9 @@ def scrape_and_save_jobs(repo: FirestoreRepo, query_term: str, domains, days=Non
                         "description": job_data["description"],
                         "posting_date": job_data["posting_date"],
                         "locations": job_data["locations"],
-                        "location": loc_str, # Polyfill for Pydantic model
-                        "work_arrangement": "Unknown", # Add default
-                        "link": job_data["link"], # Save link too!
+                        "location": loc_str,  # Polyfill for Pydantic model
+                        "work_arrangement": "Unknown",  # Add default
+                        "link": job_data["link"],  # Save link too!
                         "created_at": datetime.now(timezone.utc),
                         "updated_at": datetime.now(timezone.utc),
                     }
