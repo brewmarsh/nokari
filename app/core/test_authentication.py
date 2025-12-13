@@ -6,6 +6,7 @@ from app.core.authentication import FirebaseAuthentication
 
 User = get_user_model()
 
+
 class FirebaseAuthenticationTest(TestCase):
     def setUp(self):
         self.client = APIClient()
@@ -18,10 +19,7 @@ class FirebaseAuthenticationTest(TestCase):
         user = User.objects.create_user(email=self.email, username=self.email)
 
         # Mock Firebase verification
-        mock_verify.return_value = {
-            "email": self.email,
-            "uid": self.uid
-        }
+        mock_verify.return_value = {"email": self.email, "uid": self.uid}
 
         # Manually invoke authentication
         auth_backend = FirebaseAuthentication()
@@ -38,10 +36,7 @@ class FirebaseAuthenticationTest(TestCase):
     @patch("app.core.authentication.auth.verify_id_token")
     def test_authentication_success_creates_user(self, mock_verify):
         # Mock Firebase verification
-        mock_verify.return_value = {
-            "email": "new@example.com",
-            "uid": "new_uid"
-        }
+        mock_verify.return_value = {"email": "new@example.com", "uid": "new_uid"}
 
         auth_backend = FirebaseAuthentication()
         request = MagicMock()

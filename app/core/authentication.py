@@ -29,7 +29,10 @@ except ValueError:
         except Exception as e:
             logger.error(f"Error initializing Firebase Admin SDK: {e}")
     else:
-        logger.warning("FIREBASE_CREDENTIALS_JSON not found. Firebase Auth will not work.")
+        logger.warning(
+            "FIREBASE_CREDENTIALS_JSON not found. Firebase Auth will not work."
+        )
+
 
 class FirebaseAuthentication(authentication.BaseAuthentication):
     def authenticate(self, request):
