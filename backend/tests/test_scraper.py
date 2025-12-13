@@ -1,22 +1,25 @@
-from backend.app import scraper
 from unittest.mock import patch
-import os
-import sys
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+from backend.app import scraper
 
 
-@patch("backend.app.scraper.DynamoRepo")
-def test_scraper_handler(MockDynamoRepo):
-    mock_repo_instance = MockDynamoRepo.return_value
-    mock_repo_instance.put_job_posting.return_value = True  # Simulate all jobs are new
+@patch("backend.app.scraper.FirestoreRepo")
+@patch("backend.app.scraping_logic.scrape_and_save_jobs")
+@patch("backend.app.scraper.db") # Mock db to avoid real connection attempt
+def test_handler(mock_db, mock_scrape, MockRepo):
+    # Setup mocks
+    mock_repo_instance = MockRepo.return_value
+    mock_repo_instance.get_scrapable_domains.return_value = [
+        {"id": "1", "domain": "example.com"}
+    ]
+    mock_scrape.return_value = 5
 
+    # Run handler
     event = {}
     context = {}
-
     result = scraper.handler(event, context)
 
+    # Assertions
     assert result["statusCode"] == 200
-    assert "Successfully added" in result["body"]
-    # Total jobs = 2 jobs per domain * 2 domains = 4
-    assert mock_repo_instance.put_job_posting.call_count == 4
+    assert "5 new jobs" in result["body"]
+    mock_scrape.assert_called_once()

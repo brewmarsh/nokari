@@ -4,13 +4,14 @@ import uuid
 from typing import List, Optional
 
 import boto3
-from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile, status
+from fastapi import BackgroundTasks, Depends, FastAPI, File, HTTPException, Request, UploadFile, status
 from fastapi.responses import JSONResponse
 from mangum import Mangum
 from pydantic import BaseModel
 
 from backend.app import models
 from backend.app.firestore_repo import FirestoreRepo
+from backend.app.scraper import run_scraper
 from backend.app.firebase_auth_repo import FirebaseAuthRepo
 from backend.app.firebase_config import db, firebase_storage
 from backend.app.security import get_current_user
@@ -18,6 +19,23 @@ from backend.app.security import get_current_user
 app = FastAPI()
 firestore_repo = FirestoreRepo(db_client=db)
 firebase_auth_repo = FirebaseAuthRepo()
+
+
+def get_current_admin_user(current_user: dict = Depends(get_current_user)):
+    user_id = current_user.get("uid")
+    if not user_id:
+        raise HTTPException(status_code=403, detail="Invalid token: no uid")
+
+    user_data = firestore_repo.get_user(user_id)
+    if not user_data:
+        raise HTTPException(status_code=403, detail="User not found")
+
+    if user_data.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+
+    return user_data
+
+
 # Explicitly set region
 sqs_client = boto3.client("sqs", region_name="us-east-1")
 SIMILARITY_QUEUE_URL = os.environ.get(
@@ -186,6 +204,29 @@ async def upload_resume(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to upload resume: {e}",
         )
+
+
+@app.get("/api/scrapable-domains", response_model=List[models.ScrapableDomain])
+def get_scrapable_domains(current_user: dict = Depends(get_current_admin_user)):
+    return firestore_repo.get_scrapable_domains()
+
+
+@app.post("/api/scrapable-domains", status_code=status.HTTP_201_CREATED)
+def add_scrapable_domain(
+    domain_request: models.CreateDomainRequest,
+    current_user: dict = Depends(get_current_admin_user),
+):
+    firestore_repo.add_scrapable_domain(domain_request.domain)
+    return {"message": f"Domain {domain_request.domain} added."}
+
+
+@app.post("/api/scrape", status_code=status.HTTP_202_ACCEPTED)
+def trigger_scrape(
+    background_tasks: BackgroundTasks,
+    current_user: dict = Depends(get_current_admin_user),
+):
+    background_tasks.add_task(run_scraper)
+    return {"message": "Scraping started in background."}
 
 
 handler = Mangum(app)

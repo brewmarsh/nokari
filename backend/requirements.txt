@@ -13,3 +13,5 @@ pytest-asyncio
 PyJWT
 uvicorn
 firebase-admin
+beautifulsoup4
+google-api-python-client
