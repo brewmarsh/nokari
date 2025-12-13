@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -10,6 +11,7 @@ class JobPosting(BaseModel):
     location: str
     description: str
     work_arrangement: str
+    posting_date: Optional[datetime] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -28,7 +30,13 @@ class JobPostResponse(BaseModel):
     company: str
     location: str
     work_arrangement: str
+    posting_date: Optional[datetime] = None
+
+
+class ScrapableDomain(BaseModel):
+    id: str
+    domain: str
 
 
 class CreateDomainRequest(BaseModel):
-    domain_name: str
+    domain: str

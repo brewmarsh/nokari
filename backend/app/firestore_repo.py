@@ -133,3 +133,33 @@ class FirestoreRepo:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Failed to put similarity result: {e}",
             )
+
+    def add_scrapable_domain(self, domain: str):
+        try:
+            # Check for duplicates
+            docs = (
+                self.db.collection("scrapable_domains")
+                .where("domain", "==", domain)
+                .limit(1)
+                .get()
+            )
+            for _ in docs:
+                # Domain already exists
+                return
+
+            self.db.collection("scrapable_domains").add({"domain": domain})
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to add scrapable domain: {e}",
+            )
+
+    def get_scrapable_domains(self) -> List[Dict[str, Any]]:
+        try:
+            docs = self.db.collection("scrapable_domains").stream()
+            return [{"id": doc.id, **doc.to_dict()} for doc in docs]
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to get scrapable domains: {e}",
+            )
