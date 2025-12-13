@@ -6,6 +6,7 @@ from backend.app import scraping_logic
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+
 def run_scraper(query: str = "Software Engineer"):
     repo = FirestoreRepo(db_client=db)
     domains = repo.get_scrapable_domains()
@@ -18,6 +19,7 @@ def run_scraper(query: str = "Software Engineer"):
     count = scraping_logic.scrape_and_save_jobs(repo, query, domains)
     print(f"Scraping complete. Added {count} new jobs.")
     return count
+
 
 def handler(event, context):
     """
