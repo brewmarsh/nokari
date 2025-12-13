@@ -1,66 +1,93 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
+import { db } from '../firebaseConfig';
+import { doc, updateDoc } from 'firebase/firestore';
 
-const Settings = () => {
-    const [user, setUser] = useState(null);
-    const [preferredWorkArrangement, setPreferredWorkArrangement] = useState('');
+const Settings = ({ user }) => {
+    const [preferences, setPreferences] = useState(user?.preferred_work_arrangement || []);
     const [error, setError] = useState(null);
     const [successMessage, setSuccessMessage] = useState('');
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        const fetchUser = async () => {
-            try {
-                const res = await api.get('/me/');
-                setUser(res.data);
-                setPreferredWorkArrangement(res.data.preferred_work_arrangement || 'any');
-            } catch (err) {
-                setError(err);
-            }
-        };
-        fetchUser();
-    }, []);
+        if (user) {
+             setPreferences(user.preferred_work_arrangement || []);
+        }
+    }, [user]);
 
-    const handleChange = (e) => {
-        setPreferredWorkArrangement(e.target.value);
+    const handleCheckboxChange = (option) => {
+        setPreferences(prev => {
+            if (prev.includes(option)) {
+                return prev.filter(p => p !== option);
+            } else {
+                return [...prev, option];
+            }
+        });
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSuccessMessage('');
         setError(null);
+        setLoading(true);
+
         try {
-            await api.patch('/me/', { preferred_work_arrangement: preferredWorkArrangement });
+            // Update Firestore (Source of Truth for Frontend)
+            const userDocRef = doc(db, "users", user.uid);
+            await updateDoc(userDocRef, { preferred_work_arrangement: preferences });
+
+            // Update Backend (Sync)
+            try {
+                await api.patch('/me/', { preferred_work_arrangement: preferences });
+            } catch (backendErr) {
+                console.warn("Failed to sync settings to backend:", backendErr);
+                // We proceed as success since Firestore is updated
+            }
+
             setSuccessMessage('Your settings have been saved.');
         } catch (err) {
+            console.error("Error saving settings:", err);
             setError(err);
+        } finally {
+            setLoading(false);
         }
     };
 
-    if (error) {
-        return <div>Error: {error.message}</div>;
-    }
+    const options = ['remote', 'hybrid', 'onsite', 'unspecified'];
 
     if (!user) {
-        return <div>Loading...</div>;
+        return <div>Loading user data...</div>;
     }
 
     return (
-        <div>
+        <div className="settings-container">
             <h1>Settings</h1>
             <form onSubmit={handleSubmit}>
-                <h2>Preferences</h2>
-                <div>
-                    <label htmlFor="work-arrangement" style={{ marginRight: '10px' }}>Preferred Work Arrangement</label>
-                    <select id="work-arrangement" value={preferredWorkArrangement} onChange={handleChange}>
-                        <option value="any">Any</option>
-                        <option value="remote">Remote</option>
-                        <option value="hybrid">Hybrid</option>
-                        <option value="onsite">Onsite</option>
-                    </select>
+                <div className="settings-section">
+                    <h2>Preferred Work Arrangement</h2>
+                    <p>Select the types of jobs you are interested in:</p>
+                    <div className="checkbox-group">
+                        {options.map(option => (
+                            <label key={option} style={{ display: 'block', margin: '5px 0' }}>
+                                <input
+                                    type="checkbox"
+                                    checked={preferences.includes(option)}
+                                    onChange={() => handleCheckboxChange(option)}
+                                    style={{ marginRight: '10px' }}
+                                />
+                                {option.charAt(0).toUpperCase() + option.slice(1)}
+                            </label>
+                        ))}
+                    </div>
                 </div>
-                <button type="submit" style={{ marginTop: '20px' }}>Save Settings</button>
+
+                {error && <div className="error-message" style={{ color: 'red', marginTop: '10px' }}>Error: {error.message}</div>}
+                {successMessage && <p className="success-message" style={{ color: 'green', marginTop: '10px' }}>{successMessage}</p>}
+
+                <button type="submit" disabled={loading} style={{ marginTop: '20px' }}>
+                    {loading ? 'Saving...' : 'Save Settings'}
+                </button>
             </form>
-            {successMessage && <p style={{ color: 'green' }}>{successMessage}</p>}
         </div>
     );
 };

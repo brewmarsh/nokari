@@ -84,8 +84,8 @@ const AppRoutes = memo(({ user, onOnboardingSuccess, onLoginSuccess, handleLogou
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/admin/jobs" element={<AdminJobs />} />
                 <Route path="/documents" element={<Documents />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/settings" element={<Settings />} />
+                <Route path="/profile" element={<Profile user={user} />} />
+                <Route path="/settings" element={<Settings user={user} />} />
                 <Route path="/debug" element={<Debug />} />
                 <Route path="/*" element={<Navigate to="/dashboard" />} />
               </>
