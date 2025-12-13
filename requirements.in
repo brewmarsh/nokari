@@ -16,3 +16,4 @@ python-json-logger
 celery
 redis
 urllib3>=2.6.0
+firebase-admin
