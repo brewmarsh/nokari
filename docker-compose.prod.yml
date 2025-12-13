@@ -22,6 +22,8 @@ services:
     restart: always
     env_file:
       - ./.env
+    environment:
+      - FIREBASE_CREDENTIALS_JSON=${FIREBASE_CREDENTIALS_JSON}
     command: ["/app/wait-for-db.sh", "db", "sh", "-c", "gunicorn nokari.wsgi:application --bind 0.0.0.0:8000"]
     depends_on:
       redis:
@@ -37,6 +39,8 @@ services:
     command: celery -A nokari worker -l info
     env_file:
       - ./.env
+    environment:
+      - FIREBASE_CREDENTIALS_JSON=${FIREBASE_CREDENTIALS_JSON}
     depends_on:
       - redis
       - db
@@ -49,6 +53,8 @@ services:
     command: celery -A nokari beat -l info
     env_file:
       - ./.env
+    environment:
+      - FIREBASE_CREDENTIALS_JSON=${FIREBASE_CREDENTIALS_JSON}
     depends_on:
       - redis
       - db
