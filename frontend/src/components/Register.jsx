@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { auth } from '../firebaseConfig';
+import { auth, db } from '../firebaseConfig';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -22,7 +23,17 @@ const Register = () => {
       alert('Passwords do not match');
     } else {
       try {
-        await createUserWithEmailAndPassword(auth, email, password);
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // Create user document in Firestore
+        await setDoc(doc(db, "users", user.uid), {
+            email: user.email,
+            created_at: new Date().toISOString(),
+            role: 'user', // Default role
+            preferred_work_arrangement: []
+        });
+
         navigate('/login');
       } catch (err) {
         console.error(err);

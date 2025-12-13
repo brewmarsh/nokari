@@ -3,7 +3,7 @@ import { Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
 import './App.css';
 import { auth, db, initializationError } from './firebaseConfig';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import UserProfileIcon from './components/UserProfileIcon.jsx';
 
 // Lazy load components
@@ -137,7 +137,20 @@ function App() {
             if (userDoc.exists()) {
               setUser({ ...firebaseUser, ...userDoc.data() });
             } else {
-              setUser(firebaseUser);
+              // Create missing user document
+              const newUserProfile = {
+                  email: firebaseUser.email,
+                  role: 'user',
+                  created_at: new Date().toISOString(),
+                  preferred_work_arrangement: []
+              };
+              try {
+                  await setDoc(userDocRef, newUserProfile);
+                  setUser({ ...firebaseUser, ...newUserProfile });
+              } catch (createErr) {
+                  console.error("Failed to create user profile:", createErr);
+                  setUser(firebaseUser);
+              }
             }
           } catch (docError) {
             console.warn("Failed to fetch user profile, proceeding with auth user only:", docError);
