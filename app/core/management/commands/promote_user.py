@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 import firebase_admin
 from firebase_admin import firestore
 # Import to ensure Firebase Admin SDK is initialized
-from app.core import authentication
+from app.core import authentication  # noqa: F401
 
 User = get_user_model()
 
