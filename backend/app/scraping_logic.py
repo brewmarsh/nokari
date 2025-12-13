@@ -229,11 +229,11 @@ def scrape_and_save_jobs(repo: FirestoreRepo, query_term: str, domains, days=Non
                     loc_str = "Remote" # Default
                     if job_data["locations"]:
                         # rough heuristic
-                        l = job_data["locations"][0]
-                        if l.get("location_string"):
-                            loc_str = l.get("location_string")
-                        elif l.get("type"):
-                            loc_str = l.get("type")
+                        first_location = job_data["locations"][0]
+                        if first_location.get("location_string"):
+                            loc_str = first_location.get("location_string")
+                        elif first_location.get("type"):
+                            loc_str = first_location.get("type")
 
                     final_job_data = {
                         "title": title,
