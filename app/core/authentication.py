@@ -75,4 +75,4 @@ class FirebaseAuthentication(authentication.BaseAuthentication):
             # Create user if not exists
             user = User.objects.create_user(email=email, username=email)
 
-        return (user, None)
+        return (user, decoded_token)

@@ -1,8 +1,11 @@
+import logging
+import datetime
 import numpy as np
 from celery.result import AsyncResult
 from django.contrib.auth import get_user_model
 from django.db.models import BooleanField, OuterRef, Q, Subquery, Value
 from django.db.models.functions import Coalesce
+from firebase_admin import firestore
 from numpy.linalg import norm
 from rest_framework import generics, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
@@ -41,6 +44,8 @@ from .tasks import (
     scrape_and_save_jobs_task,
 )
 
+logger = logging.getLogger(__name__)
+
 User = get_user_model()
 
 
@@ -55,7 +60,31 @@ class MeView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
-        return self.request.user
+        user = self.request.user
+        auth_data = self.request.auth
+
+        # Check and sync to Firestore if UID is available from Firebase token
+        if auth_data and isinstance(auth_data, dict) and "uid" in auth_data:
+            uid = auth_data["uid"]
+            try:
+                db = firestore.client()
+                user_ref = db.collection("users").document(uid)
+                doc = user_ref.get()
+                if not doc.exists:
+                    logger.info(f"Syncing user {user.email} to Firestore (auto-heal)")
+                    user_ref.set(
+                        {
+                            "email": user.email,
+                            "role": "user",
+                            "created_at": datetime.datetime.utcnow().isoformat(),
+                            "preferred_work_arrangement": [],
+                            "id": uid,
+                        }
+                    )
+            except Exception as e:
+                logger.error(f"Failed to sync user to Firestore: {e}")
+
+        return user
 
 
 class RegisterView(generics.CreateAPIView):

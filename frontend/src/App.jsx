@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback, memo, useRef, Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
 import './App.css';
-import { auth, initializationError } from './firebaseConfig';
+import { auth, initializationError, db } from './firebaseConfig';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import UserProfileIcon from './components/UserProfileIcon.jsx';
 import api from './services/api';
 
@@ -136,7 +137,30 @@ function App() {
             setUser({ ...firebaseUser, ...response.data });
           } catch (apiError) {
             console.warn("Failed to fetch user profile from API, proceeding with auth user only:", apiError);
-            setUser(firebaseUser);
+
+            // Auto-heal: Ensure Firestore document exists
+            try {
+              const userRef = doc(db, "users", firebaseUser.uid);
+              const userSnap = await getDoc(userRef);
+
+              if (!userSnap.exists()) {
+                console.log("Creating missing user profile in Firestore (auto-heal)...");
+                const newUserData = {
+                  email: firebaseUser.email,
+                  role: 'user',
+                  created_at: new Date().toISOString(),
+                  preferred_work_arrangement: [],
+                  id: firebaseUser.uid
+                };
+                await setDoc(userRef, newUserData);
+                setUser({ ...firebaseUser, ...newUserData });
+              } else {
+                 setUser({ ...firebaseUser, ...userSnap.data() });
+              }
+            } catch (firestoreError) {
+              console.error("Failed to auto-heal Firestore profile:", firestoreError);
+              setUser(firebaseUser);
+            }
           }
         } else {
           // User is signed out
