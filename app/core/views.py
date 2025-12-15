@@ -13,8 +13,6 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-logger = logging.getLogger(__name__)
-
 from .models import (
     CoverLetter,
     HiddenCompany,
@@ -45,6 +43,8 @@ from .tasks import (
     rescrape_job_details_task,
     scrape_and_save_jobs_task,
 )
+
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
