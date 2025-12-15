@@ -64,21 +64,23 @@ class MeView(generics.RetrieveUpdateAPIView):
         auth_data = self.request.auth
 
         # Check and sync to Firestore if UID is available from Firebase token
-        if auth_data and isinstance(auth_data, dict) and 'uid' in auth_data:
-            uid = auth_data['uid']
+        if auth_data and isinstance(auth_data, dict) and "uid" in auth_data:
+            uid = auth_data["uid"]
             try:
                 db = firestore.client()
                 user_ref = db.collection("users").document(uid)
                 doc = user_ref.get()
                 if not doc.exists:
                     logger.info(f"Syncing user {user.email} to Firestore (auto-heal)")
-                    user_ref.set({
-                        "email": user.email,
-                        "role": "user",
-                        "created_at": datetime.datetime.utcnow().isoformat(),
-                        "preferred_work_arrangement": [],
-                        "id": uid
-                    })
+                    user_ref.set(
+                        {
+                            "email": user.email,
+                            "role": "user",
+                            "created_at": datetime.datetime.utcnow().isoformat(),
+                            "preferred_work_arrangement": [],
+                            "id": uid,
+                        }
+                    )
             except Exception as e:
                 logger.error(f"Failed to sync user to Firestore: {e}")
 
