@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List, Any
 
 from pydantic import BaseModel, Field
 
@@ -31,6 +31,9 @@ class JobPostResponse(BaseModel):
     location: str
     work_arrangement: str
     posting_date: Optional[datetime] = None
+    link: Optional[str] = None
+    locations: Optional[List[str]] = None
+    is_pinned: Optional[bool] = False
 
 
 class ScrapableDomain(BaseModel):
@@ -40,3 +43,11 @@ class ScrapableDomain(BaseModel):
 
 class CreateDomainRequest(BaseModel):
     domain: str
+
+
+class UserResponse(BaseModel):
+    id: str
+    email: str
+    role: str
+    preferred_work_arrangement: List[str] = []
+    created_at: Optional[str] = None

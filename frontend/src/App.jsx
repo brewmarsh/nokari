@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback, memo, useRef, Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
 import './App.css';
-import { auth, db, initializationError } from './firebaseConfig';
+import { auth, initializationError } from './firebaseConfig';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
 import UserProfileIcon from './components/UserProfileIcon.jsx';
+import api from './services/api';
 
 // Lazy load components
 const Login = lazy(() => import('./components/Login.jsx'));
@@ -130,30 +130,12 @@ function App() {
       console.log("Auth state changed:", firebaseUser ? "User found" : "No user");
       try {
         if (firebaseUser) {
-          // User is signed in, see if we have additional data in Firestore
-          const userDocRef = doc(db, "users", firebaseUser.uid);
           try {
-            const userDoc = await getDoc(userDocRef);
-            if (userDoc.exists()) {
-              setUser({ ...firebaseUser, ...userDoc.data() });
-            } else {
-              // Create missing user document
-              const newUserProfile = {
-                  email: firebaseUser.email,
-                  role: 'user',
-                  created_at: new Date().toISOString(),
-                  preferred_work_arrangement: []
-              };
-              try {
-                  await setDoc(userDocRef, newUserProfile);
-                  setUser({ ...firebaseUser, ...newUserProfile });
-              } catch (createErr) {
-                  console.error("Failed to create user profile:", createErr);
-                  setUser(firebaseUser);
-              }
-            }
-          } catch (docError) {
-            console.warn("Failed to fetch user profile, proceeding with auth user only:", docError);
+            // Fetch user profile from backend API to avoid Firestore permission issues
+            const response = await api.get('/users/me');
+            setUser({ ...firebaseUser, ...response.data });
+          } catch (apiError) {
+            console.warn("Failed to fetch user profile from API, proceeding with auth user only:", apiError);
             setUser(firebaseUser);
           }
         } else {
