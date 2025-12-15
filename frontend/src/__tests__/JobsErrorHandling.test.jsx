@@ -21,8 +21,20 @@ vi.mock('firebase/firestore', () => ({
   startAfter: vi.fn(),
 }));
 
+// Mock api service
+// Note: We cannot use top-level variables inside vi.mock callback due to hoisting.
+// So we define the mocks inline or import them if needed.
+// Alternatively, we can use `vi.importActual` to mock parts.
+// But here, we just need to control the `get` method.
+
+const mockGet = vi.fn();
+const mockPost = vi.fn();
+
 vi.mock('../services/api', () => ({
-  default: { post: vi.fn() },
+  default: {
+    get: (...args) => mockGet(...args),
+    post: (...args) => mockPost(...args)
+  },
 }));
 
 vi.mock('../hooks/useDebounce', () => ({
@@ -38,8 +50,6 @@ vi.mock('../components/JobFilters', () => ({
   default: () => <div data-testid="job-filters">Job Filters</div>,
 }));
 
-import { getDocs } from 'firebase/firestore';
-
 describe('Jobs Component Error Handling', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -47,9 +57,9 @@ describe('Jobs Component Error Handling', () => {
   });
 
   it('renders error message when fetching jobs fails', async () => {
-    // Simulate an error when fetching jobs
+    // Simulate an error when fetching jobs via API
     const mockError = new Error('Missing or insufficient permissions');
-    vi.mocked(getDocs).mockRejectedValue(mockError);
+    mockGet.mockRejectedValue(mockError);
 
     await act(async () => {
         render(<Jobs preferences={[]} />);
@@ -59,9 +69,5 @@ describe('Jobs Component Error Handling', () => {
     await waitFor(() => {
       expect(screen.getByText(/Error: Missing or insufficient permissions/i)).toBeInTheDocument();
     });
-
-    // Verify hooks order did not cause a crash (if it crashed, the test would fail or not reach this point)
-    // The previous bug caused "Rendered fewer hooks than expected" which crashes React.
-    // By successfully rendering the error message, we prove the fix works.
   });
 });

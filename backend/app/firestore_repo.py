@@ -15,7 +15,7 @@ class FirestoreRepo:
 
     def put_user(self, user_id: str, user_data: Dict[str, Any]):
         try:
-            self.db.collection("users").document(user_id).set(user_data)
+            self.db.collection("users").document(user_id).set(user_data, merge=True)
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -89,21 +89,25 @@ class FirestoreRepo:
 
     def search_jobs(
         self,
-        location: Optional[str] = None,
+        locations: Optional[List[str]] = None,
         title: Optional[str] = None,
+        company: Optional[str] = None,
         limit: int = 20,
         last_doc_id: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         try:
             query = self.db.collection("job_postings")
 
-            if location:
-                query = query.where("locations", "array_contains", location)
+            if locations and len(locations) > 0:
+                query = query.where("locations", "array_contains_any", locations)
+
             if title:
                 query = query.where("title", "==", title)
 
+            if company:
+                query = query.where("company", "==", company)
+
             # Order by posting_date desc
-            # Note: This requires an index in Firestore if combined with other filters
             query = query.order_by("posting_date", direction=firestore.Query.DESCENDING)
 
             if last_doc_id:
@@ -132,6 +136,30 @@ class FirestoreRepo:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Failed to put similarity result: {e}",
+            )
+
+    def update_user_job_interaction(
+        self, user_id: str, job_id: str, interaction_data: Dict[str, Any]
+    ):
+        try:
+            self.db.collection("users").document(user_id).collection(
+                "job_interactions"
+            ).document(job_id).set(interaction_data, merge=True)
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to update user job interaction: {e}",
+            )
+
+    def hide_company_for_user(self, user_id: str, company_name: str):
+        try:
+            self.db.collection("users").document(user_id).collection(
+                "hidden_companies"
+            ).document(company_name).set({"name": company_name})
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to hide company for user: {e}",
             )
 
     def add_scrapable_domain(self, domain: str):

@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './Jobs.css';
 import useDebounce from '../hooks/useDebounce.js';
-import { db, auth } from '../firebaseConfig';
-import { collection, query, where, getDocs, doc, setDoc, orderBy, limit, startAfter } from 'firebase/firestore';
-import api from '../services/api'; // Keep api for find-similar for now
+import { auth } from '../firebaseConfig';
+import api from '../services/api';
 
 import JobCard from './JobCard.jsx';
 import JobFilters from './JobFilters.jsx';
@@ -24,10 +23,10 @@ const Jobs = ({ preferences }) => {
     return saved !== null ? JSON.parse(saved) : true;
   });
 
-  const [lastDoc, setLastDoc] = useState(null);
+  const [lastDocId, setLastDocId] = useState(null);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [resetKey, setResetKey] = useState(0); // Add a key to force re-fetch
+  const [resetKey, setResetKey] = useState(0);
 
   useEffect(() => {
     localStorage.setItem('filtersVisible', JSON.stringify(filtersVisible));
@@ -36,45 +35,23 @@ const Jobs = ({ preferences }) => {
   const debouncedTitle = useDebounce(title, 500);
   const debouncedCompany = useDebounce(company, 500);
 
-  // Common function to build the query
-  const buildQuery = useCallback((startAfterDoc = null) => {
-    const jobsRef = collection(db, "job_postings");
-    let q = query(jobsRef);
-
-    if (debouncedTitle) {
-      q = query(q, where("title", "==", debouncedTitle));
-    }
-    if (debouncedCompany) {
-      q = query(q, where("company", "==", debouncedCompany));
-    }
-    if (preferences && preferences.length > 0) {
-      q = query(q, where("locations", "array-contains-any", preferences));
-    }
-
-    q = query(q, orderBy("posting_date", "desc"), limit(JOBS_PER_PAGE));
-
-    if (startAfterDoc) {
-      q = query(q, startAfter(startAfterDoc));
-    }
-    return q;
-  }, [debouncedTitle, debouncedCompany, preferences]);
-
-  const executeFetch = useCallback(async (isLoadMore = false) => {
+  const fetchJobs = useCallback(async (isLoadMore = false) => {
      if (loading) return;
      setLoading(true);
      setError(null);
 
      try {
-         // Determine if we are loading more or starting fresh
-         // Note: We use 'lastDoc' from state if isLoadMore is true, else null.
-         // Wait, 'lastDoc' state might be stale inside callback if dependencies are not correct?
-         // But we are passing it to buildQuery.
-         // Actually, if isLoadMore is true, we need the *current* lastDoc.
-         // If isLoadMore is false, we start from scratch.
+         const params = {
+             limit: JOBS_PER_PAGE,
+             last_doc_id: isLoadMore ? lastDocId : undefined,
+         };
 
-         const q = buildQuery(isLoadMore ? lastDoc : null);
-         const querySnapshot = await getDocs(q);
-         const fetchedJobs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+         if (debouncedTitle) params.title = debouncedTitle;
+         if (debouncedCompany) params.company = debouncedCompany;
+         if (preferences && preferences.length > 0) params.locations = preferences;
+
+         const response = await api.get('/jobs', { params });
+         const fetchedJobs = response.data;
 
          if (isLoadMore) {
              setJobs(prevJobs => [...prevJobs, ...fetchedJobs]);
@@ -82,10 +59,13 @@ const Jobs = ({ preferences }) => {
              setJobs(fetchedJobs);
          }
 
-         const newLastDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
-         setLastDoc(newLastDoc);
+         if (fetchedJobs.length > 0) {
+             setLastDocId(fetchedJobs[fetchedJobs.length - 1].job_id);
+         } else if (!isLoadMore) {
+             setLastDocId(null);
+         }
 
-         if (querySnapshot.docs.length < JOBS_PER_PAGE) {
+         if (fetchedJobs.length < JOBS_PER_PAGE) {
              setHasMore(false);
          } else {
              setHasMore(true);
@@ -96,31 +76,38 @@ const Jobs = ({ preferences }) => {
      } finally {
          setLoading(false);
      }
-  }, [buildQuery, lastDoc, loading]);
+  }, [debouncedTitle, debouncedCompany, preferences, lastDocId, loading]);
 
 
   // Effect for initial load and filter changes
   useEffect(() => {
     // Reset state and fetch
     setJobs([]);
-    setLastDoc(null);
+    setLastDocId(null);
     setHasMore(true);
-
-    // We can't reuse executeFetch here easily because it depends on state that we just reset (but React updates are async).
-    // So we manually execute the first fetch logic here.
 
     const initialFetch = async () => {
         setLoading(true);
         setError(null);
         try {
-            const q = buildQuery(null);
-            const querySnapshot = await getDocs(q);
-            const fetchedJobs = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const params = {
+                 limit: JOBS_PER_PAGE,
+            };
+
+            if (debouncedTitle) params.title = debouncedTitle;
+            if (debouncedCompany) params.company = debouncedCompany;
+            if (preferences && preferences.length > 0) params.locations = preferences;
+
+            const response = await api.get('/jobs', { params });
+            const fetchedJobs = response.data;
 
             setJobs(fetchedJobs);
-            setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1]);
 
-            if (querySnapshot.docs.length < JOBS_PER_PAGE) {
+            if (fetchedJobs.length > 0) {
+                setLastDocId(fetchedJobs[fetchedJobs.length - 1].job_id);
+            }
+
+            if (fetchedJobs.length < JOBS_PER_PAGE) {
                 setHasMore(false);
             } else {
                 setHasMore(true);
@@ -134,16 +121,15 @@ const Jobs = ({ preferences }) => {
     };
 
     initialFetch();
-    // We add resetKey as dependency to force re-fetch when requested (e.g. Clear button)
-  }, [buildQuery, resetKey]);
+  }, [debouncedTitle, debouncedCompany, preferences, resetKey]);
 
   const handleLoadMore = () => {
-    executeFetch(true);
+    fetchJobs(true);
   };
 
   const handleClearSimilar = () => {
       setSimilarJobsTitle('');
-      setResetKey(prev => prev + 1); // Trigger re-fetch of default list
+      setResetKey(prev => prev + 1);
   };
 
   const handleHide = useCallback(async (jobId) => {
@@ -151,9 +137,8 @@ const Jobs = ({ preferences }) => {
     if (!user) return;
 
     try {
-      const userJobInteractionRef = doc(db, "users", user.uid, "job_interactions", jobId);
-      await setDoc(userJobInteractionRef, { hidden: true }, { merge: true });
-      setJobs(jobs.filter((job) => job.id !== jobId));
+      await api.post(`/jobs/${jobId}/hide`);
+      setJobs(jobs.filter((job) => job.job_id !== jobId));
     } catch (err) {
       console.error("Error hiding job:", err);
       setError(err);
@@ -165,8 +150,7 @@ const Jobs = ({ preferences }) => {
     if (!user) return;
 
     try {
-      const hiddenCompanyRef = doc(db, "users", user.uid, "hidden_companies", companyName);
-      await setDoc(hiddenCompanyRef, { name: companyName });
+      await api.post(`/companies/${companyName}/hide`);
       setJobs(jobs.filter((job) => job.company !== companyName));
     } catch (err) {
       console.error("Error hiding company:", err);
@@ -179,10 +163,9 @@ const Jobs = ({ preferences }) => {
     if (!user) return;
 
     try {
-      const userJobInteractionRef = doc(db, "users", user.uid, "job_interactions", jobId);
-      await setDoc(userJobInteractionRef, { pinned: !isPinned }, { merge: true });
+      await api.post(`/jobs/${jobId}/pin`, null, { params: { is_pinned: !isPinned } });
       setJobs(prevJobs => prevJobs.map(job =>
-          job.id === jobId ? { ...job, is_pinned: !isPinned } : job
+          job.job_id === jobId ? { ...job, is_pinned: !isPinned } : job
       ));
     } catch (err) {
       console.error("Error pinning job:", err);
@@ -195,7 +178,7 @@ const Jobs = ({ preferences }) => {
     setSimilarJobsTitle(job.title);
     setOpenMenu(null);
     try {
-      await api.post('/jobs/find-similar/', { link: job.link });
+      await api.post(`/jobs/${job.job_id}/find-similar`);
        alert("Similarity search initiated. Check back later.");
     } catch (err) {
       console.error("Error finding similar jobs:", err);
@@ -239,7 +222,7 @@ const Jobs = ({ preferences }) => {
           <div className="jobs-container">
             {jobs.map((job) => (
               <JobCard
-                key={job.id} // Use job.id from Firestore
+                key={job.job_id} // Use job_id from API
                 job={job}
                 openMenu={openMenu}
                 setOpenMenu={setOpenMenu}
