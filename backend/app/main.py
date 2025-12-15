@@ -130,7 +130,7 @@ def get_me(current_user: dict = Depends(get_current_user)):
             "email": email,
             "role": "user",
             "created_at": datetime.utcnow().isoformat(),
-            "preferred_work_arrangement": []
+            "preferred_work_arrangement": [],
         }
         firestore_repo.put_user(user_id, new_user)
         user_data = new_user
@@ -173,8 +173,8 @@ def get_job(job_id: str):
 def search_jobs(
     title: Optional[str] = None,
     company: Optional[str] = None,
-    location: Optional[str] = None, # kept for backward compatibility if any
-    locations: Optional[List[str]] = Query(None), # Use Query for list parameters
+    location: Optional[str] = None,  # kept for backward compatibility if any
+    locations: Optional[List[str]] = Query(None),  # Use Query for list parameters
     work_arrangement: Optional[str] = None,
     limit: int = 20,
     last_doc_id: Optional[str] = None,
@@ -185,7 +185,11 @@ def search_jobs(
         search_locations.append(location)
 
     jobs = firestore_repo.search_jobs(
-        locations=search_locations, title=title, company=company, limit=limit, last_doc_id=last_doc_id
+        locations=search_locations,
+        title=title,
+        company=company,
+        limit=limit,
+        last_doc_id=last_doc_id,
     )
     # Firestore does not automatically include the document ID in the data.
     # We need to add it manually if it's part of the response model.
@@ -223,7 +227,9 @@ def hide_job(job_id: str, current_user: dict = Depends(get_current_user)):
 
 
 @app.post("/api/jobs/{job_id}/pin", status_code=status.HTTP_200_OK)
-def pin_job(job_id: str, is_pinned: bool = True, current_user: dict = Depends(get_current_user)):
+def pin_job(
+    job_id: str, is_pinned: bool = True, current_user: dict = Depends(get_current_user)
+):
     user_id = current_user.get("uid")
     if not user_id:
         raise HTTPException(status_code=400, detail="Invalid token: no uid")
