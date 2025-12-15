@@ -46,7 +46,7 @@ def test_scrape_and_save_jobs():
                 "company": "Comp",
                 "description": "Desc",
                 "link": "http://link.com",
-                "locations": [],
+                "locations": [{"type": "remote"}, {"location_string": "NY"}],
                 "posting_date": None,
             }
         ]
@@ -56,3 +56,8 @@ def test_scrape_and_save_jobs():
 
         assert count == 1
         repo.put_job_posting.assert_called_once()
+        args, _ = repo.put_job_posting.call_args
+        saved_job = args[1]
+        assert "searchable_locations" in saved_job
+        assert "remote" in saved_job["searchable_locations"]
+        assert "NY" in saved_job["searchable_locations"]

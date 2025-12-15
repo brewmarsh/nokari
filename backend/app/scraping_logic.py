@@ -196,39 +196,17 @@ def scrape_and_save_jobs(repo: FirestoreRepo, query_term: str, domains, days=Non
                 existing_job = repo.get_job_posting(job_id)
 
                 if not existing_job:
-                    # Prepare data for Firestore
-                    # Map 'locations' to 'location' string if needed by model, or keep 'locations' list?
-                    # backend/app/models.py JobPosting has 'location': str.
-                    # Frontend Jobs.jsx uses 'locations' array_contains_any.
-                    # Ah, mismatch?
-                    # backend/app/models.py:
-                    # class JobPosting(BaseModel): ... location: str ...
-                    # backend/app/firestore_repo.py search_jobs:
-                    # if location: query = query.where("locations", "array_contains", location)
-                    # So Firestore expects 'locations' array.
-                    # But the Pydantic model says 'location' string.
-                    # This implies 'location' string in Pydantic is wrong or mapped differently?
-                    # backend/app/main.py: return [models.JobPostResponse(..., **job) for job in jobs]
-                    # JobPostResponse has 'location' string.
-                    # If Firestore has 'locations' array, Pydantic might fail validation if we just unpack `**job`.
-                    # But Python unpacking is loose if not validated strictly at that point?
-                    # Wait, FastAPI validates the response model.
-                    # If `job` dict has `locations` (list) but model expects `location` (str), it will fail or cast.
-                    # I should check `models.py` again.
-                    # `location: str`.
-                    # I should probably update `models.py` to match Firestore usage (`locations: List[...]`).
-                    # Or adapt here.
-                    # I'll stick to what `scrape_jobs` produces: `locations` list of dicts.
+                    # Flatten locations for searching
+                    searchable_locations = []
+                    for loc in job_data["locations"]:
+                        if loc.get("type"):
+                            searchable_locations.append(loc["type"])
+                        if loc.get("location_string"):
+                            searchable_locations.append(loc["location_string"])
 
-                    # I will adapt `job_data` to match what `repo.put_job_posting` expects.
-                    # And `repo` expects dict.
-
-                    # I'll save `locations` as list.
-                    # Also map `location` (singular) to a string representation for compatibility.
-
-                    loc_str = "Remote"  # Default
+                    # Default location string for display
+                    loc_str = "Remote"
                     if job_data["locations"]:
-                        # rough heuristic
                         first_location = job_data["locations"][0]
                         if first_location.get("location_string"):
                             loc_str = first_location.get("location_string")
@@ -241,9 +219,10 @@ def scrape_and_save_jobs(repo: FirestoreRepo, query_term: str, domains, days=Non
                         "description": job_data["description"],
                         "posting_date": job_data["posting_date"],
                         "locations": job_data["locations"],
-                        "location": loc_str,  # Polyfill for Pydantic model
-                        "work_arrangement": "Unknown",  # Add default
-                        "link": job_data["link"],  # Save link too!
+                        "searchable_locations": searchable_locations,
+                        "location": loc_str,
+                        "work_arrangement": "Unknown",
+                        "link": job_data["link"],
                         "created_at": datetime.now(timezone.utc),
                         "updated_at": datetime.now(timezone.utc),
                     }

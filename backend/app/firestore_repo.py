@@ -99,7 +99,7 @@ class FirestoreRepo:
             query = self.db.collection("job_postings")
 
             if locations and len(locations) > 0:
-                query = query.where("locations", "array_contains_any", locations)
+                query = query.where("searchable_locations", "array_contains_any", locations)
 
             if title:
                 query = query.where("title", "==", title)
