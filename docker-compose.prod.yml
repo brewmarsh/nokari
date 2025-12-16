@@ -1,78 +1,43 @@
 services:
-  db:
-    container_name: nokari-db
-    image: postgres:14-alpine
-    restart: always
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    env_file:
-      - ./.env
-    networks:
-      - nokari-prod-net
-  redis:
-    container_name: nokari-redis
-    image: "redis:7-alpine"
-    ports:
-      - "6379:6379"
-    networks:
-      - nokari-prod-net
   backend:
     container_name: nokari-backend
-    image: ${DOCKERHUB_USERNAME}/${IMAGE_NAME_BACKEND}:${IMAGE_TAG}
-    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile.fastapi
+    command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
     env_file:
       - ./.env
     environment:
       - FIREBASE_CREDENTIALS_JSON=${FIREBASE_CREDENTIALS_JSON}
-    command: ["/app/wait-for-db.sh", "db", "sh", "-c", "gunicorn nokari.wsgi:application --bind 0.0.0.0:8000"]
-    depends_on:
-      redis:
-        condition: service_started
-      db:
-        condition: service_started
     networks:
       - nokari-prod-net
-  celery:
-    container_name: nokari-worker
-    image: ${DOCKERHUB_USERNAME}/${IMAGE_NAME_BACKEND}:${IMAGE_TAG}
-    restart: always
-    command: celery -A nokari worker -l info
-    env_file:
-      - ./.env
-    environment:
-      - FIREBASE_CREDENTIALS_JSON=${FIREBASE_CREDENTIALS_JSON}
-    depends_on:
-      - redis
-      - db
-    networks:
-      - nokari-prod-net
-  celery-beat:
-    container_name: nokari-beat
-    image: ${DOCKERHUB_USERNAME}/${IMAGE_NAME_BACKEND}:${IMAGE_TAG}
-    restart: always
-    command: celery -A nokari beat -l info
-    env_file:
-      - ./.env
-    environment:
-      - FIREBASE_CREDENTIALS_JSON=${FIREBASE_CREDENTIALS_JSON}
-    depends_on:
-      - redis
-      - db
-    networks:
-      - nokari-prod-net
+
   frontend:
     container_name: nokari-frontend
-    image: ${DOCKERHUB_USERNAME}/${IMAGE_NAME_FRONTEND}:${IMAGE_TAG}
-    restart: always
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_FIREBASE_API_KEY=${VITE_FIREBASE_API_KEY}
+        - VITE_FIREBASE_AUTH_DOMAIN=${VITE_FIREBASE_AUTH_DOMAIN}
+        - VITE_FIREBASE_PROJECT_ID=${VITE_FIREBASE_PROJECT_ID}
+        - VITE_FIREBASE_STORAGE_BUCKET=${VITE_FIREBASE_STORAGE_BUCKET}
+        - VITE_FIREBASE_MESSAGING_SENDER_ID=${VITE_FIREBASE_MESSAGING_SENDER_ID}
+        - VITE_FIREBASE_APP_ID=${VITE_FIREBASE_APP_ID}
+        - VITE_FIREBASE_MEASUREMENT_ID=${VITE_FIREBASE_MEASUREMENT_ID}
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     ports:
-      - "${WEB_APP_PORT:-3000}:80"
+      - "3000:80"
     depends_on:
       - backend
     networks:
       - nokari-prod-net
-
-volumes:
-  postgres_data:
 
 networks:
   nokari-prod-net:
