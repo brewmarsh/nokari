@@ -115,7 +115,7 @@ def login(login_request: FirebaseLoginRequest):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
-@app.get("/api/users/me", response_model=models.UserResponse)
+@app.get("/api/me", response_model=models.UserResponse)
 def get_me(current_user: dict = Depends(get_current_user)):
     user_id = current_user.get("uid")
     if not user_id:
