@@ -11,6 +11,12 @@ set -e
 # IMAGE_NAME_FRONTEND
 # IMAGE_TAG
 
+# Export variables for docker-compose
+export DOCKERHUB_USERNAME
+export IMAGE_NAME_BACKEND
+export IMAGE_NAME_FRONTEND
+export IMAGE_TAG
+
 echo "Starting deployment..."
 
 # Set the app directory
