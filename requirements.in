@@ -5,7 +5,7 @@ beautifulsoup4
 requests
 transformers
 torch
-networkx<3.7  # Pinned for Python 3.10 compatibility (3.5+ requires 3.11+)
+networkx<3.5  # Pinned for Python 3.10 compatibility (3.5+ requires 3.11+)
 numpy<3.0  # Pinned for compatibility
 djangorestframework
 djangorestframework-simplejwt==5.5.1
