@@ -163,7 +163,7 @@ networkx==3.4.2
     # via
     #   -r requirements.in
     #   torch
-numpy==2.3.5
+numpy==2.2.6
     # via
     #   -r requirements.in
     #   transformers
