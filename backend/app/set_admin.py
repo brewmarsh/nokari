@@ -1,5 +1,7 @@
 import sys
 import logging
+import json
+import os
 from backend.app.firebase_config import db
 from backend.app.firebase_auth_repo import FirebaseAuthRepo
 from backend.app.firestore_repo import FirestoreRepo
@@ -9,6 +11,20 @@ logger = logging.getLogger(__name__)
 
 
 def set_admin_role(email: str):
+    # Debug: Print Project ID
+    try:
+        creds_json = os.environ.get("FIREBASE_CREDENTIALS_JSON")
+        if creds_json:
+            creds = json.loads(creds_json)
+            project_id = creds.get("project_id", "UNKNOWN")
+            logger.info(f"Backend connected to Firebase Project ID: {project_id}")
+        else:
+            logger.warning(
+                "FIREBASE_CREDENTIALS_JSON not found, cannot determine Project ID."
+            )
+    except Exception as e:
+        logger.warning(f"Could not parse credentials to find Project ID: {e}")
+
     auth_repo = FirebaseAuthRepo()
     firestore_repo = FirestoreRepo(db_client=db)
 
