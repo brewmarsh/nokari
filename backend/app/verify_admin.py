@@ -7,6 +7,7 @@ from backend.app.firestore_repo import FirestoreRepo
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 def verify_admin_role(email: str):
     auth_repo = FirebaseAuthRepo()
     firestore_repo = FirestoreRepo(db_client=db)
@@ -23,14 +24,16 @@ def verify_admin_role(email: str):
 
     user_doc = firestore_repo.get_user(uid)
     if not user_doc:
-         logger.error(f"User document NOT found in Firestore for UID: {uid}")
+        logger.error(f"User document NOT found in Firestore for UID: {uid}")
     else:
-        role = user_doc.get('role')
+        role = user_doc.get("role")
         logger.info(f"User document found. Role: {role}")
-        if role == 'admin':
+        if role == "admin":
             logger.info("VERIFICATION SUCCESS: User has 'admin' role.")
         else:
-             logger.warning(f"VERIFICATION FAILED: User has role '{role}', expected 'admin'.")
+            logger.warning(
+                f"VERIFICATION FAILED: User has role '{role}', expected 'admin'."
+            )
 
 
 if __name__ == "__main__":
