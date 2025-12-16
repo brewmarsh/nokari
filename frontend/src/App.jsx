@@ -133,7 +133,7 @@ function App() {
         if (firebaseUser) {
           try {
             // Fetch user profile from backend API to avoid Firestore permission issues
-            const response = await api.get('/users/me');
+            const response = await api.get('/me');
             setUser({ ...firebaseUser, ...response.data });
           } catch (apiError) {
             console.warn("Failed to fetch user profile from API, proceeding with auth user only:", apiError);
