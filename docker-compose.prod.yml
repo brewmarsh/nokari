@@ -1,12 +1,8 @@
 services:
   backend:
     container_name: nokari-backend
-    build:
-      context: .
-      dockerfile: Dockerfile.fastapi
+    image: ${DOCKERHUB_USERNAME}/${IMAGE_NAME_BACKEND}:${IMAGE_TAG}
     command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
-    volumes:
-      - .:/app
     ports:
       - "8000:8000"
     env_file:
@@ -18,20 +14,7 @@ services:
 
   frontend:
     container_name: nokari-frontend
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        - VITE_FIREBASE_API_KEY=${VITE_FIREBASE_API_KEY}
-        - VITE_FIREBASE_AUTH_DOMAIN=${VITE_FIREBASE_AUTH_DOMAIN}
-        - VITE_FIREBASE_PROJECT_ID=${VITE_FIREBASE_PROJECT_ID}
-        - VITE_FIREBASE_STORAGE_BUCKET=${VITE_FIREBASE_STORAGE_BUCKET}
-        - VITE_FIREBASE_MESSAGING_SENDER_ID=${VITE_FIREBASE_MESSAGING_SENDER_ID}
-        - VITE_FIREBASE_APP_ID=${VITE_FIREBASE_APP_ID}
-        - VITE_FIREBASE_MEASUREMENT_ID=${VITE_FIREBASE_MEASUREMENT_ID}
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+    image: ${DOCKERHUB_USERNAME}/${IMAGE_NAME_FRONTEND}:${IMAGE_TAG}
     ports:
       - "3000:80"
     depends_on:
