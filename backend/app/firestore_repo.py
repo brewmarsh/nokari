@@ -216,3 +216,42 @@ class FirestoreRepo:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Failed to put scrape schedule: {e}",
             )
+
+    def add_job_title(self, title: str):
+        try:
+            # Check for duplicates
+            docs = (
+                self.db.collection("job_titles")
+                .where("title", "==", title)
+                .limit(1)
+                .get()
+            )
+            for _ in docs:
+                # Job title already exists
+                return
+
+            self.db.collection("job_titles").add({"title": title})
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to add job title: {e}",
+            )
+
+    def get_job_titles(self) -> List[Dict[str, Any]]:
+        try:
+            docs = self.db.collection("job_titles").stream()
+            return [{"id": doc.id, **doc.to_dict()} for doc in docs]
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to get job titles: {e}",
+            )
+
+    def delete_job_title(self, job_title_id: str):
+        try:
+            self.db.collection("job_titles").document(job_title_id).delete()
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to delete job title: {e}",
+            )
