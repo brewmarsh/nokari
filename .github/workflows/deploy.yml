@@ -34,7 +34,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          file: ./Dockerfile.backend
+          file: ./Dockerfile.fastapi
           push: true
           tags: ${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME_BACKEND }}:${{ env.IMAGE_TAG }}
 
