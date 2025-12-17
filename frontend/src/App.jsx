@@ -54,7 +54,7 @@ const AppRoutes = memo(({ user, onOnboardingSuccess, onLoginSuccess, handleLogou
         {user ? (
           <>
             <Link to="/dashboard">Dashboard</Link>
-            {user.role === 'admin' && <Link to="/admin">Admin</Link>}
+            {user.role && user.role.toLowerCase() === 'admin' && <Link to="/admin">Admin</Link>}
             <div style={{ position: 'relative', marginLeft: 'auto' }} ref={dropdownRef}>
               <button onClick={() => setDropdownOpen(!isDropdownOpen)} style={{ background: 'none', border: 'none', cursor: 'pointer' }} aria-label="User Menu">
                 <UserProfileIcon />
@@ -62,6 +62,9 @@ const AppRoutes = memo(({ user, onOnboardingSuccess, onLoginSuccess, handleLogou
               {isDropdownOpen && (
                 <div style={{ position: 'absolute', right: 0, backgroundColor: 'white', border: '1px solid var(--neutral-gray)', borderRadius: '5px', zIndex: 10 }}>
                   <Link to="/profile" style={{ display: 'block', padding: '10px', textDecoration: 'none', color: 'var(--neutral-gray)' }}>Profile</Link>
+                  {user.role && user.role.toLowerCase() === 'admin' && (
+                    <Link to="/admin" style={{ display: 'block', padding: '10px', textDecoration: 'none', color: 'var(--neutral-gray)' }}>Admin</Link>
+                  )}
                   <Link to="/settings" style={{ display: 'block', padding: '10px', textDecoration: 'none', color: 'var(--neutral-gray)' }}>Settings</Link>
                   <Link to="/documents" style={{ display: 'block', padding: '10px', textDecoration: 'none', color: 'var(--neutral-gray)' }}>Documents</Link>
                   <button onClick={() => { handleLogout(); setDropdownOpen(false); }} style={{ display: 'block', width: '100%', padding: '10px', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', color: 'var(--neutral-gray)' }}>Logout</button>
