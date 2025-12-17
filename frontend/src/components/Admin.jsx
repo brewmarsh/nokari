@@ -10,12 +10,14 @@ const Admin = () => {
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState([]);
   const [scheduledTime, setScheduledTime] = useState('');
+  const [flexMinutes, setFlexMinutes] = useState(0);
 
   useEffect(() => {
     const fetchSchedule = async () => {
       try {
         const response = await api.get('/scrape-schedule/');
         setScheduledTime(response.data.time);
+        setFlexMinutes(response.data.flex_minutes || 0);
       } catch (error) {
         console.error('Error fetching scrape schedule:', error);
       }
@@ -43,7 +45,7 @@ const Admin = () => {
 
   const handleSaveSchedule = async () => {
     try {
-      await api.put('/scrape-schedule/', { time: scheduledTime });
+      await api.put('/scrape-schedule/', { time: scheduledTime, flex_minutes: parseInt(flexMinutes, 10) });
       alert('Schedule saved!');
     } catch (error) {
       console.error('Error saving scrape schedule:', error);
@@ -93,7 +95,16 @@ const Admin = () => {
           Daily scrape time:
           <input type="time" value={scheduledTime} onChange={(e) => setScheduledTime(e.target.value)} />
         </label>
-        <button onClick={handleSaveSchedule}>Save Schedule</button>
+        <label style={{ marginLeft: '10px' }}>
+          Flex (minutes):
+          <input
+            type="number"
+            value={flexMinutes}
+            onChange={(e) => setFlexMinutes(e.target.value)}
+            style={{ width: '60px', marginLeft: '5px' }}
+          />
+        </label>
+        <button onClick={handleSaveSchedule} style={{ marginLeft: '10px' }}>Save Schedule</button>
       </div>
       <JobTitles />
       <ScrapableDomains />
