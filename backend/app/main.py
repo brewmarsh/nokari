@@ -81,7 +81,7 @@ def read_root():
     return {"Hello": "World"}
 
 
-@app.get("/api/health")
+@app.get("/api/health/")
 def health_check():
     return {"status": "ok"}
 
@@ -115,7 +115,7 @@ def login(login_request: FirebaseLoginRequest):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
-@app.get("/api/me", response_model=models.UserResponse)
+@app.get("/api/me/", response_model=models.UserResponse)
 def get_me(current_user: dict = Depends(get_current_user)):
     user_id = current_user.get("uid")
     if not user_id:
@@ -139,7 +139,7 @@ def get_me(current_user: dict = Depends(get_current_user)):
     return models.UserResponse(**user_data)
 
 
-@app.post("/api/jobs", response_model=models.JobPostResponse)
+@app.post("/api/jobs/", response_model=models.JobPostResponse)
 def create_job(
     job_request: models.CreateJobRequest, current_user: dict = Depends(get_current_user)
 ):
@@ -159,7 +159,7 @@ def create_job(
     return models.JobPostResponse(job_id=job_id, **job_data)
 
 
-@app.get("/api/jobs/{job_id}", response_model=models.JobPostResponse)
+@app.get("/api/jobs/{job_id}/", response_model=models.JobPostResponse)
 def get_job(job_id: str):
     job_data = firestore_repo.get_job_posting(job_id)
     if not job_data:
@@ -169,7 +169,7 @@ def get_job(job_id: str):
     return models.JobPostResponse(job_id=job_id, **job_data)
 
 
-@app.get("/api/jobs", response_model=List[models.JobPostResponse])
+@app.get("/api/jobs/", response_model=List[models.JobPostResponse])
 def search_jobs(
     title: Optional[str] = None,
     company: Optional[str] = None,
@@ -197,7 +197,7 @@ def search_jobs(
     return [models.JobPostResponse(job_id=job.get("id", ""), **job) for job in jobs]
 
 
-@app.post("/api/jobs/{job_id}/find-similar", status_code=status.HTTP_202_ACCEPTED)
+@app.post("/api/jobs/{job_id}/find-similar/", status_code=status.HTTP_202_ACCEPTED)
 def find_similar_jobs(job_id: str, current_user: dict = Depends(get_current_user)):
     user_id = current_user.get("uid")  # Use 'uid' from Firebase decoded token
     task_id = str(uuid.uuid4())
@@ -216,7 +216,7 @@ def find_similar_jobs(job_id: str, current_user: dict = Depends(get_current_user
         )
 
 
-@app.post("/api/jobs/{job_id}/hide", status_code=status.HTTP_200_OK)
+@app.post("/api/jobs/{job_id}/hide/", status_code=status.HTTP_200_OK)
 def hide_job(job_id: str, current_user: dict = Depends(get_current_user)):
     user_id = current_user.get("uid")
     if not user_id:
@@ -226,7 +226,7 @@ def hide_job(job_id: str, current_user: dict = Depends(get_current_user)):
     return {"message": "Job hidden"}
 
 
-@app.post("/api/jobs/{job_id}/pin", status_code=status.HTTP_200_OK)
+@app.post("/api/jobs/{job_id}/pin/", status_code=status.HTTP_200_OK)
 def pin_job(
     job_id: str, is_pinned: bool = True, current_user: dict = Depends(get_current_user)
 ):
@@ -238,7 +238,7 @@ def pin_job(
     return {"message": "Job pinned status updated"}
 
 
-@app.post("/api/companies/{company_name}/hide", status_code=status.HTTP_200_OK)
+@app.post("/api/companies/{company_name}/hide/", status_code=status.HTTP_200_OK)
 def hide_company(company_name: str, current_user: dict = Depends(get_current_user)):
     user_id = current_user.get("uid")
     if not user_id:
@@ -248,7 +248,7 @@ def hide_company(company_name: str, current_user: dict = Depends(get_current_use
     return {"message": "Company hidden"}
 
 
-@app.post("/api/resumes/upload")
+@app.post("/api/resumes/upload/")
 async def upload_resume(
     file: UploadFile = File(...), current_user: dict = Depends(get_current_user)
 ):
@@ -283,12 +283,12 @@ async def upload_resume(
         )
 
 
-@app.get("/api/scrapable-domains", response_model=List[models.ScrapableDomain])
+@app.get("/api/scrapable-domains/", response_model=List[models.ScrapableDomain])
 def get_scrapable_domains(current_user: dict = Depends(get_current_admin_user)):
     return firestore_repo.get_scrapable_domains()
 
 
-@app.post("/api/scrapable-domains", status_code=status.HTTP_201_CREATED)
+@app.post("/api/scrapable-domains/", status_code=status.HTTP_201_CREATED)
 def add_scrapable_domain(
     domain_request: models.CreateDomainRequest,
     current_user: dict = Depends(get_current_admin_user),
@@ -297,7 +297,7 @@ def add_scrapable_domain(
     return {"message": f"Domain {domain_request.domain} added."}
 
 
-@app.post("/api/scrape", status_code=status.HTTP_202_ACCEPTED)
+@app.post("/api/scrape/", status_code=status.HTTP_202_ACCEPTED)
 def trigger_scrape(
     background_tasks: BackgroundTasks,
     current_user: dict = Depends(get_current_admin_user),
