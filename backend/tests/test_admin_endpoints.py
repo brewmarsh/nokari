@@ -48,7 +48,7 @@ async def test_add_scrapable_domain_as_admin():
             transport=ASGITransport(app=app), base_url="http://test"
         ) as ac:
             response = await ac.post(
-                "/api/scrapable-domains", json={"domain": "test.com"}
+                "/api/scrapable-domains/", json={"domain": "test.com"}
             )
 
     app.dependency_overrides = {}
@@ -67,7 +67,7 @@ async def test_add_scrapable_domain_as_user():
             transport=ASGITransport(app=app), base_url="http://test"
         ) as ac:
             response = await ac.post(
-                "/api/scrapable-domains", json={"domain": "test.com"}
+                "/api/scrapable-domains/", json={"domain": "test.com"}
             )
 
     app.dependency_overrides = {}
@@ -84,7 +84,7 @@ async def test_trigger_scrape():
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as ac:
-            response = await ac.post("/api/scrape")
+            response = await ac.post("/api/scrape/")
 
     app.dependency_overrides = {}
     assert response.status_code == 202
