@@ -45,6 +45,15 @@ class CreateDomainRequest(BaseModel):
     domain: str
 
 
+class JobTitle(BaseModel):
+    id: str
+    title: str
+
+
+class CreateJobTitleRequest(BaseModel):
+    title: str
+
+
 class UserResponse(BaseModel):
     id: str
     email: str
