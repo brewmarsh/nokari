@@ -52,6 +52,16 @@ class FirestoreRepo:
                 detail=f"Failed to get user by email: {e}",
             )
 
+    def get_users(self) -> List[Dict[str, Any]]:
+        try:
+            docs = self.db.collection("users").stream()
+            return [{"id": doc.id, **doc.to_dict()} for doc in docs]
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to get users: {e}",
+            )
+
     def update_user_resume(self, user_id: str, s3_link: str):
         try:
             self.db.collection("users").document(user_id).update(
@@ -254,4 +264,28 @@ class FirestoreRepo:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Failed to delete job title: {e}",
+            )
+
+    def add_scrape_history_entry(self, entry: Dict[str, Any]):
+        try:
+            self.db.collection("scrape_history").add(entry)
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to add scrape history entry: {e}",
+            )
+
+    def get_scrape_history(self, limit: int = 20) -> List[Dict[str, Any]]:
+        try:
+            docs = (
+                self.db.collection("scrape_history")
+                .order_by("timestamp", direction=firestore.Query.DESCENDING)
+                .limit(limit)
+                .stream()
+            )
+            return [{"id": doc.id, **doc.to_dict()} for doc in docs]
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to get scrape history: {e}",
             )
