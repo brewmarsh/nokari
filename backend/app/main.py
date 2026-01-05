@@ -365,15 +365,17 @@ def rescrape_admin_job(
         details = scraping_logic.scrape_job_details(link)
         if details:
             # Update job details
-            job.update({
-                "title": details.get("title") or job.get("title"),
-                "description": details.get("description") or job.get("description"),
-                "updated_at": datetime.utcnow()
-            })
+            job.update(
+                {
+                    "title": details.get("title") or job.get("title"),
+                    "description": details.get("description") or job.get("description"),
+                    "updated_at": datetime.utcnow(),
+                }
+            )
             firestore_repo.put_job_posting(job_id, job)
             return {"message": "Job rescraped and updated."}
         else:
-             raise HTTPException(status_code=500, detail="Failed to scrape job details")
+            raise HTTPException(status_code=500, detail="Failed to scrape job details")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Rescrape failed: {e}")
 

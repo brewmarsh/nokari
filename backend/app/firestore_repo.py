@@ -75,7 +75,9 @@ class FirestoreRepo:
 
     def put_job_posting(self, job_id: str, job_data: Dict[str, Any]):
         try:
-            self.db.collection("job_postings").document(job_id).set(job_data, merge=True)
+            self.db.collection("job_postings").document(job_id).set(
+                job_data, merge=True
+            )
             return True
         except Exception as e:
             raise HTTPException(
