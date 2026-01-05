@@ -26,9 +26,55 @@ def scrape_job_details(url):
         response.raise_for_status()
         soup = BeautifulSoup(response.content, "html.parser")
 
+        # Check for iCIMS iframe
+        iframe = soup.find("iframe", id="icims_content_iframe") or soup.find(
+            "iframe", id="noscript_icims_content_iframe"
+        )
+        if iframe:
+            src = iframe.get("src")
+            if src:
+                from urllib.parse import urljoin
+
+                iframe_url = urljoin(url, src)
+                try:
+                    logger.info(f"Following iframe to {iframe_url}")
+                    iframe_response = requests.get(iframe_url, timeout=10)
+                    iframe_response.raise_for_status()
+                    soup = BeautifulSoup(iframe_response.content, "html.parser")
+                except Exception as e:
+                    logger.warning(f"Failed to follow iframe: {e}")
+
         details = {}
         # Title
         details["title"] = soup.title.string if soup.title else ""
+
+        # Locations
+        locations = []
+        # Look for "Job Locations"
+        for element in soup.find_all(
+            string=lambda text: text and "Job Locations" in text
+        ):
+            # Check parent text
+            parent = element.parent
+            if not parent:
+                continue
+            text = parent.get_text(strip=True)
+            # If the text is just "Job Locations", check siblings
+            if text == "Job Locations":
+                # Next sibling element?
+                next_elem = parent.find_next_sibling()
+                if next_elem:
+                    loc = next_elem.get_text(strip=True)
+                    if loc:
+                        locations.append({"type": "onsite", "location_string": loc})
+            elif text.startswith("Job Locations"):
+                loc = text.replace("Job Locations", "").strip()
+                if loc:
+                    locations.append({"type": "onsite", "location_string": loc})
+
+        if locations:
+            details["locations"] = locations
+
         # Description
         # This is a generic attempt to get the main content.
         # A more robust solution would have parsers for specific site structures.
@@ -151,6 +197,8 @@ def scrape_jobs(query, domain, days=None):
                     job_data["description"] = (
                         scraped_details.get("description") or job_data["description"]
                     )
+                    if scraped_details.get("locations"):
+                        job_data["locations"] = scraped_details["locations"]
 
             jobs.append(job_data)
     return jobs
