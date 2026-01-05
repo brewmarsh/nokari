@@ -1,32 +1,30 @@
 import pytest
 from httpx import AsyncClient, ASGITransport
 from backend.app.main import app
+from unittest.mock import patch
 
 
 # Mock Firebase Auth
 @pytest.fixture
-def mock_firebase_auth(mocker):
-    mock_verify = mocker.patch(
-        "backend.app.firebase_auth_repo.FirebaseAuthRepo.verify_id_token"
-    )
-    mock_verify.return_value = {"uid": "test_admin_uid", "email": "admin@example.com"}
-    return mock_verify
+def mock_firebase_auth():
+    with patch("backend.app.firebase_auth_repo.FirebaseAuthRepo.verify_id_token") as mock_verify:
+        mock_verify.return_value = {"uid": "test_admin_uid", "email": "admin@example.com"}
+        yield mock_verify
 
 
 # Mock Firestore
 @pytest.fixture
-def mock_firestore(mocker):
-    mock_repo = mocker.patch("backend.app.main.firestore_repo")
-
-    # Mock admin user check
-    mock_repo.get_user.return_value = {"role": "admin", "uid": "test_admin_uid"}
-
-    return mock_repo
+def mock_firestore():
+    with patch("backend.app.main.firestore_repo") as mock_repo:
+        # Mock admin user check
+        mock_repo.get_user.return_value = {"role": "admin", "uid": "test_admin_uid"}
+        yield mock_repo
 
 
 @pytest.fixture
-def mock_scraping_logic(mocker):
-    return mocker.patch("backend.app.main.scraping_logic")
+def mock_scraping_logic():
+    with patch("backend.app.main.scraping_logic") as mock_logic:
+        yield mock_logic
 
 
 @pytest.mark.asyncio
@@ -45,11 +43,6 @@ async def test_get_admin_jobs(mock_firebase_auth, mock_firestore):
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
-        # We need to bypass the actual authentication middleware or mock it effectively.
-        # Since 'get_current_user' depends on 'verify_id_token', mocking 'verify_id_token' isn't enough
-        # because the dependency override isn't set up here.
-        # However, we can override the dependency.
-
         from backend.app.security import get_current_user
 
         app.dependency_overrides[get_current_user] = lambda: {
