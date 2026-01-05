@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Union
 
 from pydantic import BaseModel, Field
 
@@ -24,6 +24,11 @@ class CreateJobRequest(BaseModel):
     work_arrangement: str
 
 
+class JobLocation(BaseModel):
+    type: str
+    location_string: Optional[str] = None
+
+
 class JobPostResponse(BaseModel):
     job_id: str
     title: str
@@ -32,7 +37,7 @@ class JobPostResponse(BaseModel):
     work_arrangement: str
     posting_date: Optional[datetime] = None
     link: Optional[str] = None
-    locations: Optional[List[str]] = None
+    locations: Optional[List[JobLocation]] = None
     is_pinned: Optional[bool] = False
 
 
