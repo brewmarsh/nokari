@@ -1,6 +1,5 @@
 import logging
 import time
-import uuid
 from datetime import datetime, timezone
 from backend.app.firestore_repo import FirestoreRepo
 from backend.app.firebase_config import db
