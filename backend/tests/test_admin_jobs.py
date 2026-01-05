@@ -2,7 +2,6 @@
 import pytest
 from httpx import AsyncClient, ASGITransport
 from backend.app.main import app
-from unittest.mock import MagicMock
 
 # Mock Firebase Auth
 @pytest.fixture
