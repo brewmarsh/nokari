@@ -61,3 +61,20 @@ class UserResponse(BaseModel):
 class ScrapeSchedule(BaseModel):
     time: str
     flex_minutes: Optional[int] = 0
+
+
+class JobTitle(BaseModel):
+    id: str
+    title: str
+
+
+class CreateJobTitleRequest(BaseModel):
+    title: str
+
+
+class ScrapeHistoryItem(BaseModel):
+    id: str
+    timestamp: datetime
+    status: str
+    jobs_found: int
+    duration_seconds: float

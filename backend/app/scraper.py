@@ -1,4 +1,6 @@
 import logging
+import time
+from datetime import datetime, timezone
 from backend.app.firestore_repo import FirestoreRepo
 from backend.app.firebase_config import db
 from backend.app import scraping_logic
@@ -16,7 +18,29 @@ def run_scraper(query: str = "Software Engineer"):
         return 0
 
     print(f"Starting scrape for query: {query}")
-    count = scraping_logic.scrape_and_save_jobs(repo, query, domains)
+    start_time = time.time()
+
+    try:
+        count = scraping_logic.scrape_and_save_jobs(repo, query, domains)
+        status = "success"
+    except Exception as e:
+        logger.error(f"Scraper failed: {e}")
+        status = "failed"
+        count = 0
+
+    end_time = time.time()
+    duration = end_time - start_time
+
+    # Record history
+    history_entry = {
+        "timestamp": datetime.now(timezone.utc),
+        "status": status,
+        "jobs_found": count,
+        "duration_seconds": duration,
+        "query": query,
+    }
+    repo.add_scrape_history_entry(history_entry)
+
     print(f"Scraping complete. Added {count} new jobs.")
     return count
 

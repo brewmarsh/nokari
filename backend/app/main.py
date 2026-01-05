@@ -323,4 +323,38 @@ def update_scrape_schedule(
     return {"message": "Schedule updated successfully."}
 
 
+@app.get("/api/admin/job-titles/", response_model=List[models.JobTitle])
+def get_job_titles(current_user: dict = Depends(get_current_admin_user)):
+    return firestore_repo.get_job_titles()
+
+
+@app.post("/api/admin/job-titles/", status_code=status.HTTP_201_CREATED)
+def add_job_title(
+    title_request: models.CreateJobTitleRequest,
+    current_user: dict = Depends(get_current_admin_user),
+):
+    firestore_repo.add_job_title(title_request.title)
+    return {"message": f"Job title {title_request.title} added."}
+
+
+@app.delete("/api/admin/job-titles/{job_title_id}/", status_code=status.HTTP_200_OK)
+def delete_job_title(
+    job_title_id: str,
+    current_user: dict = Depends(get_current_admin_user),
+):
+    firestore_repo.delete_job_title(job_title_id)
+    return {"message": "Job title deleted."}
+
+
+@app.get("/api/scrape-history/", response_model=List[models.ScrapeHistoryItem])
+def get_scrape_history(current_user: dict = Depends(get_current_admin_user)):
+    return firestore_repo.get_scrape_history()
+
+
+@app.get("/api/users/", response_model=List[models.UserResponse])
+def get_users(current_user: dict = Depends(get_current_admin_user)):
+    users = firestore_repo.get_users()
+    return [models.UserResponse(**user) for user in users]
+
+
 handler = Mangum(app)
