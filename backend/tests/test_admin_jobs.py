@@ -7,8 +7,13 @@ from unittest.mock import patch
 # Mock Firebase Auth
 @pytest.fixture
 def mock_firebase_auth():
-    with patch("backend.app.firebase_auth_repo.FirebaseAuthRepo.verify_id_token") as mock_verify:
-        mock_verify.return_value = {"uid": "test_admin_uid", "email": "admin@example.com"}
+    with patch(
+        "backend.app.firebase_auth_repo.FirebaseAuthRepo.verify_id_token"
+    ) as mock_verify:
+        mock_verify.return_value = {
+            "uid": "test_admin_uid",
+            "email": "admin@example.com",
+        }
         yield mock_verify
 
 
