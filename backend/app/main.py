@@ -23,6 +23,7 @@ from pydantic import BaseModel
 from backend.app import models
 from backend.app.firestore_repo import FirestoreRepo
 from backend.app.scraper import run_scraper
+from backend.app import scraping_logic
 from backend.app.firebase_auth_repo import FirebaseAuthRepo
 from backend.app.firebase_config import db, firebase_storage
 from backend.app.security import get_current_user
@@ -321,6 +322,62 @@ def update_scrape_schedule(
 ):
     firestore_repo.put_scrape_schedule(schedule.model_dump())
     return {"message": "Schedule updated successfully."}
+
+
+@app.get("/api/admin/jobs/", response_model=List[models.JobPostResponse])
+def get_admin_jobs(
+    limit: int = 100,
+    current_user: dict = Depends(get_current_admin_user),
+):
+    """
+    Fetch jobs for admin management.
+    """
+    jobs = firestore_repo.search_jobs(limit=limit)
+    return [models.JobPostResponse(job_id=job.get("id", ""), **job) for job in jobs]
+
+
+@app.delete("/api/admin/jobs/{job_id}/", status_code=status.HTTP_200_OK)
+def delete_admin_job(
+    job_id: str,
+    current_user: dict = Depends(get_current_admin_user),
+):
+    """
+    Delete a job posting.
+    """
+    firestore_repo.delete_job_posting(job_id)
+    return {"message": "Job deleted successfully."}
+
+
+@app.post("/api/admin/jobs/{job_id}/rescrape/", status_code=status.HTTP_200_OK)
+def rescrape_admin_job(
+    job_id: str,
+    current_user: dict = Depends(get_current_admin_user),
+):
+    """
+    Trigger a rescrape for a specific job.
+    """
+    job = firestore_repo.get_job_posting(job_id)
+    if not job or not job.get("link"):
+        raise HTTPException(status_code=404, detail="Job or link not found")
+
+    link = job["link"]
+    try:
+        details = scraping_logic.scrape_job_details(link)
+        if details:
+            # Update job details
+            job.update(
+                {
+                    "title": details.get("title") or job.get("title"),
+                    "description": details.get("description") or job.get("description"),
+                    "updated_at": datetime.utcnow(),
+                }
+            )
+            firestore_repo.put_job_posting(job_id, job)
+            return {"message": "Job rescraped and updated."}
+        else:
+            raise HTTPException(status_code=500, detail="Failed to scrape job details")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Rescrape failed: {e}")
 
 
 @app.get("/api/admin/job-titles/", response_model=List[models.JobTitle])

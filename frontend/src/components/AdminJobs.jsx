@@ -23,10 +23,10 @@ const AdminJobs = () => {
         fetchJobs();
     }, []);
 
-    const handleDelete = async (jobLink) => {
+    const handleDelete = async (jobId) => {
         if (window.confirm('Are you sure you want to delete this job posting?')) {
             try {
-                await api.delete(`/admin/jobs/${encodeURIComponent(jobLink)}/`);
+                await api.delete(`/admin/jobs/${jobId}/`);
                 fetchJobs(); // Refresh the list
             } catch (err) {
                 setError(err);
@@ -34,9 +34,9 @@ const AdminJobs = () => {
         }
     };
 
-    const handleRescrape = async (jobLink) => {
+    const handleRescrape = async (jobId) => {
         try {
-            await api.post(`/admin/jobs/${encodeURIComponent(jobLink)}/rescrape/`);
+            await api.post(`/admin/jobs/${jobId}/rescrape/`);
             alert('Rescrape task started. The job details will be updated in the background.');
         } catch (err) {
             setError(err);
@@ -64,17 +64,17 @@ const AdminJobs = () => {
                 </thead>
                 <tbody>
                     {jobs.map(job => (
-                        <tr key={job.link}>
+                        <tr key={job.job_id}>
                             <td><a href={job.link} target="_blank" rel="noopener noreferrer">{job.title}</a></td>
                             <td>{job.company}</td>
-                            <td>{job.location_string}</td>
+                            <td>{job.location}</td>
                             <td>{job.remote ? 'Yes' : 'No'}</td>
                             <td>{job.hybrid ? 'Yes' : 'No'}</td>
                             <td>{job.onsite ? 'Yes' : 'No'}</td>
-                            <td>{job.details_updated_at ? new Date(job.details_updated_at).toLocaleString() : 'Never'}</td>
+                            <td>{job.updated_at ? new Date(job.updated_at).toLocaleString() : 'Never'}</td>
                             <td>
-                                <button onClick={() => handleRescrape(job.link)}>Rescrape</button>
-                                <button onClick={() => handleDelete(job.link)}>Delete</button>
+                                <button onClick={() => handleRescrape(job.job_id)}>Rescrape</button>
+                                <button onClick={() => handleDelete(job.job_id)}>Delete</button>
                             </td>
                         </tr>
                     ))}
