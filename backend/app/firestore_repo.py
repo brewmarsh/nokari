@@ -75,12 +75,21 @@ class FirestoreRepo:
 
     def put_job_posting(self, job_id: str, job_data: Dict[str, Any]):
         try:
-            self.db.collection("job_postings").document(job_id).set(job_data)
+            self.db.collection("job_postings").document(job_id).set(job_data, merge=True)
             return True
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Failed to put job posting: {e}",
+            )
+
+    def delete_job_posting(self, job_id: str):
+        try:
+            self.db.collection("job_postings").document(job_id).delete()
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to delete job posting: {e}",
             )
 
     def get_job_posting(self, job_id: str):
