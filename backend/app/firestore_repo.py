@@ -194,6 +194,29 @@ class FirestoreRepo:
                 detail=f"Failed to get scrapable domains: {e}",
             )
 
+    def get_scrape_schedule(self) -> Optional[Dict[str, Any]]:
+        try:
+            doc = self.db.collection("settings").document("scrape_schedule").get()
+            if doc.exists:
+                return doc.to_dict()
+            return None
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to get scrape schedule: {e}",
+            )
+
+    def put_scrape_schedule(self, schedule_data: Dict[str, Any]):
+        try:
+            self.db.collection("settings").document("scrape_schedule").set(
+                schedule_data, merge=True
+            )
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to put scrape schedule: {e}",
+            )
+
     def add_job_title(self, title: str):
         try:
             # Check for duplicates

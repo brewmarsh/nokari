@@ -329,4 +329,21 @@ def trigger_scrape(
     return {"message": "Scraping started in background."}
 
 
+@app.get("/api/scrape-schedule/", response_model=models.ScrapeSchedule)
+def get_scrape_schedule(current_user: dict = Depends(get_current_admin_user)):
+    schedule = firestore_repo.get_scrape_schedule()
+    if not schedule:
+        return models.ScrapeSchedule(time="", flex_minutes=0)
+    return models.ScrapeSchedule(**schedule)
+
+
+@app.put("/api/scrape-schedule/", status_code=status.HTTP_200_OK)
+def update_scrape_schedule(
+    schedule: models.ScrapeSchedule,
+    current_user: dict = Depends(get_current_admin_user),
+):
+    firestore_repo.put_scrape_schedule(schedule.model_dump())
+    return {"message": "Schedule updated successfully."}
+
+
 handler = Mangum(app)

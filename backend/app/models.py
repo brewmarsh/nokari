@@ -60,3 +60,8 @@ class UserResponse(BaseModel):
     role: str
     preferred_work_arrangement: List[str] = []
     created_at: Optional[str] = None
+
+
+class ScrapeSchedule(BaseModel):
+    time: str
+    flex_minutes: Optional[int] = 0
