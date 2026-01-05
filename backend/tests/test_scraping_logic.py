@@ -63,24 +63,24 @@ def test_scrape_and_save_jobs():
         assert "remote" in saved_job["searchable_locations"]
         assert "NY" in saved_job["searchable_locations"]
 
-class TestScrapingLogic:
 
-    @patch('backend.app.scraping_logic.requests.get')
+class TestScrapingLogic:
+    @patch("backend.app.scraping_logic.requests.get")
     def test_scrape_job_details_with_icims_iframe(self, mock_get):
         # Mock responses
         initial_response = MagicMock()
-        initial_response.content = b'''
+        initial_response.content = b"""
         <html>
             <head><title>Initial Page</title></head>
             <body>
                 <iframe id="icims_content_iframe" src="iframe_content.html"></iframe>
             </body>
         </html>
-        '''
+        """
         initial_response.raise_for_status.return_value = None
 
         iframe_response = MagicMock()
-        iframe_response.content = b'''
+        iframe_response.content = b"""
         <html>
             <head><title>Iframe Page</title></head>
             <body>
@@ -95,7 +95,7 @@ class TestScrapingLogic:
                 </div>
             </body>
         </html>
-        '''
+        """
         iframe_response.raise_for_status.return_value = None
 
         # Configure side_effect to return different responses based on URL
@@ -109,17 +109,17 @@ class TestScrapingLogic:
         details = scrape_job_details("http://example.com/job")
 
         assert details is not None
-        assert details['title'] == "Iframe Page"
+        assert details["title"] == "Iframe Page"
         assert "locations" in details
-        assert len(details['locations']) == 1
-        assert details['locations'][0]['location_string'] == "DE-Berlin"
-        assert details['locations'][0]['type'] == "onsite"
-        assert "This is the job description." in details['description']
+        assert len(details["locations"]) == 1
+        assert details["locations"][0]["location_string"] == "DE-Berlin"
+        assert details["locations"][0]["type"] == "onsite"
+        assert "This is the job description." in details["description"]
 
-    @patch('backend.app.scraping_logic.requests.get')
+    @patch("backend.app.scraping_logic.requests.get")
     def test_scrape_job_details_plain_text_location(self, mock_get):
         response = MagicMock()
-        response.content = b'''
+        response.content = b"""
         <html>
             <head><title>Job Page</title></head>
             <body>
@@ -127,28 +127,28 @@ class TestScrapingLogic:
                 <p>Description here.</p>
             </body>
         </html>
-        '''
+        """
         response.raise_for_status.return_value = None
         mock_get.return_value = response
 
         details = scrape_job_details("http://example.com/job")
 
         assert details is not None
-        assert details['title'] == "Job Page"
+        assert details["title"] == "Job Page"
         assert "locations" in details
-        assert details['locations'][0]['location_string'] == "US-Remote"
+        assert details["locations"][0]["location_string"] == "US-Remote"
 
-    @patch('backend.app.scraping_logic.requests.get')
+    @patch("backend.app.scraping_logic.requests.get")
     def test_scrape_job_details_no_location(self, mock_get):
         response = MagicMock()
-        response.content = b'''
+        response.content = b"""
         <html>
             <head><title>Job Page</title></head>
             <body>
                 <p>Description here.</p>
             </body>
         </html>
-        '''
+        """
         response.raise_for_status.return_value = None
         mock_get.return_value = response
 
