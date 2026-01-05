@@ -1,12 +1,12 @@
-Django>=5.2.7,<6.0
+Django>=6.0
 gunicorn
 psycopg2-binary
 beautifulsoup4
 requests
 transformers
 torch
-networkx<3.5  # Pinned for Python 3.10 compatibility (3.5+ requires 3.11+)
-numpy<2.3  # Pinned for Python 3.10 compatibility (2.3+ requires 3.11+)
+networkx>=3.6.1
+numpy>=2.4.0
 djangorestframework
 djangorestframework-simplejwt==5.5.1
 django-cors-headers

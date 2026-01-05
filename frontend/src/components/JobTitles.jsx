@@ -55,16 +55,16 @@ const JobTitles = () => {
 
     return (
         <div>
-            <h1>Searchable Job Roles</h1>
+            <h1>Searchable Job Titles</h1>
             <form onSubmit={onSubmit}>
                 <input
                     type="text"
-                    placeholder="Enter a job role"
+                    placeholder="Enter a job title"
                     value={title}
                     onChange={onChange}
                     required
                 />
-                <button type="submit">Add Job Role</button>
+                <button type="submit">Add Job Title</button>
             </form>
             <ul>
                 {jobTitles.map((t) => (
