@@ -37,7 +37,7 @@ def run_scraper(query: str = "Software Engineer"):
         "status": status,
         "jobs_found": count,
         "duration_seconds": duration,
-        "query": query
+        "query": query,
     }
     repo.add_scrape_history_entry(history_entry)
 
