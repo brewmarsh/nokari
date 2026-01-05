@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, memo, useRef, Suspense, lazy } from 'react';
+import React, { useState, useEffect, useCallback, memo, useRef, Suspense } from 'react';
 import { Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
 import './App.css';
 import { auth, initializationError, db } from './firebaseConfig';
@@ -6,18 +6,19 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import UserProfileIcon from './components/UserProfileIcon.jsx';
 import api from './services/api';
+import lazyWithRetry from './utils/lazyWithRetry';
 
 // Lazy load components
-const Login = lazy(() => import('./components/Login.jsx'));
-const Register = lazy(() => import('./components/Register.jsx'));
-const Dashboard = lazy(() => import('./components/Dashboard.jsx'));
-const Onboarding = lazy(() => import('./components/Onboarding.jsx'));
-const Documents = lazy(() => import('./components/Documents.jsx'));
-const Profile = lazy(() => import('./components/Profile.jsx'));
-const Settings = lazy(() => import('./components/Settings.jsx'));
-const Admin = lazy(() => import('./components/Admin.jsx'));
-const AdminJobs = lazy(() => import('./components/AdminJobs.jsx'));
-const Debug = lazy(() => import('./components/Debug.jsx'));
+const Login = lazyWithRetry(() => import('./components/Login.jsx'));
+const Register = lazyWithRetry(() => import('./components/Register.jsx'));
+const Dashboard = lazyWithRetry(() => import('./components/Dashboard.jsx'));
+const Onboarding = lazyWithRetry(() => import('./components/Onboarding.jsx'));
+const Documents = lazyWithRetry(() => import('./components/Documents.jsx'));
+const Profile = lazyWithRetry(() => import('./components/Profile.jsx'));
+const Settings = lazyWithRetry(() => import('./components/Settings.jsx'));
+const Admin = lazyWithRetry(() => import('./components/Admin.jsx'));
+const AdminJobs = lazyWithRetry(() => import('./components/AdminJobs.jsx'));
+const Debug = lazyWithRetry(() => import('./components/Debug.jsx'));
 
 const AppRoutes = memo(({ user, onOnboardingSuccess, onLoginSuccess, handleLogout }) => {
   const [isDropdownOpen, setDropdownOpen] = useState(false);

@@ -297,6 +297,29 @@ def add_scrapable_domain(
     return {"message": f"Domain {domain_request.domain} added."}
 
 
+@app.get("/api/admin/job-titles/", response_model=List[models.JobTitle])
+def get_job_titles(current_user: dict = Depends(get_current_admin_user)):
+    return firestore_repo.get_job_titles()
+
+
+@app.post("/api/admin/job-titles/", status_code=status.HTTP_201_CREATED)
+def add_job_title(
+    job_title_request: models.CreateJobTitleRequest,
+    current_user: dict = Depends(get_current_admin_user),
+):
+    firestore_repo.add_job_title(job_title_request.title)
+    return {"message": f"Job title {job_title_request.title} added."}
+
+
+@app.delete("/api/admin/job-titles/{id}/", status_code=status.HTTP_200_OK)
+def delete_job_title(
+    id: str,
+    current_user: dict = Depends(get_current_admin_user),
+):
+    firestore_repo.delete_job_title(id)
+    return {"message": f"Job title with ID {id} deleted."}
+
+
 @app.post("/api/scrape/", status_code=status.HTTP_202_ACCEPTED)
 def trigger_scrape(
     background_tasks: BackgroundTasks,
