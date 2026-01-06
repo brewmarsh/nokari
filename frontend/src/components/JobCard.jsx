@@ -64,26 +64,11 @@ const JobCard = ({ job, openMenu, setOpenMenu, handlePin, handleHide, handleHide
         initialUrl={job.link}
         onConfirm={handleBlockUrl}
       />
-      <div className="job-card-left">
-        <div className="job-card-header">
-          <h2 className="job-title">
-            <a href={job.link} target="_blank" rel="noopener noreferrer">{job.title}</a>
-          </h2>
-        </div>
-        <p className="company-name">{job.company}</p>
-        {job.locations && job.locations.length > 0 && (
-          <div className="job-location">
-            {job.locations.map((loc, index) => (
-              <span key={index}>{loc.location_string}</span>
-            ))}
-          </div>
-        )}
-        <p className="posting-date">
-          Posted on: {new Date(job.posting_date).toLocaleDateString()}
-        </p>
-        <p className="description">{job.description}</p>
-      </div>
-      <div className="job-card-right">
+
+      <div className="job-card-header">
+        <h2 className="job-title">
+          <a href={job.link} target="_blank" rel="noopener noreferrer">{job.title}</a>
+        </h2>
         <div className="job-card-actions">
           <button
             onClick={() => handlePin(job.link, job.is_pinned)}
@@ -115,6 +100,25 @@ const JobCard = ({ job, openMenu, setOpenMenu, handlePin, handleHide, handleHide
             )}
           </div>
         </div>
+      </div>
+
+      <p className="company-name">{job.company}</p>
+
+      {job.locations && job.locations.length > 0 && (
+        <div className="job-location">
+          {job.locations.map((loc, index) => (
+            <span key={index}>{loc.location_string}{index < job.locations.length - 1 ? ', ' : ''}</span>
+          ))}
+        </div>
+      )}
+
+      <p className="description">{job.description}</p>
+
+      <p className="posting-date">
+          Posted on: {new Date(job.posting_date).toLocaleDateString()}
+      </p>
+
+      <div className="job-card-bottom">
         <div className="job-card-badges">
           {job.locations && job.locations.map((loc, index) => (
             <Badge key={index} location={loc} />

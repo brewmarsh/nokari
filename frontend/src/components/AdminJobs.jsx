@@ -65,16 +65,16 @@ const AdminJobs = () => {
                 <tbody>
                     {jobs.map(job => (
                         <tr key={job.job_id}>
-                            <td><a href={job.link} target="_blank" rel="noopener noreferrer">{job.title}</a></td>
-                            <td>{job.company}</td>
-                            <td>{job.location}</td>
-                            <td>{job.remote ? 'Yes' : 'No'}</td>
-                            <td>{job.hybrid ? 'Yes' : 'No'}</td>
-                            <td>{job.onsite ? 'Yes' : 'No'}</td>
-                            <td>{job.updated_at ? new Date(job.updated_at).toLocaleString() : 'Never'}</td>
-                            <td>
-                                <button onClick={() => handleRescrape(job.job_id)}>Rescrape</button>
-                                <button onClick={() => handleDelete(job.job_id)}>Delete</button>
+                            <td data-label="Job Title"><a href={job.link} target="_blank" rel="noopener noreferrer">{job.title}</a></td>
+                            <td data-label="Company">{job.company}</td>
+                            <td data-label="Location">{job.location}</td>
+                            <td data-label="Remote">{job.remote ? 'Yes' : 'No'}</td>
+                            <td data-label="Hybrid">{job.hybrid ? 'Yes' : 'No'}</td>
+                            <td data-label="Onsite">{job.onsite ? 'Yes' : 'No'}</td>
+                            <td data-label="Updated">{job.updated_at ? new Date(job.updated_at).toLocaleString() : 'Never'}</td>
+                            <td data-label="Actions">
+                                <button className="secondary" onClick={() => handleRescrape(job.job_id)}>Rescrape</button>
+                                <button className="danger" onClick={() => handleDelete(job.job_id)}>Delete</button>
                             </td>
                         </tr>
                     ))}
