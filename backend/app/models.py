@@ -50,6 +50,15 @@ class CreateDomainRequest(BaseModel):
     domain: str
 
 
+class BlockedPattern(BaseModel):
+    id: str
+    pattern: str
+
+
+class CreateBlockedPatternRequest(BaseModel):
+    pattern: str
+
+
 class UserResponse(BaseModel):
     id: str
     email: str

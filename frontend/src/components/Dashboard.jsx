@@ -57,7 +57,7 @@ const Dashboard = ({ user }) => {
                 preferences={preferences}
                 onPreferenceChange={handlePreferenceChange}
             />
-            <Jobs preferences={preferences} />
+            <Jobs preferences={preferences} user={user} />
         </div>
     );
 };
