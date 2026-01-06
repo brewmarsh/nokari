@@ -87,3 +87,4 @@ class ScrapeHistoryItem(BaseModel):
     status: str
     jobs_found: int
     duration_seconds: float
+    requested_by: Optional[str] = "System"
