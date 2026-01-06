@@ -65,9 +65,12 @@ def test_scrape_and_save_jobs():
 
 
 class TestScrapingLogic:
-    @patch("backend.app.scraping_logic.requests.get")
-    def test_scrape_job_details_with_icims_iframe(self, mock_get):
-        # Mock responses
+    @patch("backend.app.scraping_logic.get_session")
+    def test_scrape_job_details_with_icims_iframe(self, mock_get_session):
+        # Mock session and responses
+        mock_session = MagicMock()
+        mock_get_session.return_value = mock_session
+
         initial_response = MagicMock()
         initial_response.content = b"""
         <html>
@@ -104,7 +107,7 @@ class TestScrapingLogic:
                 return iframe_response
             return initial_response
 
-        mock_get.side_effect = side_effect
+        mock_session.get.side_effect = side_effect
 
         details = scrape_job_details("http://example.com/job")
 
@@ -116,8 +119,11 @@ class TestScrapingLogic:
         assert details["locations"][0]["type"] == "onsite"
         assert "This is the job description." in details["description"]
 
-    @patch("backend.app.scraping_logic.requests.get")
-    def test_scrape_job_details_plain_text_location(self, mock_get):
+    @patch("backend.app.scraping_logic.get_session")
+    def test_scrape_job_details_plain_text_location(self, mock_get_session):
+        mock_session = MagicMock()
+        mock_get_session.return_value = mock_session
+
         response = MagicMock()
         response.content = b"""
         <html>
@@ -129,7 +135,7 @@ class TestScrapingLogic:
         </html>
         """
         response.raise_for_status.return_value = None
-        mock_get.return_value = response
+        mock_session.get.return_value = response
 
         details = scrape_job_details("http://example.com/job")
 
@@ -138,8 +144,11 @@ class TestScrapingLogic:
         assert "locations" in details
         assert details["locations"][0]["location_string"] == "US-Remote"
 
-    @patch("backend.app.scraping_logic.requests.get")
-    def test_scrape_job_details_no_location(self, mock_get):
+    @patch("backend.app.scraping_logic.get_session")
+    def test_scrape_job_details_no_location(self, mock_get_session):
+        mock_session = MagicMock()
+        mock_get_session.return_value = mock_session
+
         response = MagicMock()
         response.content = b"""
         <html>
@@ -150,7 +159,7 @@ class TestScrapingLogic:
         </html>
         """
         response.raise_for_status.return_value = None
-        mock_get.return_value = response
+        mock_session.get.return_value = response
 
         details = scrape_job_details("http://example.com/job")
 
