@@ -3,6 +3,7 @@ import logging
 import os
 import uuid
 from datetime import datetime, timezone
+from urllib.parse import urlparse
 
 import requests
 from bs4 import BeautifulSoup
@@ -69,32 +70,93 @@ def scrape_job_details(url):
         # Title
         details["title"] = soup.title.string if soup.title else ""
 
-        # Locations
-        locations = []
-        # Look for "Job Locations"
-        for element in soup.find_all(
-            string=lambda text: text and "Job Locations" in text
-        ):
-            # Check parent text
-            parent = element.parent
-            if not parent:
-                continue
-            text = parent.get_text(strip=True)
-            # If the text is just "Job Locations", check siblings
-            if text == "Job Locations":
-                # Next sibling element?
-                next_elem = parent.find_next_sibling()
-                if next_elem:
-                    loc = next_elem.get_text(strip=True)
+        parsed_url = urlparse(url)
+        # Check for Lever specific logic
+        if "lever.co" in parsed_url.netloc:
+            # Company from path
+            path_parts = parsed_url.path.strip("/").split("/")
+            if len(path_parts) > 0:
+                # e.g. "palantir" -> "Palantir"
+                # If there are dashes or special formatting, we might want to be careful,
+                # but capitalizing is a good start.
+                details["company"] = path_parts[0].capitalize()
+
+            # Title from h2
+            # Lever usually puts the job title in an h2 tag (often with 'posting-headline' class parent,
+            # but h2 is distinctive enough in the top section)
+            h2 = soup.find("h2")
+            if h2:
+                details["title"] = h2.get_text(strip=True)
+
+            # Locations and Type
+            # Inspecting Lever pages, we see classes like:
+            # location -> class="location" or class="sort-by-time posting-category ... location"
+            # workplace type -> class="workplaceTypes"
+            # commitment -> class="commitment"
+            # department -> class="department"
+
+            lever_locations = []
+
+            # Location
+            loc_div = soup.find("div", class_="location")
+            location_str = loc_div.get_text(strip=True) if loc_div else None
+
+            # Workplace Type (Hybrid, Remote, Onsite)
+            type_div = soup.find("div", class_="workplaceTypes")
+            workplace_type_str = type_div.get_text(strip=True) if type_div else None
+
+            if location_str or workplace_type_str:
+                # Determine type
+                loc_type = "onsite"  # Default
+                if workplace_type_str:
+                    w_type_lower = workplace_type_str.lower()
+                    if "hybrid" in w_type_lower:
+                        loc_type = "hybrid"
+                    elif "remote" in w_type_lower:
+                        loc_type = "remote"
+                elif location_str:
+                    if "remote" in location_str.lower():
+                        loc_type = "remote"
+                    elif "hybrid" in location_str.lower():
+                        loc_type = "hybrid"
+
+                # Construct location object
+                # If we have both strings, we can combine or just use location_str as the string
+                final_loc_str = location_str or workplace_type_str
+
+                lever_locations.append(
+                    {"type": loc_type, "location_string": final_loc_str}
+                )
+
+                details["locations"] = lever_locations
+
+        # Fallback Locations if Lever logic didn't find anything or for non-Lever sites
+        if "locations" not in details:
+            locations = []
+            # Look for "Job Locations"
+            for element in soup.find_all(
+                string=lambda text: text and "Job Locations" in text
+            ):
+                # Check parent text
+                parent = element.parent
+                if not parent:
+                    continue
+                text = parent.get_text(strip=True)
+                # If the text is just "Job Locations", check siblings
+                if text == "Job Locations":
+                    # Next sibling element?
+                    next_elem = parent.find_next_sibling()
+                    if next_elem:
+                        loc = next_elem.get_text(strip=True)
+                        if loc:
+                            locations.append({"type": "onsite", "location_string": loc})
+                elif text.startswith("Job Locations"):
+                    loc = text.replace("Job Locations", "").strip()
                     if loc:
                         locations.append({"type": "onsite", "location_string": loc})
-            elif text.startswith("Job Locations"):
-                loc = text.replace("Job Locations", "").strip()
-                if loc:
-                    locations.append({"type": "onsite", "location_string": loc})
 
-        if locations:
-            details["locations"] = locations
+            if locations:
+                details["locations"] = locations
 
         # Description
         # This is a generic attempt to get the main content.
@@ -232,6 +294,10 @@ def scrape_jobs(query, domain, days=None, blocked_patterns=None):
                     )
                     if scraped_details.get("locations"):
                         job_data["locations"] = scraped_details["locations"]
+
+                    # Update company if scraped_details found a better one
+                    if scraped_details.get("company"):
+                        job_data["company"] = scraped_details["company"]
 
             jobs.append(job_data)
     return jobs
