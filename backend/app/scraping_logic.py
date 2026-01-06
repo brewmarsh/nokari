@@ -87,7 +87,7 @@ def scrape_job_details(url):
 
             if location_str or workplace_type_str:
                 # Determine type
-                loc_type = "onsite" # Default
+                loc_type = "onsite"  # Default
                 if workplace_type_str:
                     w_type_lower = workplace_type_str.lower()
                     if "hybrid" in w_type_lower:
@@ -95,19 +95,18 @@ def scrape_job_details(url):
                     elif "remote" in w_type_lower:
                         loc_type = "remote"
                 elif location_str:
-                     if "remote" in location_str.lower():
-                         loc_type = "remote"
-                     elif "hybrid" in location_str.lower():
-                         loc_type = "hybrid"
+                    if "remote" in location_str.lower():
+                        loc_type = "remote"
+                    elif "hybrid" in location_str.lower():
+                        loc_type = "hybrid"
 
                 # Construct location object
                 # If we have both strings, we can combine or just use location_str as the string
                 final_loc_str = location_str or workplace_type_str
 
-                lever_locations.append({
-                    "type": loc_type,
-                    "location_string": final_loc_str
-                })
+                lever_locations.append(
+                    {"type": loc_type, "location_string": final_loc_str}
+                )
 
                 details["locations"] = lever_locations
 
