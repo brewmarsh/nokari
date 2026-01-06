@@ -2,8 +2,8 @@ import unittest
 from unittest.mock import patch, MagicMock
 from backend.app.scraping_logic import scrape_job_details, get_session
 
-class TestScrapingLogic(unittest.TestCase):
 
+class TestScrapingLogic(unittest.TestCase):
     def test_get_session_headers(self):
         session = get_session()
         self.assertIn("User-Agent", session.headers)
@@ -36,7 +36,7 @@ class TestScrapingLogic(unittest.TestCase):
 
         # Second response (iframe content)
         mock_response_2 = MagicMock()
-        mock_response_2.content = b'<html><title>Iframe Job Title</title></html>'
+        mock_response_2.content = b"<html><title>Iframe Job Title</title></html>"
         mock_response_2.status_code = 200
 
         mock_session.get.side_effect = [mock_response_1, mock_response_2]
@@ -48,6 +48,7 @@ class TestScrapingLogic(unittest.TestCase):
         args, _ = mock_session.get.call_args_list[1]
         self.assertEqual(args[0], "https://example.com/iframe_content")
         self.assertEqual(result["title"], "Iframe Job Title")
+
 
 if __name__ == "__main__":
     unittest.main()
