@@ -371,9 +371,7 @@ def add_blocked_pattern(
     return {"message": f"Blocked pattern {pattern_request.pattern} added."}
 
 
-@app.delete(
-    "/api/admin/blocked-patterns/{pattern_id}/", status_code=status.HTTP_200_OK
-)
+@app.delete("/api/admin/blocked-patterns/{pattern_id}/", status_code=status.HTTP_200_OK)
 def delete_blocked_pattern(
     pattern_id: str,
     current_user: dict = Depends(get_current_admin_user),

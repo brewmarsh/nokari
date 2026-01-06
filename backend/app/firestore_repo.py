@@ -289,3 +289,42 @@ class FirestoreRepo:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Failed to get scrape history: {e}",
             )
+
+    def add_blocked_pattern(self, pattern: str):
+        try:
+            # Check for duplicates
+            docs = (
+                self.db.collection("blocked_patterns")
+                .where("pattern", "==", pattern)
+                .limit(1)
+                .get()
+            )
+            for _ in docs:
+                # Pattern already exists
+                return
+
+            self.db.collection("blocked_patterns").add({"pattern": pattern})
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to add blocked pattern: {e}",
+            )
+
+    def get_blocked_patterns(self) -> List[Dict[str, Any]]:
+        try:
+            docs = self.db.collection("blocked_patterns").stream()
+            return [{"id": doc.id, **doc.to_dict()} for doc in docs]
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to get blocked patterns: {e}",
+            )
+
+    def delete_blocked_pattern(self, pattern_id: str):
+        try:
+            self.db.collection("blocked_patterns").document(pattern_id).delete()
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to delete blocked pattern: {e}",
+            )

@@ -109,7 +109,7 @@ const Admin = () => {
       </div>
       <JobTitles />
       <ScrapableDomains />
-      <BlockedPatterns auth={{ currentUser: { getIdToken: () => api.defaults.headers.common['Authorization']?.split(' ')[1] ? Promise.resolve(api.defaults.headers.common['Authorization'].split(' ')[1]) : Promise.reject('No token') } }} />
+      <BlockedPatterns />
       <ScrapeHistory />
       <div>
         <h3>Users</h3>
