@@ -1,140 +1,125 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import JobTitles from './JobTitles.jsx';
 import ScrapableDomains from './ScrapableDomains.jsx';
 import ScrapeHistory from './ScrapeHistory.jsx';
 import BlockedPatterns from './BlockedPatterns.jsx';
-import api from '../services/api';
+import AdminOverview from './AdminOverview.jsx';
+import AdminUsers from './AdminUsers.jsx';
+import './AdminLayout.css';
 
 const Admin = () => {
-  const [scrapeStatus, setScrapeStatus] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [users, setUsers] = useState([]);
-  const [scheduledTime, setScheduledTime] = useState('');
-  const [flexMinutes, setFlexMinutes] = useState(0);
+  const [activeTab, setActiveTab] = useState('overview');
 
-  useEffect(() => {
-    const fetchSchedule = async () => {
-      try {
-        const response = await api.get('/scrape-schedule/');
-        setScheduledTime(response.data.time);
-        setFlexMinutes(response.data.flex_minutes || 0);
-      } catch (error) {
-        console.error('Error fetching scrape schedule:', error);
-      }
-    };
-    fetchSchedule();
-  }, []);
-
-  const handleScrape = useCallback(async () => {
-    setLoading(true);
-    setScrapeStatus('Scraping...');
-    try {
-      const response = await api.post('/scrape/', { days: 1 });
-      setScrapeStatus(response.data.detail);
-    } catch (error) {
-      console.error('Error scraping jobs:', error);
-      if (error.response && error.response.data && error.response.data.detail) {
-        setScrapeStatus(error.response.data.detail);
-      } else {
-        setScrapeStatus('An error occurred while scraping jobs.');
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const handleSaveSchedule = async () => {
-    try {
-      await api.put('/scrape-schedule/', { time: scheduledTime, flex_minutes: parseInt(flexMinutes, 10) });
-      alert('Schedule saved!');
-    } catch (error) {
-      console.error('Error saving scrape schedule:', error);
-      alert('Error saving schedule.');
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'overview':
+        return <AdminOverview />;
+      case 'job-titles':
+        return (
+            <div>
+                <h3>Job Titles Configuration</h3>
+                <JobTitles />
+            </div>
+        );
+      case 'domains':
+        return (
+            <div>
+                <h3>Scrapable Domains Configuration</h3>
+                <ScrapableDomains />
+            </div>
+        );
+      case 'blocked-patterns':
+        return (
+            <div>
+                <h3>Blocked Patterns Configuration</h3>
+                <BlockedPatterns />
+            </div>
+        );
+      case 'history':
+        return (
+            <div>
+                <h3>Scrape History Log</h3>
+                <ScrapeHistory />
+            </div>
+        );
+      case 'users':
+        return <AdminUsers />;
+      default:
+        return <AdminOverview />;
     }
   };
 
-  const fetchUsers = useCallback(async () => {
-    try {
-      const response = await api.get('/users/');
-      setUsers(response.data);
-    } catch (error) {
-      console.error('Error fetching users:', error);
-    }
-  }, []);
-
-  const promoteUser = useCallback(async (userId) => {
-    try {
-      await api.post(`/users/${userId}/promote/`);
-      fetchUsers(); // Refresh the user list
-    } catch (error) {
-      console.error('Error promoting user:', error);
-    }
-  }, [fetchUsers]);
-
-  React.useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
-
   return (
-    <div className="admin-section">
-      <h2>Admin Tools</h2>
-      <div className="admin-section">
-        <h3>Job Management</h3>
-        <Link to="/admin/jobs">Jobs Table</Link>
+    <div className="admin-page">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+        <h2>Admin Dashboard</h2>
+        <Link to="/admin/jobs" className="button" style={{
+            backgroundColor: 'var(--primary)',
+            color: 'white',
+            padding: '0.5rem 1rem',
+            borderRadius: 'var(--radius)',
+            fontSize: '0.95rem',
+            display: 'inline-block'
+        }}>
+            Manage Jobs Table
+        </Link>
       </div>
-      <div>
-        <h3>Manual Scrape</h3>
-        <button onClick={handleScrape} disabled={loading}>
-          {loading ? 'Scraping...' : 'Run Manual 1-Day Scrape'}
-        </button>
-        {scrapeStatus && <p>{scrapeStatus}</p>}
-      </div>
-      <div>
-        <h3>Scheduled Scrape</h3>
-        <label>
-          Daily scrape time:
-          <input type="time" value={scheduledTime} onChange={(e) => setScheduledTime(e.target.value)} />
-        </label>
-        <label style={{ marginLeft: '10px' }}>
-          Flex (minutes):
-          <input
-            type="number"
-            value={flexMinutes}
-            onChange={(e) => setFlexMinutes(e.target.value)}
-            style={{ width: '60px', marginLeft: '5px' }}
-          />
-        </label>
-        <button onClick={handleSaveSchedule} style={{ marginLeft: '10px' }}>Save Schedule</button>
-      </div>
-      <JobTitles />
-      <ScrapableDomains />
-      <BlockedPatterns />
-      <ScrapeHistory />
-      <div>
-        <h3>Users</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
-              <tr key={user.id}>
-                <td>{user.email}</td>
-                <td>{user.role}</td>
-                <td>
-                  {user.role !== 'admin' && (
-                    <button onClick={() => promoteUser(user.id)}>Promote to Admin</button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+
+      <div className="admin-container">
+        <div className="admin-sidebar">
+          <div className="admin-sidebar-header">Main Menu</div>
+
+          <div
+            className={`admin-nav-item ${activeTab === 'overview' ? 'active' : ''}`}
+            onClick={() => setActiveTab('overview')}
+          >
+            Overview
+          </div>
+
+          <div className="admin-sidebar-header" style={{ marginTop: '1rem' }}>Configuration</div>
+
+          <div
+            className={`admin-nav-item ${activeTab === 'job-titles' ? 'active' : ''}`}
+            onClick={() => setActiveTab('job-titles')}
+          >
+            Job Titles
+          </div>
+
+          <div
+            className={`admin-nav-item ${activeTab === 'domains' ? 'active' : ''}`}
+            onClick={() => setActiveTab('domains')}
+          >
+            Scrapable Domains
+          </div>
+
+          <div
+            className={`admin-nav-item ${activeTab === 'blocked-patterns' ? 'active' : ''}`}
+            onClick={() => setActiveTab('blocked-patterns')}
+          >
+            Blocked Patterns
+          </div>
+
+          <div className="admin-sidebar-header" style={{ marginTop: '1rem' }}>System</div>
+
+          <div
+            className={`admin-nav-item ${activeTab === 'history' ? 'active' : ''}`}
+            onClick={() => setActiveTab('history')}
+          >
+            Scrape History
+          </div>
+
+          <div
+            className={`admin-nav-item ${activeTab === 'users' ? 'active' : ''}`}
+            onClick={() => setActiveTab('users')}
+          >
+            Users
+          </div>
+        </div>
+
+        <div className="admin-content">
+          {renderContent()}
+        </div>
       </div>
     </div>
   );
