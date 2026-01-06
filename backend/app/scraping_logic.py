@@ -68,8 +68,8 @@ def scrape_job_details(url):
                             details["company"] = org
 
                     if "description" in data:
-                         # Keep description as is (HTML) but maybe normalize whitespace
-                         # to avoid massive spacing issues, but don't strip tags.
+                        # Keep description as is (HTML) but maybe normalize whitespace
+                        # to avoid massive spacing issues, but don't strip tags.
                         details["description"] = data["description"].strip()
 
                     if "datePosted" in data:
@@ -77,7 +77,9 @@ def scrape_job_details(url):
                             # Handle ISO format
                             # Example: 2025-10-14T21:34:00+0000
                             # Python 3.11+ handles this well. Python 3.12 is used.
-                            details["posting_date"] = datetime.fromisoformat(data["datePosted"])
+                            details["posting_date"] = datetime.fromisoformat(
+                                data["datePosted"]
+                            )
                         except ValueError:
                             pass
 
@@ -95,7 +97,9 @@ def scrape_job_details(url):
                                 parts = []
                                 if isinstance(addr, dict):
                                     if addr.get("streetAddress"):
-                                         parts.append(addr["streetAddress"].replace("\n", ", "))
+                                        parts.append(
+                                            addr["streetAddress"].replace("\n", ", ")
+                                        )
                                     if addr.get("addressLocality"):
                                         parts.append(addr["addressLocality"])
                                     if addr.get("addressRegion"):
@@ -114,7 +118,9 @@ def scrape_job_details(url):
                                         first_loc_string = loc_str
                                     # Infer type
                                     # Default to onsite unless we detect otherwise?
-                                    parsed_locs.append({"type": "onsite", "location_string": loc_str})
+                                    parsed_locs.append(
+                                        {"type": "onsite", "location_string": loc_str}
+                                    )
 
                         if parsed_locs:
                             details["locations"] = parsed_locs
@@ -124,10 +130,9 @@ def scrape_job_details(url):
 
                     # If we found valid data, we can return or merge.
                     if details.get("title"):
-                         return details
+                        return details
             except json.JSONDecodeError:
                 continue
-
 
         # Check for iCIMS iframe (Fallback / Legacy logic)
         iframe = soup.find("iframe", id="icims_content_iframe") or soup.find(
@@ -374,13 +379,6 @@ def scrape_jobs(query, domain, days=None, blocked_patterns=None):
                     )
                     if scraped_details.get("locations"):
                         job_data["locations"] = scraped_details["locations"]
-
-                    # Update singular location if present
-                    if scraped_details.get("location"):
-                        # job_data does not have 'location' key initially, but scrape_and_save_jobs might use it?
-                        # scrape_and_save_jobs constructs final_job_data from locations list mainly.
-                        # But adding it here makes 'job_data' dictionary richer.
-                        pass # scrape_and_save_jobs logic recalculates it anyway.
 
                     # Update company if scraped_details found a better one
                     if scraped_details.get("company"):
