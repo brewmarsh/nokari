@@ -16,13 +16,33 @@ class ScraperException(Exception):
     pass
 
 
+def get_session():
+    """Returns a requests Session with common browser headers."""
+    session = requests.Session()
+    session.headers.update(
+        {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Upgrade-Insecure-Requests": "1",
+            "Sec-Fetch-Dest": "document",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Site": "none",
+            "Sec-Fetch-User": "?1",
+            "Referer": "https://www.google.com/",
+        }
+    )
+    return session
+
+
 def scrape_job_details(url):
     """
     Scrapes the details of a single job posting from its URL.
     Returns a dictionary with the scraped data.
     """
+    session = get_session()
     try:
-        response = requests.get(url, timeout=10)
+        response = session.get(url, timeout=10)
         response.raise_for_status()
         soup = BeautifulSoup(response.content, "html.parser")
 
@@ -38,7 +58,7 @@ def scrape_job_details(url):
                 iframe_url = urljoin(url, src)
                 try:
                     logger.info(f"Following iframe to {iframe_url}")
-                    iframe_response = requests.get(iframe_url, timeout=10)
+                    iframe_response = session.get(iframe_url, timeout=10)
                     iframe_response.raise_for_status()
                     soup = BeautifulSoup(iframe_response.content, "html.parser")
                 except Exception as e:
