@@ -1,4 +1,5 @@
 import fnmatch
+import json
 import logging
 import os
 import uuid
@@ -48,7 +49,87 @@ def scrape_job_details(url):
         response.raise_for_status()
         soup = BeautifulSoup(response.content, "html.parser")
 
-        # Check for iCIMS iframe
+        details = {}
+
+        # 1. Try JSON-LD (Preferred method for structured data)
+        json_ld_scripts = soup.find_all("script", type="application/ld+json")
+        for script in json_ld_scripts:
+            try:
+                data = json.loads(script.string)
+                # Should be type JobPosting
+                if data.get("@type") == "JobPosting":
+                    details["title"] = data.get("title")
+
+                    if "hiringOrganization" in data:
+                        org = data["hiringOrganization"]
+                        if isinstance(org, dict):
+                            details["company"] = org.get("name")
+                        elif isinstance(org, str):
+                            details["company"] = org
+
+                    if "description" in data:
+                         # Keep description as is (HTML) but maybe normalize whitespace
+                         # to avoid massive spacing issues, but don't strip tags.
+                        details["description"] = data["description"].strip()
+
+                    if "datePosted" in data:
+                        try:
+                            # Handle ISO format
+                            # Example: 2025-10-14T21:34:00+0000
+                            # Python 3.11+ handles this well. Python 3.12 is used.
+                            details["posting_date"] = datetime.fromisoformat(data["datePosted"])
+                        except ValueError:
+                            pass
+
+                    # Locations
+                    if "jobLocation" in data:
+                        locs = data["jobLocation"]
+                        if not isinstance(locs, list):
+                            locs = [locs]
+
+                        parsed_locs = []
+                        first_loc_string = None
+                        for loc in locs:
+                            if loc.get("@type") == "Place" and "address" in loc:
+                                addr = loc["address"]
+                                parts = []
+                                if isinstance(addr, dict):
+                                    if addr.get("streetAddress"):
+                                         parts.append(addr["streetAddress"].replace("\n", ", "))
+                                    if addr.get("addressLocality"):
+                                        parts.append(addr["addressLocality"])
+                                    if addr.get("addressRegion"):
+                                        parts.append(addr["addressRegion"])
+                                    if addr.get("addressCountry"):
+                                        country = addr["addressCountry"]
+                                        # addressCountry can be string or object
+                                        if isinstance(country, dict):
+                                            parts.append(country.get("name", ""))
+                                        else:
+                                            parts.append(country)
+
+                                loc_str = ", ".join([p for p in parts if p])
+                                if loc_str:
+                                    if not first_loc_string:
+                                        first_loc_string = loc_str
+                                    # Infer type
+                                    # Default to onsite unless we detect otherwise?
+                                    parsed_locs.append({"type": "onsite", "location_string": loc_str})
+
+                        if parsed_locs:
+                            details["locations"] = parsed_locs
+                            # Populate singular location field for compatibility
+                            if first_loc_string:
+                                details["location"] = first_loc_string
+
+                    # If we found valid data, we can return or merge.
+                    if details.get("title"):
+                         return details
+            except json.JSONDecodeError:
+                continue
+
+
+        # Check for iCIMS iframe (Fallback / Legacy logic)
         iframe = soup.find("iframe", id="icims_content_iframe") or soup.find(
             "iframe", id="noscript_icims_content_iframe"
         )
@@ -66,7 +147,6 @@ def scrape_job_details(url):
                 except Exception as e:
                     logger.warning(f"Failed to follow iframe: {e}")
 
-        details = {}
         # Title
         details["title"] = soup.title.string if soup.title else ""
 
@@ -294,6 +374,13 @@ def scrape_jobs(query, domain, days=None, blocked_patterns=None):
                     )
                     if scraped_details.get("locations"):
                         job_data["locations"] = scraped_details["locations"]
+
+                    # Update singular location if present
+                    if scraped_details.get("location"):
+                        # job_data does not have 'location' key initially, but scrape_and_save_jobs might use it?
+                        # scrape_and_save_jobs constructs final_job_data from locations list mainly.
+                        # But adding it here makes 'job_data' dictionary richer.
+                        pass # scrape_and_save_jobs logic recalculates it anyway.
 
                     # Update company if scraped_details found a better one
                     if scraped_details.get("company"):
