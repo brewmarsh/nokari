@@ -9,7 +9,7 @@ import JobFilters from './JobFilters.jsx';
 
 const JOBS_PER_PAGE = 20;
 
-const Jobs = ({ preferences }) => {
+const Jobs = ({ preferences, user }) => {
   const [jobs, setJobs] = useState([]);
   const [error, setError] = useState(null);
   const [title, setTitle] = useState('');
@@ -188,6 +188,16 @@ const Jobs = ({ preferences }) => {
     }
   }, []);
 
+  const handleBlockUrl = useCallback(async (pattern) => {
+    try {
+      await api.post("/admin/blocked-patterns/", { pattern });
+      alert(`Blocked pattern: ${pattern}`);
+    } catch (err) {
+      console.error("Error blocking pattern:", err);
+      alert(`Error blocking pattern: ${err.message}`);
+    }
+  }, []);
+
   if (error) {
     return <div>Error: {error.message}</div>;
   }
@@ -230,6 +240,8 @@ const Jobs = ({ preferences }) => {
                 handleHide={handleHide}
                 handleHideCompany={handleHideCompany}
                 handleFindSimilar={handleFindSimilar}
+                isAdmin={user?.role?.toLowerCase() === 'admin'}
+                handleBlockUrl={handleBlockUrl}
               />
             ))}
           </div>

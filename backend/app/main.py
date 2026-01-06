@@ -414,4 +414,27 @@ def get_users(current_user: dict = Depends(get_current_admin_user)):
     return [models.UserResponse(**user) for user in users]
 
 
+@app.get("/api/admin/blocked-patterns/", response_model=List[models.BlockedPattern])
+def get_blocked_patterns(current_user: dict = Depends(get_current_admin_user)):
+    return firestore_repo.get_blocked_patterns()
+
+
+@app.post("/api/admin/blocked-patterns/", status_code=status.HTTP_201_CREATED)
+def add_blocked_pattern(
+    pattern_request: models.CreateBlockedPatternRequest,
+    current_user: dict = Depends(get_current_admin_user),
+):
+    firestore_repo.add_blocked_pattern(pattern_request.pattern)
+    return {"message": f"Blocked pattern {pattern_request.pattern} added."}
+
+
+@app.delete("/api/admin/blocked-patterns/{pattern_id}/", status_code=status.HTTP_200_OK)
+def delete_blocked_pattern(
+    pattern_id: str,
+    current_user: dict = Depends(get_current_admin_user),
+):
+    firestore_repo.delete_blocked_pattern(pattern_id)
+    return {"message": "Blocked pattern deleted."}
+
+
 handler = Mangum(app)

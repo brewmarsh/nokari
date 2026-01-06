@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PinIcon from './PinIcon.jsx';
 import ThreeDotsIcon from './icons/ThreeDotsIcon.jsx';
 import HideIcon from './icons/HideIcon.jsx';
@@ -28,9 +28,42 @@ const Badge = ({ location }) => {
     return <span style={style}>{location.type}</span>;
 };
 
-const JobCard = ({ job, openMenu, setOpenMenu, handlePin, handleHide, handleHideCompany, handleFindSimilar }) => {
+const BlockUrlModal = ({ isOpen, onClose, initialUrl, onConfirm }) => {
+  const [pattern, setPattern] = useState(initialUrl);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <h3>Block URL Pattern</h3>
+        <p>Enter the URL pattern to block (supports wildcards *):</p>
+        <input
+          type="text"
+          value={pattern}
+          onChange={(e) => setPattern(e.target.value)}
+          style={{ width: '100%', marginBottom: '10px' }}
+        />
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+          <button onClick={onClose}>Cancel</button>
+          <button onClick={() => { onConfirm(pattern); onClose(); }}>Block</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const JobCard = ({ job, openMenu, setOpenMenu, handlePin, handleHide, handleHideCompany, handleFindSimilar, isAdmin, handleBlockUrl }) => {
+  const [showBlockModal, setShowBlockModal] = useState(false);
+
   return (
     <div className={`job-card ${job.is_pinned ? 'pinned' : ''}`}>
+      <BlockUrlModal
+        isOpen={showBlockModal}
+        onClose={() => setShowBlockModal(false)}
+        initialUrl={job.link}
+        onConfirm={handleBlockUrl}
+      />
       <div className="job-card-left">
         <div className="job-card-header">
           <h2 className="job-title">
@@ -75,6 +108,9 @@ const JobCard = ({ job, openMenu, setOpenMenu, handlePin, handleHide, handleHide
                 <button onClick={() => { handleHide(job.link); setOpenMenu(null); }}>Hide Job</button>
                 <button onClick={() => { handleHideCompany(job.company); setOpenMenu(null); }}>Hide Company</button>
                 <button onClick={() => handleFindSimilar(job)}>Find similar</button>
+                {isAdmin && (
+                  <button onClick={() => { setShowBlockModal(true); setOpenMenu(null); }}>Block this URL</button>
+                )}
               </div>
             )}
           </div>

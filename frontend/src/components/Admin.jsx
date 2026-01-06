@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import JobTitles from './JobTitles.jsx';
 import ScrapableDomains from './ScrapableDomains.jsx';
 import ScrapeHistory from './ScrapeHistory.jsx';
+import BlockedPatterns from './BlockedPatterns.jsx';
 import api from '../services/api';
 
 const Admin = () => {
@@ -108,6 +109,7 @@ const Admin = () => {
       </div>
       <JobTitles />
       <ScrapableDomains />
+      <BlockedPatterns />
       <ScrapeHistory />
       <div>
         <h3>Users</h3>

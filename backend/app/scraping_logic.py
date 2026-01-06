@@ -1,3 +1,4 @@
+import fnmatch
 import logging
 import os
 import uuid
@@ -90,7 +91,7 @@ def scrape_job_details(url):
         return None
 
 
-def scrape_jobs(query, domain, days=None):
+def scrape_jobs(query, domain, days=None, blocked_patterns=None):
     """
     Scrapes job postings from a given domain using the Google Custom Search API.
 
@@ -98,6 +99,7 @@ def scrape_jobs(query, domain, days=None):
         query (str): The search query for job titles.
         domain (str): The domain to search within (e.g., "lever.co").
         days (int, optional): The number of past days to restrict the search to.
+        blocked_patterns (list, optional): List of URL patterns to block.
 
     Returns:
         list: A list of dictionaries, where each dictionary represents a job posting.
@@ -132,6 +134,17 @@ def scrape_jobs(query, domain, days=None):
     jobs = []
     if "items" in result:
         for item in result["items"]:
+            link = item.get("link")
+            if blocked_patterns and link:
+                is_blocked = False
+                for pattern in blocked_patterns:
+                    if fnmatch.fnmatch(link, pattern):
+                        logger.info(f"Skipping blocked URL: {link} (matches {pattern})")
+                        is_blocked = True
+                        break
+                if is_blocked:
+                    continue
+
             pagemap = item.get("pagemap", {})
             metatags = pagemap.get("metatags", [{}])[0]
             title = item.get("title", "")
@@ -217,6 +230,14 @@ def scrape_and_save_jobs(repo: FirestoreRepo, query_term: str, domains, days=Non
     Returns:
         int: The number of new jobs that were scraped and saved.
     """
+    # Fetch blocked patterns once
+    try:
+        blocked_patterns_docs = repo.get_blocked_patterns()
+        blocked_patterns = [doc["pattern"] for doc in blocked_patterns_docs]
+    except Exception as e:
+        logger.warning(f"Failed to fetch blocked patterns: {e}")
+        blocked_patterns = []
+
     scraped_count = 0
     for domain_obj in domains:
         domain_name = (
@@ -226,7 +247,9 @@ def scrape_and_save_jobs(repo: FirestoreRepo, query_term: str, domains, days=Non
         )
         try:
             logger.info(f"Scraping {domain_name} for {query_term}...")
-            jobs = scrape_jobs(query_term, domain_name, days=days)
+            jobs = scrape_jobs(
+                query_term, domain_name, days=days, blocked_patterns=blocked_patterns
+            )
             for job_data in jobs:
                 title = job_data["title"]
                 if "Job Application for" in title:
