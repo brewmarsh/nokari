@@ -24,24 +24,24 @@ const ScrapeHistory = () => {
   return (
     <div>
       <h1>Scrape History</h1>
-      <table>
+      <table style={{ width: '100%', textAlign: 'center' }}>
         <thead>
           <tr>
-            <th>Timestamp</th>
-            <th>User</th>
-            <th>Status</th>
-            <th>Jobs Found</th>
-            <th>Details</th>
+            <th style={{ textAlign: 'center' }}>Timestamp</th>
+            <th style={{ textAlign: 'center' }}>User</th>
+            <th style={{ textAlign: 'center' }}>Status</th>
+            <th style={{ textAlign: 'center' }}>Jobs Found</th>
+            <th style={{ textAlign: 'center' }}>Details</th>
           </tr>
         </thead>
         <tbody>
           {history.map((item) => (
             <tr key={item.id}>
-              <td>{new Date(item.timestamp).toLocaleString()}</td>
-              <td>{item.user}</td>
-              <td>{item.status}</td>
-              <td>{item.jobs_found}</td>
-              <td>{item.details}</td>
+              <td style={{ textAlign: 'center' }}>{new Date(item.timestamp).toLocaleString()}</td>
+              <td style={{ textAlign: 'center' }}>{item.requested_by || 'System'}</td>
+              <td style={{ textAlign: 'center' }}>{item.status}</td>
+              <td style={{ textAlign: 'center' }}>{item.jobs_found}</td>
+              <td style={{ textAlign: 'center' }}>{item.details}</td>
             </tr>
           ))}
         </tbody>

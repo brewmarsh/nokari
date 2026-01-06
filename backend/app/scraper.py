@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-def run_scraper(query: str = "Software Engineer"):
+def run_scraper(query: str = "Software Engineer", requested_by: str = "System"):
     repo = FirestoreRepo(db_client=db)
     domains = repo.get_scrapable_domains()
 
@@ -38,6 +38,7 @@ def run_scraper(query: str = "Software Engineer"):
         "jobs_found": count,
         "duration_seconds": duration,
         "query": query,
+        "requested_by": requested_by,
     }
     repo.add_scrape_history_entry(history_entry)
 

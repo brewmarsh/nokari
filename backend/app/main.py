@@ -303,7 +303,8 @@ def trigger_scrape(
     background_tasks: BackgroundTasks,
     current_user: dict = Depends(get_current_admin_user),
 ):
-    background_tasks.add_task(run_scraper)
+    email = current_user.get("email", "Admin")
+    background_tasks.add_task(run_scraper, requested_by=email)
     return {"message": "Scraping started in background."}
 
 
