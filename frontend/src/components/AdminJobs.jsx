@@ -43,12 +43,26 @@ const AdminJobs = () => {
         }
     };
 
+    const handleRescrapeAll = async () => {
+        if (window.confirm('Are you sure you want to rescrape ALL jobs? This process runs in the background and may take some time.')) {
+            try {
+                await api.post('/admin/jobs/rescrape-all/');
+                alert('Background task started to rescrape all jobs.');
+            } catch (err) {
+                setError(err);
+            }
+        }
+    };
+
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error: {error.message}</div>;
 
     return (
         <div className="admin-jobs-container">
-            <h1>Admin - Job Postings</h1>
+            <div className="admin-jobs-header">
+                <h1>Admin - Job Postings</h1>
+                <button className="primary" onClick={handleRescrapeAll}>Rescrape All</button>
+            </div>
             <table className="admin-jobs-table">
                 <thead>
                     <tr>

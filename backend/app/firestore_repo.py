@@ -108,6 +108,16 @@ class FirestoreRepo:
                 detail=f"Failed to get job posting: {e}",
             )
 
+    def get_all_jobs(self) -> List[Dict[str, Any]]:
+        try:
+            docs = self.db.collection("job_postings").stream()
+            return [{"id": doc.id, **doc.to_dict()} for doc in docs]
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to get all jobs: {e}",
+            )
+
     def search_jobs(
         self,
         locations: Optional[List[str]] = None,

@@ -22,7 +22,7 @@ from pydantic import BaseModel
 
 from backend.app import models
 from backend.app.firestore_repo import FirestoreRepo
-from backend.app.scraper import run_scraper
+from backend.app.scraper import run_scraper, rescrape_all_jobs
 from backend.app import scraping_logic
 from backend.app.firebase_auth_repo import FirebaseAuthRepo
 from backend.app.firebase_config import db, firebase_storage
@@ -379,6 +379,19 @@ def rescrape_admin_job(
             raise HTTPException(status_code=500, detail="Failed to scrape job details")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Rescrape failed: {e}")
+
+
+@app.post("/api/admin/jobs/rescrape-all/", status_code=status.HTTP_202_ACCEPTED)
+def rescrape_all_jobs_endpoint(
+    background_tasks: BackgroundTasks,
+    current_user: dict = Depends(get_current_admin_user),
+):
+    """
+    Trigger a background task to rescrape all jobs.
+    """
+    email = current_user.get("email", "Admin")
+    background_tasks.add_task(rescrape_all_jobs, requested_by=email)
+    return {"message": "Rescrape all started in background."}
 
 
 @app.get("/api/admin/job-titles/", response_model=List[models.JobTitle])
