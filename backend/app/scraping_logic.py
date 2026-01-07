@@ -124,12 +124,44 @@ def scrape_job_details(url):
 
                         if parsed_locs:
                             details["locations"] = parsed_locs
-                            # Populate singular location field for compatibility
-                            if first_loc_string:
-                                details["location"] = first_loc_string
+
+                            # Extract city, state, country from first valid location
+                            for loc in locs:
+                                if loc.get("@type") == "Place" and "address" in loc:
+                                    addr = loc["address"]
+                                    if isinstance(addr, dict):
+                                        if addr.get("addressLocality"):
+                                            details["city"] = addr["addressLocality"]
+                                        if addr.get("addressRegion"):
+                                            details["state"] = addr["addressRegion"]
+                                        if addr.get("addressCountry"):
+                                            country = addr["addressCountry"]
+                                            if isinstance(country, dict):
+                                                details["country"] = country.get(
+                                                    "name", ""
+                                                )
+                                            else:
+                                                details["country"] = country
+                                        # Use the first one found
+                                        break
 
                     # If we found valid data, we can return or merge.
                     if details.get("title"):
+                        # Clean title
+                        if " | " in details["title"]:
+                            details["title"] = details["title"].split(" | ")[0]
+                        if " - " in details["title"]:
+                            # Often companies append " - Company Name"
+                            details["title"] = details["title"].split(" - ")[0]
+
+                        # Clean company
+                        if details.get("company") and details["company"].lower() in [
+                            "careers",
+                            "job",
+                        ]:
+                            # Try to fallback to something better if possible, or leave it blank
+                            pass
+
                         return details
             except json.JSONDecodeError:
                 continue
@@ -152,8 +184,21 @@ def scrape_job_details(url):
                 except Exception as e:
                     logger.warning(f"Failed to follow iframe: {e}")
 
-        # Title
-        details["title"] = soup.title.string if soup.title else ""
+        # Title - Try h1 first
+        h1 = soup.find("h1")
+        if h1:
+            details["title"] = h1.get_text(strip=True)
+        else:
+            details["title"] = soup.title.string if soup.title else ""
+
+        # Clean title (remove common suffixes)
+        if details.get("title"):
+            separators = [" | ", " - ", " : "]
+            for sep in separators:
+                if sep in details["title"]:
+                    parts = details["title"].split(sep)
+                    # Heuristic: Job title is usually the first part
+                    details["title"] = parts[0]
 
         parsed_url = urlparse(url)
         # Check for Lever specific logic
@@ -380,9 +425,21 @@ def scrape_jobs(query, domain, days=None, blocked_patterns=None):
                     if scraped_details.get("locations"):
                         job_data["locations"] = scraped_details["locations"]
 
+                    if scraped_details.get("city"):
+                        job_data["city"] = scraped_details["city"]
+                    if scraped_details.get("state"):
+                        job_data["state"] = scraped_details["state"]
+                    if scraped_details.get("country"):
+                        job_data["country"] = scraped_details["country"]
+
                     # Update company if scraped_details found a better one
                     if scraped_details.get("company"):
-                        job_data["company"] = scraped_details["company"]
+                        if scraped_details["company"].lower() not in [
+                            "careers",
+                            "home",
+                            "index",
+                        ]:
+                            job_data["company"] = scraped_details["company"]
 
             jobs.append(job_data)
     return jobs
@@ -447,13 +504,7 @@ def scrape_and_save_jobs(repo: FirestoreRepo, query_term: str, domains, days=Non
                             searchable_locations.append(loc["location_string"])
 
                     # Default location string for display
-                    loc_str = "Remote"
-                    if job_data["locations"]:
-                        first_location = job_data["locations"][0]
-                        if first_location.get("location_string"):
-                            loc_str = first_location.get("location_string")
-                        elif first_location.get("type"):
-                            loc_str = first_location.get("type")
+                    # loc_str logic removed as it was unused and flagged by linter
 
                     final_job_data = {
                         "title": title,
@@ -462,7 +513,9 @@ def scrape_and_save_jobs(repo: FirestoreRepo, query_term: str, domains, days=Non
                         "posting_date": job_data["posting_date"],
                         "locations": job_data["locations"],
                         "searchable_locations": searchable_locations,
-                        "location": loc_str,
+                        "city": job_data.get("city"),
+                        "state": job_data.get("state"),
+                        "country": job_data.get("country"),
                         "work_arrangement": "Unknown",
                         "link": job_data["link"],
                         "created_at": datetime.now(timezone.utc),

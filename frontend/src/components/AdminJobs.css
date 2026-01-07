@@ -2,6 +2,11 @@
     padding: 20px;
 }
 
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
 .admin-jobs-table {
     width: 100%;
     border-collapse: collapse;
@@ -10,6 +15,7 @@
     border-radius: var(--radius);
     overflow: hidden;
     box-shadow: var(--shadow);
+    min-width: 900px; /* Ensure table doesn't squish too much */
 }
 
 .admin-jobs-table th,

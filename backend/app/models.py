@@ -8,7 +8,9 @@ class JobPosting(BaseModel):
     job_id: str
     title: str
     company: str
-    location: str
+    city: Optional[str] = None
+    state: Optional[str] = None
+    country: Optional[str] = None
     description: str
     work_arrangement: str
     posting_date: Optional[datetime] = None
@@ -33,9 +35,15 @@ class JobPostResponse(BaseModel):
     job_id: str
     title: str
     company: str
-    location: str
+    city: Optional[str] = None
+    state: Optional[str] = None
+    country: Optional[str] = None
+    remote: bool = False
+    hybrid: bool = False
+    onsite: bool = False
     work_arrangement: str
     posting_date: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
     link: Optional[str] = None
     locations: Optional[List[JobLocation]] = None
     is_pinned: Optional[bool] = False

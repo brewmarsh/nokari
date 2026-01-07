@@ -63,37 +63,43 @@ const AdminJobs = () => {
                 <h1>Admin - Job Postings</h1>
                 <button className="primary" onClick={handleRescrapeAll}>Rescrape All</button>
             </div>
-            <table className="admin-jobs-table">
-                <thead>
-                    <tr>
-                        <th>Job Title</th>
-                        <th>Company</th>
-                        <th>Location</th>
-                        <th>Remote</th>
-                        <th>Hybrid</th>
-                        <th>Onsite</th>
-                        <th>Updated</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {jobs.map(job => (
-                        <tr key={job.job_id}>
-                            <td data-label="Job Title"><a href={job.link} target="_blank" rel="noopener noreferrer">{job.title}</a></td>
-                            <td data-label="Company">{job.company}</td>
-                            <td data-label="Location">{job.location}</td>
-                            <td data-label="Remote">{job.remote ? 'Yes' : 'No'}</td>
-                            <td data-label="Hybrid">{job.hybrid ? 'Yes' : 'No'}</td>
-                            <td data-label="Onsite">{job.onsite ? 'Yes' : 'No'}</td>
-                            <td data-label="Updated">{job.updated_at ? new Date(job.updated_at).toLocaleString() : 'Never'}</td>
-                            <td data-label="Actions">
-                                <button className="secondary" onClick={() => handleRescrape(job.job_id)}>Rescrape</button>
-                                <button className="danger" onClick={() => handleDelete(job.job_id)}>Delete</button>
-                            </td>
+            <div className="table-responsive">
+                <table className="admin-jobs-table">
+                    <thead>
+                        <tr>
+                            <th>Job Title</th>
+                            <th>Company</th>
+                            <th>City</th>
+                            <th>State</th>
+                            <th>Country</th>
+                            <th>Remote</th>
+                            <th>Hybrid</th>
+                            <th>Onsite</th>
+                            <th>Updated</th>
+                            <th>Actions</th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {jobs.map(job => (
+                            <tr key={job.job_id}>
+                                <td data-label="Job Title"><a href={job.link} target="_blank" rel="noopener noreferrer">{job.title}</a></td>
+                                <td data-label="Company">{job.company}</td>
+                                <td data-label="City">{job.city || '-'}</td>
+                                <td data-label="State">{job.state || '-'}</td>
+                                <td data-label="Country">{job.country || '-'}</td>
+                                <td data-label="Remote">{job.remote ? 'Yes' : 'No'}</td>
+                                <td data-label="Hybrid">{job.hybrid ? 'Yes' : 'No'}</td>
+                                <td data-label="Onsite">{job.onsite ? 'Yes' : 'No'}</td>
+                                <td data-label="Updated">{job.updated_at ? new Date(job.updated_at).toLocaleString() : 'Never'}</td>
+                                <td data-label="Actions">
+                                    <button className="secondary" onClick={() => handleRescrape(job.job_id)}>Rescrape</button>
+                                    <button className="danger" onClick={() => handleDelete(job.job_id)}>Delete</button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 };

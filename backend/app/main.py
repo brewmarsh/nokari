@@ -24,6 +24,7 @@ from backend.app import models
 from backend.app.firestore_repo import FirestoreRepo
 from backend.app.scraper import run_scraper, rescrape_all_jobs
 from backend.app import scraping_logic
+from backend.app import utils
 from backend.app.firebase_auth_repo import FirebaseAuthRepo
 from backend.app.firebase_config import db, firebase_storage
 from backend.app.security import get_current_user
@@ -192,10 +193,13 @@ def search_jobs(
         limit=limit,
         last_doc_id=last_doc_id,
     )
-    # Firestore does not automatically include the document ID in the data.
-    # We need to add it manually if it's part of the response model.
-    # Assuming job_id is the document ID.
-    return [models.JobPostResponse(job_id=job.get("id", ""), **job) for job in jobs]
+
+    response_jobs = []
+    for job in jobs:
+        utils.enrich_job_with_flags(job)
+        response_jobs.append(models.JobPostResponse(job_id=job.get("id", ""), **job))
+
+    return response_jobs
 
 
 @app.post("/api/jobs/{job_id}/find-similar/", status_code=status.HTTP_202_ACCEPTED)
@@ -334,7 +338,13 @@ def get_admin_jobs(
     Fetch jobs for admin management.
     """
     jobs = firestore_repo.search_jobs(limit=limit)
-    return [models.JobPostResponse(job_id=job.get("id", ""), **job) for job in jobs]
+
+    response_jobs = []
+    for job in jobs:
+        utils.enrich_job_with_flags(job)
+        response_jobs.append(models.JobPostResponse(job_id=job.get("id", ""), **job))
+
+    return response_jobs
 
 
 @app.delete("/api/admin/jobs/{job_id}/", status_code=status.HTTP_200_OK)
