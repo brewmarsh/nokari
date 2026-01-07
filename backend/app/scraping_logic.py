@@ -495,13 +495,7 @@ def scrape_and_save_jobs(repo: FirestoreRepo, query_term: str, domains, days=Non
                             searchable_locations.append(loc["location_string"])
 
                     # Default location string for display
-                    loc_str = "Remote"
-                    if job_data["locations"]:
-                        first_location = job_data["locations"][0]
-                        if first_location.get("location_string"):
-                            loc_str = first_location.get("location_string")
-                        elif first_location.get("type"):
-                            loc_str = first_location.get("type")
+                    # loc_str logic removed as it was unused and flagged by linter
 
                     final_job_data = {
                         "title": title,

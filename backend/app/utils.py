@@ -1,4 +1,4 @@
-from typing import Dict, List, Any
+from typing import Dict, Any
 
 def enrich_job_with_flags(job: Dict[str, Any]) -> None:
     """
@@ -25,9 +25,12 @@ def enrich_job_with_flags(job: Dict[str, Any]) -> None:
     # Fallback to searchable_locations
     if not (is_remote or is_hybrid or is_onsite):
             searchable = job.get("searchable_locations", [])
-            if "remote" in searchable: is_remote = True
-            if "hybrid" in searchable: is_hybrid = True
-            if "onsite" in searchable: is_onsite = True
+            if "remote" in searchable:
+                is_remote = True
+            if "hybrid" in searchable:
+                is_hybrid = True
+            if "onsite" in searchable:
+                is_onsite = True
 
     job["remote"] = is_remote
     job["hybrid"] = is_hybrid
