@@ -1,6 +1,6 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
-import { vi, describe, it, expect } from 'vitest';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import AdminJobs from '../components/AdminJobs';
 import api from '../services/api';
 
@@ -14,6 +14,14 @@ vi.mock('../services/api', () => ({
 }));
 
 describe('AdminJobs Component', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Default mock implementation for window.confirm
+    vi.spyOn(window, 'confirm').mockImplementation(() => true);
+    // Mock window.alert
+    vi.spyOn(window, 'alert').mockImplementation(() => {});
+  });
+
   it('renders job rows with data-label attributes for responsiveness', async () => {
     // Mock response
     const mockJobs = [
@@ -44,4 +52,42 @@ describe('AdminJobs Component', () => {
     const companyCell = screen.getByText('Test Company').closest('td');
     expect(companyCell).toHaveAttribute('data-label', 'Company');
   });
+
+  it('calls rescrape-all endpoint when "Rescrape All" is clicked and confirmed', async () => {
+      api.get.mockResolvedValue({ data: [] });
+      api.post.mockResolvedValue({ data: { message: 'Started' } });
+
+      render(<AdminJobs />);
+
+      await waitFor(() => {
+          expect(screen.getByText('Admin - Job Postings')).toBeInTheDocument();
+      });
+
+      const rescrapeAllBtn = screen.getByText('Rescrape All');
+      fireEvent.click(rescrapeAllBtn);
+
+      expect(window.confirm).toHaveBeenCalledWith(expect.stringContaining('rescrape ALL jobs'));
+      expect(api.post).toHaveBeenCalledWith('/admin/jobs/rescrape-all/');
+
+      await waitFor(() => {
+          expect(window.alert).toHaveBeenCalledWith(expect.stringContaining('Background task started'));
+      });
+  });
+
+  it('does not call rescrape-all endpoint when cancelled', async () => {
+    api.get.mockResolvedValue({ data: [] });
+    window.confirm.mockReturnValue(false);
+
+    render(<AdminJobs />);
+
+    await waitFor(() => {
+        expect(screen.getByText('Admin - Job Postings')).toBeInTheDocument();
+    });
+
+    const rescrapeAllBtn = screen.getByText('Rescrape All');
+    fireEvent.click(rescrapeAllBtn);
+
+    expect(window.confirm).toHaveBeenCalled();
+    expect(api.post).not.toHaveBeenCalledWith('/admin/jobs/rescrape-all/');
+});
 });

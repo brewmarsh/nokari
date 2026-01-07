@@ -46,6 +46,50 @@ def run_scraper(query: str = "Software Engineer", requested_by: str = "System"):
     return count
 
 
+def rescrape_all_jobs(requested_by: str = "System"):
+    repo = FirestoreRepo(db_client=db)
+    logger.info("Starting rescrape of all jobs")
+    start_time = time.time()
+
+    try:
+        jobs = repo.get_all_jobs()
+    except Exception as e:
+        logger.error(f"Failed to fetch jobs for rescrape: {e}")
+        return 0
+
+    count = 0
+    for job in jobs:
+        link = job.get("link")
+        job_id = job.get("id")
+        if not link or not job_id:
+            continue
+
+        try:
+            details = scraping_logic.scrape_job_details(link)
+            if details:
+                job.update(
+                    {
+                        "title": details.get("title") or job.get("title"),
+                        "description": details.get("description")
+                        or job.get("description"),
+                        "updated_at": datetime.utcnow(),
+                    }
+                )
+                repo.put_job_posting(job_id, job)
+                count += 1
+                logger.info(f"Rescraped job {job_id}")
+            else:
+                logger.warning(f"Failed to scrape details for job {job_id}")
+        except Exception as e:
+            logger.error(f"Error rescraping job {job_id}: {e}")
+
+    end_time = time.time()
+    duration = end_time - start_time
+
+    logger.info(f"Rescrape complete. Updated {count} jobs in {duration} seconds.")
+    return count
+
+
 def handler(event, context):
     """
     The AWS Lambda handler for the daily job scraper.
