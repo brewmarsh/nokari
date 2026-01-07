@@ -137,7 +137,9 @@ def scrape_job_details(url):
                                         if addr.get("addressCountry"):
                                             country = addr["addressCountry"]
                                             if isinstance(country, dict):
-                                                details["country"] = country.get("name", "")
+                                                details["country"] = country.get(
+                                                    "name", ""
+                                                )
                                             else:
                                                 details["country"] = country
                                         # Use the first one found
@@ -153,9 +155,12 @@ def scrape_job_details(url):
                             details["title"] = details["title"].split(" - ")[0]
 
                         # Clean company
-                        if details.get("company") and details["company"].lower() in ["careers", "job"]:
-                             # Try to fallback to something better if possible, or leave it blank
-                             pass
+                        if details.get("company") and details["company"].lower() in [
+                            "careers",
+                            "job",
+                        ]:
+                            # Try to fallback to something better if possible, or leave it blank
+                            pass
 
                         return details
             except json.JSONDecodeError:
@@ -190,10 +195,10 @@ def scrape_job_details(url):
         if details.get("title"):
             separators = [" | ", " - ", " : "]
             for sep in separators:
-                 if sep in details["title"]:
-                      parts = details["title"].split(sep)
-                      # Heuristic: Job title is usually the first part
-                      details["title"] = parts[0]
+                if sep in details["title"]:
+                    parts = details["title"].split(sep)
+                    # Heuristic: Job title is usually the first part
+                    details["title"] = parts[0]
 
         parsed_url = urlparse(url)
         # Check for Lever specific logic
@@ -429,7 +434,11 @@ def scrape_jobs(query, domain, days=None, blocked_patterns=None):
 
                     # Update company if scraped_details found a better one
                     if scraped_details.get("company"):
-                        if scraped_details["company"].lower() not in ["careers", "home", "index"]:
+                        if scraped_details["company"].lower() not in [
+                            "careers",
+                            "home",
+                            "index",
+                        ]:
                             job_data["company"] = scraped_details["company"]
 
             jobs.append(job_data)
